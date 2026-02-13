@@ -1,0 +1,52 @@
+name: Bug Report
+description: Report a bug in prompt-shield
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: prompt-shield version
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      placeholder: "3.12"
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: input
+    attributes:
+      label: Input that caused the issue
+      description: The input text or code snippet that triggered the bug.
+      render: python
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What actually happened?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration (sanitized)
+      description: Your prompt_shield config (remove any secrets).
+      render: yaml

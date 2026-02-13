@@ -1,0 +1,8 @@
+# Default owners for everything
+* @prompt-shield/maintainers
+
+# Detectors require review from security team
+src/prompt_shield/detectors/ @prompt-shield/security
+
+# Integration adapters
+src/prompt_shield/integrations/ @prompt-shield/maintainers

@@ -1,0 +1,42 @@
+name: New Detector Proposal
+description: Propose a new prompt injection detector
+title: "[Detector]: "
+labels: ["new-detector"]
+body:
+  - type: textarea
+    id: attack-type
+    attributes:
+      label: Attack type
+      description: What type of prompt injection does this detector catch?
+    validations:
+      required: true
+  - type: textarea
+    id: examples-malicious
+    attributes:
+      label: Example malicious inputs (minimum 5)
+      description: Provide at least 5 example inputs that should trigger this detector.
+    validations:
+      required: true
+  - type: textarea
+    id: examples-benign
+    attributes:
+      label: Example benign inputs (minimum 3)
+      description: Provide at least 3 benign inputs that should NOT trigger this detector.
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to research, blog posts, or known attacks this detector would catch.
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Proposed severity
+      options:
+        - critical
+        - high
+        - medium
+        - low
+    validations:
+      required: true

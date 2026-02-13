@@ -1,0 +1,91 @@
+[project]
+name = "prompt-shield"
+version = "0.1.0"
+description = "Self-learning prompt injection detection engine for LLM applications"
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.10"
+authors = [{ name = "prompt-shield contributors" }]
+keywords = ["llm", "security", "prompt-injection", "ai-safety", "firewall", "self-learning"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+]
+
+dependencies = [
+    "pydantic>=2.0",
+    "pyyaml>=6.0",
+    "click>=8.0",
+    "regex>=2023.0",
+    "sentence-transformers>=2.0",
+    "chromadb>=0.5",
+]
+
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.100", "starlette>=0.27"]
+flask = ["flask>=2.0"]
+langchain = ["langchain-core>=0.1"]
+llamaindex = ["llama-index-core>=0.10"]
+django = ["django>=4.0"]
+mcp = ["mcp>=1.0"]
+openai = ["openai>=1.0"]
+anthropic = ["anthropic>=0.30"]
+ml = [
+    "transformers>=4.30",
+    "optimum[onnxruntime]>=1.12",
+]
+all = ["prompt-shield[fastapi,flask,langchain,llamaindex,django,mcp]"]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "pytest-asyncio>=0.21",
+    "ruff>=0.4",
+    "mypy>=1.8",
+    "pre-commit>=3.0",
+    "httpx>=0.24",
+    "mkdocs-material>=9.0",
+]
+
+[project.scripts]
+prompt-shield = "prompt_shield.cli:main"
+
+[project.entry-points."prompt_shield.detectors"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/prompt_shield"]
+
+[tool.ruff]
+target-version = "py310"
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH", "RUF"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+packages = ["prompt_shield"]
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=prompt_shield --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["prompt_shield"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 85

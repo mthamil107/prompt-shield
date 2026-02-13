@@ -1,0 +1,118 @@
+prompt_shield:
+  mode: block
+  threshold: 0.7
+
+  actions:
+    critical: block
+    high: block
+    medium: flag
+    low: log
+
+  logging:
+    level: INFO
+    format: json
+    output: stdout
+
+  data_dir: null
+
+  vault:
+    enabled: true
+    embedding_model: "all-MiniLM-L6-v2"
+    similarity_threshold: 0.85
+    max_entries: 100000
+    auto_store_detections: true
+    min_confidence_to_store: 0.7
+
+  feedback:
+    enabled: true
+    auto_tune: true
+    tune_interval: 100
+    max_threshold_adjustment: 0.15
+
+  canary:
+    enabled: true
+    token_length: 16
+    header_format: "<-@!-- {canary} --@!->"
+
+  threat_feed:
+    enabled: true
+    auto_sync: false
+    feed_url: "https://raw.githubusercontent.com/prompt-shield/threat-feed/main/feeds/latest.json"
+    sync_interval_hours: 24
+
+  history:
+    enabled: true
+    retention_days: 90
+    store_input_text: false
+
+  detectors:
+    d001_system_prompt_extraction:
+      enabled: true
+      severity: critical
+      threshold: 0.6
+    d002_role_hijack:
+      enabled: true
+      severity: critical
+    d003_instruction_override:
+      enabled: true
+      severity: high
+    d004_prompt_leaking:
+      enabled: true
+      severity: critical
+    d005_context_manipulation:
+      enabled: true
+      severity: high
+    d006_multi_turn_escalation:
+      enabled: true
+      severity: medium
+    d007_task_deflection:
+      enabled: true
+      severity: medium
+    d008_base64_payload:
+      enabled: true
+      severity: high
+    d009_rot13_substitution:
+      enabled: true
+      severity: high
+    d010_unicode_homoglyph:
+      enabled: true
+      severity: high
+    d011_whitespace_injection:
+      enabled: true
+      severity: medium
+    d012_markdown_html_injection:
+      enabled: true
+      severity: medium
+    d013_data_exfiltration:
+      enabled: true
+      severity: critical
+    d014_tool_function_abuse:
+      enabled: true
+      severity: critical
+    d015_rag_poisoning:
+      enabled: true
+      severity: high
+    d016_url_injection:
+      enabled: true
+      severity: medium
+    d017_hypothetical_framing:
+      enabled: true
+      severity: medium
+    d018_academic_pretext:
+      enabled: true
+      severity: low
+    d019_dual_persona:
+      enabled: true
+      severity: high
+    d020_token_smuggling:
+      enabled: true
+      severity: high
+    d021_vault_similarity:
+      enabled: true
+      severity: high
+
+  allowlist:
+    patterns: []
+
+  blocklist:
+    patterns: []

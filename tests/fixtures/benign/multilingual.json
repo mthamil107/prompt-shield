@@ -1,0 +1,75 @@
+{
+  "detector_id": "all",
+  "test_cases": [
+    {
+      "id": "benign_ml_001",
+      "input": "Bonjour, pouvez-vous m'expliquer comment fonctionne la photosynthese?",
+      "expected_detected": false,
+      "description": "French: Can you explain how photosynthesis works?",
+      "tags": ["benign", "multilingual", "french"]
+    },
+    {
+      "id": "benign_ml_002",
+      "input": "\u00bfCu\u00e1les son las mejores pr\u00e1cticas para el desarrollo de software?",
+      "expected_detected": false,
+      "description": "Spanish: What are the best practices for software development?",
+      "tags": ["benign", "multilingual", "spanish"]
+    },
+    {
+      "id": "benign_ml_003",
+      "input": "Wie kann ich eine Datenbank in PostgreSQL erstellen?",
+      "expected_detected": false,
+      "description": "German: How can I create a database in PostgreSQL?",
+      "tags": ["benign", "multilingual", "german"]
+    },
+    {
+      "id": "benign_ml_004",
+      "input": "\u6a5f\u68b0\u5b66\u7fd2\u306e\u57fa\u672c\u7684\u306a\u6982\u5ff5\u3092\u8aac\u660e\u3057\u3066\u304f\u3060\u3055\u3044",
+      "expected_detected": false,
+      "description": "Japanese: Please explain the basic concepts of machine learning",
+      "tags": ["benign", "multilingual", "japanese"]
+    },
+    {
+      "id": "benign_ml_005",
+      "input": "\ub9e4\uc77c \uc6b4\ub3d9\ud558\ub294 \uac83\uc758 \uac74\uac15 \uc774\uc810\uc740 \ubb34\uc5c7\uc778\uac00\uc694?",
+      "expected_detected": false,
+      "description": "Korean: What are the health benefits of exercising every day?",
+      "tags": ["benign", "multilingual", "korean"]
+    },
+    {
+      "id": "benign_ml_006",
+      "input": "\u041a\u0430\u043a \u043d\u0430\u0447\u0430\u0442\u044c \u0438\u0437\u0443\u0447\u0430\u0442\u044c \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0438\u0440\u043e\u0432\u0430\u043d\u0438\u0435 \u043d\u0430 Python?",
+      "expected_detected": false,
+      "description": "Russian: How to start learning Python programming?",
+      "tags": ["benign", "multilingual", "russian"]
+    },
+    {
+      "id": "benign_ml_007",
+      "input": "\u4ec0\u4e48\u662f\u4eba\u5de5\u667a\u80fd\uff1f\u5b83\u5982\u4f55\u5f71\u54cd\u6211\u4eec\u7684\u65e5\u5e38\u751f\u6d3b\uff1f",
+      "expected_detected": false,
+      "description": "Chinese: What is artificial intelligence? How does it affect our daily life?",
+      "tags": ["benign", "multilingual", "chinese"]
+    },
+    {
+      "id": "benign_ml_008",
+      "input": "\u0645\u0627 \u0647\u064a \u0623\u0641\u0636\u0644 \u0637\u0631\u064a\u0642\u0629 \u0644\u062a\u0639\u0644\u0645 \u0644\u063a\u0629 \u062c\u062f\u064a\u062f\u0629\u061f",
+      "expected_detected": false,
+      "description": "Arabic: What is the best way to learn a new language?",
+      "tags": ["benign", "multilingual", "arabic"]
+    },
+    {
+      "id": "benign_ml_009",
+      "input": "\u0915\u0943\u092a\u092f\u093e \u092e\u0941\u091d\u0947 \u092c\u0924\u093e\u090f\u0902 \u0915\u093f \u0935\u0947\u092c \u0921\u0947\u0935\u0932\u092a\u092e\u0947\u0902\u091f \u0915\u0948\u0938\u0947 \u0936\u0941\u0930\u0942 \u0915\u0930\u0947\u0902",
+      "expected_detected": false,
+      "description": "Hindi: Please tell me how to start web development",
+      "tags": ["benign", "multilingual", "hindi"]
+    },
+    {
+      "id": "benign_ml_010",
+      "input": "Voc\u00ea pode me ajudar a entender como funciona o algoritmo de ordena\u00e7\u00e3o merge sort?",
+      "expected_detected": false,
+      "description": "Portuguese: Can you help me understand how the merge sort algorithm works?",
+      "tags": ["benign", "multilingual", "portuguese"]
+    }
+  ]
+}
