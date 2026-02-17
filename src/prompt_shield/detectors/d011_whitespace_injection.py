@@ -20,7 +20,7 @@ _SUSPICIOUS_KEYWORDS: list[str] = [
     "forget",
 ]
 
-_EXCESSIVE_SPACES_PATTERN = regex.compile(r" {4,}")
+_EXCESSIVE_SPACES_PATTERN = regex.compile(r" {6,}")
 _EXCESSIVE_NEWLINES_PATTERN = regex.compile(r"\n{6,}")
 _TAB_IN_TEXT_PATTERN = regex.compile(r"(?<!\n)\t|\t(?!\n)")
 
@@ -101,7 +101,9 @@ class WhitespaceInjectionDetector(BaseDetector):
                 )
 
         # --- Excessive consecutive spaces ---
+        has_whitespace_anomaly = False
         for m in _EXCESSIVE_SPACES_PATTERN.finditer(input_text):
+            has_whitespace_anomaly = True
             matches.append(
                 MatchDetail(
                     pattern=_EXCESSIVE_SPACES_PATTERN.pattern,
@@ -115,6 +117,7 @@ class WhitespaceInjectionDetector(BaseDetector):
 
         # --- Excessive newlines ---
         for m in _EXCESSIVE_NEWLINES_PATTERN.finditer(input_text):
+            has_whitespace_anomaly = True
             matches.append(
                 MatchDetail(
                     pattern=_EXCESSIVE_NEWLINES_PATTERN.pattern,
@@ -128,6 +131,7 @@ class WhitespaceInjectionDetector(BaseDetector):
 
         # --- Tab characters in unexpected places ---
         for m in _TAB_IN_TEXT_PATTERN.finditer(input_text):
+            has_whitespace_anomaly = True
             matches.append(
                 MatchDetail(
                     pattern=_TAB_IN_TEXT_PATTERN.pattern,
@@ -136,6 +140,27 @@ class WhitespaceInjectionDetector(BaseDetector):
                     description="Tab character in unexpected position",
                 )
             )
+
+        # --- Check for keywords hidden in whitespace-padded text ---
+        whitespace_keywords_found = False
+        if has_whitespace_anomaly and not has_suspicious_content:
+            normalized = regex.sub(r"\s+", " ", input_text).strip().lower()
+            ws_keywords = [
+                kw for kw in _SUSPICIOUS_KEYWORDS if kw in normalized
+            ]
+            if ws_keywords:
+                whitespace_keywords_found = True
+                matches.append(
+                    MatchDetail(
+                        pattern="whitespace_padded_keywords",
+                        matched_text=f"[normalized text contains keywords]",
+                        position=(0, len(input_text)),
+                        description=(
+                            f"Whitespace-padded text contains suspicious "
+                            f"keywords: {', '.join(ws_keywords)}"
+                        ),
+                    )
+                )
 
         if not matches:
             return DetectionResult(
@@ -150,6 +175,8 @@ class WhitespaceInjectionDetector(BaseDetector):
             confidence = min(1.0, 0.75 + 0.1 * (len(matches) - 1))
         elif invisible_count > 0:
             confidence = min(1.0, 0.5 + 0.05 * (len(matches) - 1))
+        elif whitespace_keywords_found:
+            confidence = min(1.0, 0.75 + 0.05 * (len(matches) - 1))
         else:
             confidence = min(1.0, 0.3 + 0.05 * (len(matches) - 1))
 

@@ -12,15 +12,26 @@ _SUSPICIOUS_KEYWORDS: list[str] = [
     "ignore",
     "instructions",
     "system prompt",
+    "system",
+    "prompt",
     "override",
     "execute",
     "admin",
     "jailbreak",
     "pretend",
     "forget",
+    "bypass",
+    "hack",
+    "inject",
+    "exploit",
+    "passwd",
+    "password",
+    "secret",
+    "token",
+    "reveal",
 ]
 
-_BASE64_PATTERN = regex.compile(r"[A-Za-z0-9+/]{20,}={0,2}")
+_BASE64_PATTERN = regex.compile(r"[A-Za-z0-9+/]{8,}={0,2}")
 
 
 class Base64PayloadDetector(BaseDetector):

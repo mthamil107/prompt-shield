@@ -26,21 +26,25 @@ class AcademicPretextDetector(BaseDetector):
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    _base_confidence: float = 0.6
+    _base_confidence: float = 0.7
 
     _patterns: list[tuple[str, str]] = [
-        (r"for\s+my\s+security\s+thesis", "Security thesis claim"),
-        (r"I'?m\s+a\s+researcher\s+studying", "Researcher claim"),
-        (r"for\s+educational\s+purposes\s+only", "Educational purpose claim"),
-        (r"I'?m\s+writing\s+a\s+paper\s+on", "Paper writing claim"),
-        (r"as\s+a\s+cybersecurity\s+professional", "Cybersecurity professional claim"),
-        (r"for\s+my\s+penetration\s+testing\s+class", "Pen testing class claim"),
-        (r"academic\s+research\s+on\s+vulnerabilities", "Academic vulnerability research"),
-        (r"I'?m\s+a\s+professor\s+teaching", "Professor claim"),
-        (r"for\s+a\s+CTF\s+competition", "CTF claim"),
+        (r"for\s+(?:my|a|the)\s+(?:security|cybersecurity)\s+(?:thesis|paper|research|class|course|project)", "Security research claim"),
+        (r"(?:I'?m|I\s+am)\s+a\s+(?:security\s+)?researcher\s+(?:studying|researching|investigating|working\s+on)", "Researcher claim"),
+        (r"for\s+educational\s+purposes?\s*(?:only)?", "Educational purpose claim"),
+        (r"(?:I'?m|I\s+am)\s+(?:writing|working\s+on)\s+(?:a|my)\s+(?:paper|thesis|dissertation|report)\s+(?:on|about)", "Paper writing claim"),
+        (r"as\s+a\s+(?:cyber)?security\s+professional", "Security professional claim"),
+        (r"for\s+my\s+(?:penetration\s+testing|pentesting|security)\s+class", "Pen testing class claim"),
+        (r"academic\s+research\s+on\s+(?:vulnerabilities|security|attacks|exploits)", "Academic vulnerability research"),
+        (r"(?:I'?m|I\s+am)\s+a\s+professor\s+teaching", "Professor claim"),
+        (r"for\s+(?:a|my|the)\s+CTF\s+(?:competition|challenge|event)", "CTF claim"),
         (r"security\s+audit\s+requires", "Security audit claim"),
-        (r"for\s+my\s+dissertation", "Dissertation claim"),
+        (r"for\s+my\s+(?:dissertation|thesis)\b", "Dissertation claim"),
         (r"peer[\s-]reviewed\s+research", "Peer review claim"),
+        (r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:security\s+)?researcher\b", "Researcher identity claim"),
+        (r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:student|professor|academic)\s+(?:studying|researching|teaching)", "Academic identity claim"),
+        (r"(?:for|in)\s+(?:my|a|the)\s+(?:dissertation|thesis|paper|research)\s+(?:on|about|regarding)\s+(?:AI|artificial\s+intelligence|prompt|security|safety)", "Research topic claim"),
+        (r"(?:studying|researching|investigating)\s+(?:prompt\s+)?injection\s+attacks?", "Studying injection attacks"),
     ]
 
     def detect(

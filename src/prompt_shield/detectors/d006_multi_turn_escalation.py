@@ -28,20 +28,26 @@ class MultiTurnEscalationDetector(BaseDetector):
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    _base_confidence: float = 0.6
+    _base_confidence: float = 0.7
     _escalation_confidence: float = 0.85
 
     _patterns: list[tuple[str, str]] = [
-        (r"just a little more", "Incremental push phrase"),
-        (r"one small exception", "Exception minimization"),
+        (r"just a little (?:more|further|bit)", "Incremental push phrase"),
+        (r"one (?:small|tiny|little)\s+(?:exception|step|thing)", "Exception minimization"),
         (r"can you slightly", "Incremental boundary push"),
-        (r"almost there, just", "Progress-based pressure"),
-        (r"building on that", "Escalation continuation"),
-        (r"take it a step further", "Explicit escalation request"),
-        (r"now can you also", "Additive request escalation"),
+        (r"almost there,?\s*just", "Progress-based pressure"),
+        (r"building on (?:that|this|the above)", "Escalation continuation"),
+        (r"take it (?:a step|one step|further|a bit) further", "Explicit escalation request"),
+        (r"now (?:can you|could you|please)?\s*(?:also|add)", "Additive request escalation"),
         (r"extend that to include", "Scope expansion request"),
         (r"just one more thing", "Incremental addition request"),
         (r"what if we also", "Hypothetical scope expansion"),
+        (r"(?:go|dig|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?deeper", "Depth escalation"),
+        (r"(?:go|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?further", "Further escalation"),
+        (r"(?:add|include)\s+(?:the\s+)?restricted\s+(?:part|section|content|info)", "Restricted content request"),
+        (r"a\s+(?:little|bit)\s+more\s+detail", "Incremental detail request"),
+        (r"(?:step|notch|level)\s+further", "Step escalation"),
+        (r"without\s+the\s+(?:restrictions?|limitations?|boundaries)", "Restriction removal request"),
     ]
 
     # Patterns that are suspicious when found in conversation history,
