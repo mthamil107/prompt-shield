@@ -244,9 +244,13 @@ class PromptShieldEngine:
                     "Detector %s failed: %s", detector.detector_id, exc
                 )
 
-        # Aggregate risk score
+        # Aggregate risk score with ensemble bonus
         if detections:
-            risk_score = max(d.confidence for d in detections)
+            max_conf = max(d.confidence for d in detections)
+            bonus = self._ps_config.get("scoring", {}).get(
+                "ensemble_bonus", 0.05
+            )
+            risk_score = min(1.0, max_conf + bonus * (len(detections) - 1))
         else:
             risk_score = 0.0
 

@@ -13,12 +13,15 @@ prompt_shield:
     format: json
     output: stdout
 
+  scoring:
+    ensemble_bonus: 0.05
+
   data_dir: null
 
   vault:
     enabled: true
     embedding_model: "all-MiniLM-L6-v2"
-    similarity_threshold: 0.85
+    similarity_threshold: 0.75
     max_entries: 100000
     auto_store_detections: true
     min_confidence_to_store: 0.7
@@ -110,6 +113,12 @@ prompt_shield:
     d021_vault_similarity:
       enabled: true
       severity: high
+    d022_semantic_classifier:
+      enabled: true
+      severity: high
+      threshold: 0.7
+      model_name: "protectai/deberta-v3-base-prompt-injection-v2"
+      device: "cpu"
 
   allowlist:
     patterns: []

@@ -120,16 +120,20 @@ def resolve_data_dir(config: dict[str, Any]) -> Path:
 
 
 def get_detector_config(config: dict[str, Any], detector_id: str) -> dict[str, Any]:
-    """Get per-detector config, falling back to global defaults."""
+    """Get per-detector config, falling back to global defaults.
+
+    Returns all detector-specific keys plus ``enabled`` and ``threshold``
+    with sensible defaults so that custom detectors (e.g. d022) can
+    receive extra settings like ``model_name`` or ``device``.
+    """
     ps = config.get("prompt_shield", config)
     detectors = ps.get("detectors", {})
-    detector_cfg = detectors.get(detector_id, {})
+    detector_cfg = dict(detectors.get(detector_id, {}))
 
-    return {
-        "enabled": detector_cfg.get("enabled", True),
-        "severity": detector_cfg.get("severity"),
-        "threshold": detector_cfg.get("threshold", ps.get("threshold", 0.7)),
-    }
+    detector_cfg.setdefault("enabled", True)
+    detector_cfg.setdefault("severity", None)
+    detector_cfg.setdefault("threshold", ps.get("threshold", 0.7))
+    return detector_cfg
 
 
 def get_action_for_severity(config: dict[str, Any], severity: Severity) -> str:
