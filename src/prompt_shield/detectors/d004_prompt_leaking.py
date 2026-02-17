@@ -32,7 +32,7 @@ class PromptLeakingDetector(BaseDetector):
         (r"\b(?:print|output|display|show|echo|repeat)\s+(?:out\s+)?(?:everything|all(?:\s+text)?)\s+(?:above|before|preceding)\s+(?:this|here|that)\b", "Attempt to dump preceding context"),
         (r"\b(?:show|display|reveal|give)\s+(?:me\s+)?the\s+(?:full|complete|entire|whole)\s+conversation\b", "Request for full conversation history"),
         (r"\bwhat\s+(?:was|is)\s+the\s+(?:first|initial|original|opening)\s+(?:message|prompt|instruction)\b", "Probing for initial system message"),
-        (r"\b(?:repeat|recite|echo|reproduce|restate)\s+(?:the\s+)?(?:system|initial|original|hidden)\s+(?:message|prompt|instructions?)\b", "Request to repeat system message"),
+        (r"\b(?:repeat|recite|echo|reproduce|restate|reveal|show|display)\s+(?:the\s+)?(?:system|initial|original|hidden)\s+(?:message|prompt|instructions?)\b", "Request to repeat system message"),
         (r"\b(?:display|show|reveal|expose|uncover)\s+(?:the\s+)?(?:hidden|secret|internal|underlying)\s+(?:context|prompt|instructions?|text)\b", "Request to reveal hidden context"),
         (r"\b(?:output|print|display|dump|show)\s+(?:all|every)\s+(?:the\s+)?messages?\b", "Attempt to dump all messages"),
         (r"\b(?:list|show|enumerate|tell\s+me)\s+(?:all\s+)?(?:the\s+)?(?:tools?|plugins?)\s+(?:you\s+have\s+)?(?:available|accessible)\b", "Probing for available tools"),

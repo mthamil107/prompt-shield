@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.1.1 (Pattern Coverage Fix)
+
+### Detectors
+
+- **d001 System Prompt Extraction** — Fixed patterns that rejected the article "the" (e.g., "reveal the system prompt" was not detected). Broadened verb coverage with `give`, `share`, `disclose`, `expose` and added optional indirect objects (`me`/`us`). Added two new patterns: contraction form ("what's your system prompt") and indirect requests ("can you share the system prompt").
+- **d003 Instruction Override** — Added two new patterns for system-level bypass attempts ("override system", "bypass safety filters", "circumvent the system restrictions", "disable safety guardrails") and deactivation attempts ("turn off content filters", "deactivate safety protections"). Previously the override pattern required a temporal qualifier and instruction noun, so bare phrases like "override system" were missed.
+- **d004 Prompt Leaking** — Added `reveal`, `show`, `display` verbs to the repeat-system-message pattern for consistent coverage across detectors.
+
+---
+
 ## v0.1.0 (Initial Release)
 
 ### Engine

@@ -240,8 +240,7 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 ## Roadmap
 
-- **v0.1.1**: OpenAI and Anthropic client wrappers (auto-scan on chat completion)
-- **v0.2.0**: ML-based detection (DeBERTa/PromptGuard fine-tuned classifier), LLM-as-judge detector
+- **v0.2.0**: OpenAI and Anthropic client wrappers (auto-scan on chat completion), ML-based detection (DeBERTa/PromptGuard fine-tuned classifier), LLM-as-judge detector
 - **v0.3.0**: Federated learning for collaborative model training, multi-modal detection (images, PDFs), attention-based detection
 
 ## License

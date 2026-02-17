@@ -41,6 +41,8 @@ class InstructionOverrideDetector(BaseDetector):
         (r"\[SYSTEM\]", "Fake SYSTEM tag injection"),
         (r"\b(?:ignore|disregard|forget|skip)\s+(?:everything|anything|all)\s+(?:before|above|prior\s+to)\s+(?:this|here)\b", "Context erasure attempt"),
         (r"\byour\s+(?:actual|real|true)\s+(?:instructions?|directives?|orders?)\s+are\b", "Fake authoritative instruction claim"),
+        (r"\b(?:override|bypass|circumvent|disable|break(?:\s+through)?|defeat|remove|disable)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:prompt|filters?|rules?|restrictions?|constraints?|guidelines?|protections?|safeguards?|settings?|instructions?|directives?|guardrails?|limits?|boundaries?)?\b", "System override or bypass attempt"),
+        (r"\b(?:turn\s+off|shut\s+off|deactivate|neutralize)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:filters?|rules?|restrictions?|constraints?|protections?|safeguards?|checks?)?\b", "Attempt to deactivate system protections"),
     ]
 
     def detect(
