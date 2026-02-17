@@ -32,7 +32,7 @@ class SystemPromptExtractionDetector(BaseDetector):
         (r"ignore\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+instructions", "Attempt to override previous instructions"),
         (r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)", "Request to reveal system prompt or instructions"),
         (r"what\s+(?:are|were)\s+(?:your|the)\s+(?:initial\s+)?(?:instructions|rules|prompt|directives)", "Probing for model instructions"),
-        (r"print\s+everything\s+above", "Attempt to dump preceding context"),
+        (r"print\s+(?:out\s+)?(?:everything|all)\s+above", "Attempt to dump preceding context"),
         (r"(?:show|tell|reveal|display|give|share)\s+me\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|message|rules)", "Request to display system message"),
         (r"output\s+(?:your|the)\s+(?:full\s+)?(?:configuration|config|setup|prompt)", "Request to output model configuration"),
         (r"what\s+were\s+you\s+told\s+to\s+do", "Probing for model directives"),
@@ -43,6 +43,9 @@ class SystemPromptExtractionDetector(BaseDetector):
         (r"(?:copy|paste|reproduce)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)", "Request to reproduce instructions"),
         (r"(?:what(?:'s|\s+is)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|message))", "Question probing for system prompt"),
         (r"(?:can\s+you\s+)?(?:share|tell|give|send|provide)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|directives)", "Indirect request for system prompt"),
+        (r"(?:print|show|give|tell)\s+(?:out\s+)?(?:me\s+)?(?:your|the)\s+(?:configuration|config|setup|rules)", "Request for model configuration"),
+        (r"(?:give|tell|show)\s+me\s+your\s+rules", "Request for model rules"),
+        (r"repeat\s+(?:your\s+)?(?:initial|original|first)\s+(?:instructions|prompt|message)", "Request to repeat initial instructions"),
     ]
 
     def detect(

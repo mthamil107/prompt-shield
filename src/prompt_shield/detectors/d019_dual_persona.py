@@ -32,15 +32,17 @@ class DualPersonaDetector(BaseDetector):
         (r"respond\s+as\s+both\s+safe\s+and\s+unsafe", "Dual safe/unsafe request"),
         (r"give\s+me\s+two\s+answers.*filtered.*unfiltered", "Filtered/unfiltered request"),
         (r"your\s+evil\s+twin\s+would\s+say", "Evil twin framing"),
-        (r"the\s+uncensored\s+version\s+is", "Uncensored version request"),
+        (r"(?:the|an?|your)\s+uncensored\s+(?:version|response|answer|output)", "Uncensored version request"),
+        (r"(?:show|give)\s+(?:me\s+)?(?:the|an?|your)\s+uncensored\s+(?:version|response|answer|output)", "Show uncensored request"),
         (r"answer\s+A.*safe.*answer\s+B.*real", "A/B answer split"),
         (r"good\s+cop\s*/?\s*bad\s+cop", "Good cop/bad cop"),
         (r"what\s+would\s+the\s+unaligned\s+version\s+say", "Unaligned version request"),
         (r"give\s+your\s+honest\s+answer\s+vs\s+trained", "Honest vs trained answer"),
         (r"shadow\s+self\s+response", "Shadow self response"),
-        (r"without\s+(your|the)\s+filter", "Without filter request"),
-        (r"unfiltered\s+(response|answer|version|output)", "Unfiltered output request"),
+        (r"without\s+(?:your|the|any)\s+(?:filter|filters|censorship|restrictions?|safety)", "Without filter request"),
+        (r"unfiltered\s+(?:response|answer|version|output)", "Unfiltered output request"),
         (r"what\s+you\s+really\s+think", "Real thoughts request"),
+        (r"(?:uncensored|unfiltered|unrestricted|raw)\s+(?:version|mode|response|answer|output)", "Uncensored mode request"),
     ]
 
     def detect(
