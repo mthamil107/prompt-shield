@@ -11,7 +11,7 @@ from prompt_shield.models import (
     ThreatFeed,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 __all__ = [
     "PromptShieldEngine",

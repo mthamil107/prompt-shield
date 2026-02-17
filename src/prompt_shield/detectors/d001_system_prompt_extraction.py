@@ -30,10 +30,10 @@ class SystemPromptExtractionDetector(BaseDetector):
 
     _patterns: list[tuple[str, str]] = [
         (r"ignore\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+instructions", "Attempt to override previous instructions"),
-        (r"(?:repeat|show|display|print|reveal|output|echo)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)", "Request to reveal system prompt or instructions"),
+        (r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)", "Request to reveal system prompt or instructions"),
         (r"what\s+(?:are|were)\s+(?:your|the)\s+(?:initial\s+)?(?:instructions|rules|prompt|directives)", "Probing for model instructions"),
         (r"print\s+everything\s+above", "Attempt to dump preceding context"),
-        (r"(?:show|tell)\s+me\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|message|rules)", "Request to display system message"),
+        (r"(?:show|tell|reveal|display|give|share)\s+me\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|message|rules)", "Request to display system message"),
         (r"output\s+(?:your|the)\s+(?:full\s+)?(?:configuration|config|setup|prompt)", "Request to output model configuration"),
         (r"what\s+were\s+you\s+told\s+to\s+do", "Probing for model directives"),
         (r"(?:dump|leak|extract)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions|memory|context)", "Attempt to extract system info"),
@@ -41,6 +41,8 @@ class SystemPromptExtractionDetector(BaseDetector):
         (r"(?:what|how)\s+(?:is|was)\s+(?:your|the)\s+(?:system|initial|original)\s+(?:prompt|message|instruction)", "Probing for system prompt content"),
         (r"read\s+(?:back|out)\s+(?:your\s+)?(?:instructions|prompt|rules)", "Request to read back instructions"),
         (r"(?:copy|paste|reproduce)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)", "Request to reproduce instructions"),
+        (r"(?:what(?:'s|\s+is)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|message))", "Question probing for system prompt"),
+        (r"(?:can\s+you\s+)?(?:share|tell|give|send|provide)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|directives)", "Indirect request for system prompt"),
     ]
 
     def detect(
