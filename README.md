@@ -7,12 +7,16 @@
 
 **Self-learning prompt injection detection engine for LLM applications.**
 
-prompt-shield detects and blocks prompt injection attacks targeting LLM-powered applications. Unlike static detection tools, it features a self-hardening feedback loop — every blocked attack strengthens future detection via a vector similarity vault, community users collectively harden defenses through shared threat intelligence, and false positive feedback automatically tunes detector sensitivity.
+prompt-shield detects and blocks prompt injection attacks targeting LLM-powered applications. It combines 22 pattern-based detectors with a semantic ML classifier (DeBERTa), ensemble scoring that amplifies weak signals, and a self-hardening feedback loop — every blocked attack strengthens future detection via a vector similarity vault, community users collectively harden defenses through shared threat intelligence, and false positive feedback automatically tunes detector sensitivity.
 
 ## Quick Install
 
 ```bash
-pip install prompt-shield
+pip install prompt-shield                    # Core (regex detectors only)
+pip install prompt-shield[ml]               # + Semantic ML detector (DeBERTa)
+pip install prompt-shield[openai]           # + OpenAI wrapper
+pip install prompt-shield[anthropic]        # + Anthropic wrapper
+pip install prompt-shield[all]              # Everything
 ```
 
 ## 30-Second Quickstart
@@ -29,13 +33,16 @@ print(report.overall_risk_score)  # 0.95
 
 ## Features
 
-- **21 Built-in Detectors** — Direct injection, encoding/obfuscation, indirect injection, jailbreak patterns, and self-learning vector similarity
+- **22 Built-in Detectors** — Direct injection, encoding/obfuscation, indirect injection, jailbreak patterns, self-learning vector similarity, and semantic ML classification
+- **Semantic ML Detector** — DeBERTa-v3 transformer classifier (`protectai/deberta-v3-base-prompt-injection-v2`) catches paraphrased attacks that bypass regex patterns
+- **Ensemble Scoring** — Multiple weak signals combine: 3 detectors at 0.65 confidence → 0.75 risk score (above threshold), preventing attackers from flying under any single detector
+- **OpenAI & Anthropic Wrappers** — Drop-in client wrappers that auto-scan messages before calling the API; block or monitor mode
 - **Self-Learning Vault** — Every detected attack is embedded and stored; future variants are caught by vector similarity (ChromaDB + all-MiniLM-L6-v2)
 - **Community Threat Feed** — Import/export anonymized threat intelligence; collectively harden everyone's defenses
 - **Auto-Tuning** — User feedback (true/false positive) automatically adjusts detector thresholds
 - **Canary Tokens** — Inject hidden tokens into prompts; detect if the LLM leaks them in responses
 - **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak detection)
-- **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; MCP filter
+- **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; MCP filter; OpenAI/Anthropic client wrappers
 - **Plugin Architecture** — Write custom detectors with a simple interface; auto-discovery via entry points
 - **CLI** — Scan text, manage vault, import/export threats, provide feedback — all from the command line
 - **Zero External Services** — Everything runs locally: SQLite for metadata, ChromaDB for vectors, CPU-based embeddings
@@ -47,7 +54,9 @@ User Input ──> [Input Gate] ──> LLM ──> [Output Gate] ──> Respon
                     |                        |
                     v                        v
               prompt-shield              Canary Check
-              21 Detectors
+              22 Detectors
+              + ML Classifier (DeBERTa)
+              + Ensemble Scoring
               + Vault Similarity
                     |
                     v
@@ -85,6 +94,55 @@ User Input ──> [Input Gate] ──> LLM ──> [Output Gate] ──> Respon
 | d019 | Dual Persona | Jailbreak | High |
 | d020 | Token Smuggling | Obfuscation | High |
 | d021 | Vault Similarity | Self-Learning | High |
+| d022 | Semantic Classifier | ML / Semantic | High |
+
+## Ensemble Scoring
+
+prompt-shield uses ensemble scoring to combine signals from multiple detectors. When several detectors fire on the same input — even with individually low confidence — the combined risk score gets boosted:
+
+```
+risk_score = min(1.0, max_confidence + ensemble_bonus × (num_detections - 1))
+```
+
+With the default bonus of 0.05, three detectors firing at 0.65 confidence produce a risk score of 0.75, crossing the 0.7 threshold. This prevents attackers from crafting inputs that stay just below any single detector's threshold.
+
+## OpenAI & Anthropic Wrappers
+
+Drop-in wrappers that auto-scan all messages before sending them to the API:
+
+```python
+from openai import OpenAI
+from prompt_shield.integrations.openai_wrapper import PromptShieldOpenAI
+
+client = OpenAI()
+shield = PromptShieldOpenAI(client=client, mode="block")
+
+# Raises ValueError if prompt injection detected
+response = shield.create(
+    model="gpt-4o",
+    messages=[{"role": "user", "content": user_input}],
+)
+```
+
+```python
+from anthropic import Anthropic
+from prompt_shield.integrations.anthropic_wrapper import PromptShieldAnthropic
+
+client = Anthropic()
+shield = PromptShieldAnthropic(client=client, mode="block")
+
+# Handles both string and content block formats
+response = shield.create(
+    model="claude-sonnet-4-20250514",
+    max_tokens=1024,
+    messages=[{"role": "user", "content": user_input}],
+)
+```
+
+Both wrappers support:
+- `mode="block"` — raises `ValueError` on detection (default)
+- `mode="monitor"` — logs warnings but allows the request through
+- `scan_responses=True` — also scan LLM responses for suspicious content
 
 ## Protecting Agentic Apps (3-Gate Model)
 
@@ -146,6 +204,20 @@ engine.import_threats("community-threats.json")
 
 ## Integrations
 
+### OpenAI / Anthropic Client Wrappers
+
+```python
+from prompt_shield.integrations.openai_wrapper import PromptShieldOpenAI
+shield = PromptShieldOpenAI(client=OpenAI(), mode="block")
+response = shield.create(model="gpt-4o", messages=[...])
+```
+
+```python
+from prompt_shield.integrations.anthropic_wrapper import PromptShieldAnthropic
+shield = PromptShieldAnthropic(client=Anthropic(), mode="block")
+response = shield.create(model="claude-sonnet-4-20250514", max_tokens=1024, messages=[...])
+```
+
 ### FastAPI / Flask Middleware
 
 ```python
@@ -176,12 +248,20 @@ Create `prompt_shield.yaml` in your project root or use environment variables:
 prompt_shield:
   mode: block           # block | monitor | flag
   threshold: 0.7        # Global confidence threshold
+  scoring:
+    ensemble_bonus: 0.05  # Bonus per additional detector firing
   vault:
     enabled: true
-    similarity_threshold: 0.85
+    similarity_threshold: 0.75
   feedback:
     enabled: true
     auto_tune: true
+  detectors:
+    d022_semantic_classifier:
+      enabled: true
+      severity: high
+      model_name: "protectai/deberta-v3-base-prompt-injection-v2"
+      device: "cpu"       # or "cuda:0" for GPU
 ```
 
 See [Configuration Docs](docs/configuration.md) for the full reference.
@@ -240,8 +320,8 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 ## Roadmap
 
-- **v0.2.0**: OpenAI and Anthropic client wrappers (auto-scan on chat completion), ML-based detection (DeBERTa/PromptGuard fine-tuned classifier), LLM-as-judge detector
-- **v0.3.0**: Federated learning for collaborative model training, multi-modal detection (images, PDFs), attention-based detection
+- **v0.2.0** (current): Semantic ML detector (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, comprehensive test coverage
+- **v0.3.0**: LLM-as-judge detector, federated learning for collaborative model training, multi-modal detection (images, PDFs), attention-based detection
 
 ## License
 
