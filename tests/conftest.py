@@ -1,11 +1,10 @@
 """Shared test fixtures for prompt-shield."""
+
 from __future__ import annotations
 
 import json
-import os
-import tempfile
 from pathlib import Path
-from typing import Any, Generator
+from typing import Any
 
 import pytest
 
@@ -31,7 +30,12 @@ def sample_config(tmp_data_dir: Path) -> dict[str, Any]:
             "canary": {"enabled": True, "token_length": 16},
             "history": {"enabled": True, "retention_days": 90},
             "threat_feed": {"enabled": False},
-            "actions": {"critical": "block", "high": "block", "medium": "flag", "low": "log"},
+            "actions": {
+                "critical": "block",
+                "high": "block",
+                "medium": "flag",
+                "low": "log",
+            },
             "detectors": {},
             "allowlist": {"patterns": []},
             "blocklist": {"patterns": []},
@@ -43,6 +47,7 @@ def sample_config(tmp_data_dir: Path) -> dict[str, Any]:
 def engine(sample_config: dict[str, Any], tmp_data_dir: Path):
     """Create a PromptShieldEngine for testing (vault disabled for speed)."""
     from prompt_shield.engine import PromptShieldEngine
+
     return PromptShieldEngine(config_dict=sample_config, data_dir=str(tmp_data_dir))
 
 

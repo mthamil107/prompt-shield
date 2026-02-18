@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, ClassVar
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity
@@ -28,7 +28,7 @@ class SemanticClassifierDetector(BaseDetector):
         "pre-trained transformer classifier"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["ml", "semantic"]
+    tags: ClassVar[list[str]] = ["ml", "semantic"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -51,9 +51,7 @@ class SemanticClassifierDetector(BaseDetector):
             from transformers import pipeline as hf_pipeline
 
             device_arg = (
-                -1
-                if self._device == "cpu"
-                else int(self._device.split(":")[-1])
+                -1 if self._device == "cpu" else int(self._device.split(":")[-1])
             )
             self._pipeline = hf_pipeline(
                 "text-classification",
@@ -65,9 +63,7 @@ class SemanticClassifierDetector(BaseDetector):
             self._available = True
             logger.info("Loaded semantic classifier: %s", self._model_name)
         except ImportError:
-            logger.info(
-                "transformers not installed; d022 semantic classifier disabled"
-            )
+            logger.info("transformers not installed; d022 semantic classifier disabled")
             self._available = False
         except Exception as exc:
             logger.warning("Failed to load semantic classifier: %s", exc)
@@ -121,9 +117,7 @@ class SemanticClassifierDetector(BaseDetector):
                 detected=False,
                 confidence=0.0,
                 severity=self.severity,
-                explanation=(
-                    f"Classified as safe (label={label}, score={score:.4f})"
-                ),
+                explanation=(f"Classified as safe (label={label}, score={score:.4f})"),
             )
         except Exception as exc:
             logger.warning("Semantic classification failed: %s", exc)

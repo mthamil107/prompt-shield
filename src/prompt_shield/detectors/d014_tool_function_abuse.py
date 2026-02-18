@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,13 +24,13 @@ class ToolFunctionAbuseDetector(BaseDetector):
         "Detects attempts to trick the AI into misusing its tools or API access"
     )
     severity: Severity = Severity.CRITICAL
-    tags: list[str] = ["indirect_injection"]
+    tags: ClassVar[list[str]] = ["indirect_injection"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.8
 
-    _patterns: list[tuple[str, str]] = [
+    _patterns: ClassVar[list[tuple[str, str]]] = [
         (r"call\s+the\s+delete\s+function", "Delete function call"),
         (r"execute\s+\w+\s*\(", "Function execution attempt"),
         (r"run\s+the\s+following\s+command", "Command execution"),
@@ -77,7 +79,6 @@ class ToolFunctionAbuseDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

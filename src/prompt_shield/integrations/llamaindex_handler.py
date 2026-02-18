@@ -1,6 +1,7 @@
 """LlamaIndex handler for prompt-shield scanning."""
 
 from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -25,9 +26,13 @@ class PromptShieldHandler:
 
     def scan_query(self, query: str) -> None:
         """Scan user query before processing."""
-        report = self.engine.scan(query, context={"gate": "input", "source": "llamaindex"})
+        report = self.engine.scan(
+            query, context={"gate": "input", "source": "llamaindex"}
+        )
         if report.action == Action.BLOCK and self.mode == "block":
-            raise ValueError(f"Prompt injection detected by prompt-shield: {report.scan_id}")
+            raise ValueError(
+                f"Prompt injection detected by prompt-shield: {report.scan_id}"
+            )
 
     def scan_retrieved_nodes(self, nodes: list[Any]) -> list[Any]:
         """Scan retrieved nodes for indirect injection. Returns filtered list."""
@@ -36,7 +41,9 @@ class PromptShieldHandler:
         safe_nodes = []
         for node in nodes:
             text = getattr(node, "text", str(node))
-            report = self.engine.scan(text, context={"gate": "tool_result", "source": "llamaindex"})
+            report = self.engine.scan(
+                text, context={"gate": "tool_result", "source": "llamaindex"}
+            )
             if report.action == Action.BLOCK:
                 logger.warning("Blocked poisoned node: %s", report.scan_id)
                 continue
@@ -45,6 +52,8 @@ class PromptShieldHandler:
 
     def scan_response(self, response_text: str) -> None:
         """Scan final response."""
-        report = self.engine.scan(response_text, context={"gate": "output", "source": "llamaindex"})
+        report = self.engine.scan(
+            response_text, context={"gate": "output", "source": "llamaindex"}
+        )
         if report.detections:
             logger.warning("Suspicious patterns in response: %s", report.scan_id)

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,27 +24,63 @@ class InstructionOverrideDetector(BaseDetector):
         "that supersede the model's original directives."
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["direct_injection"]
+    tags: ClassVar[list[str]] = ["direct_injection"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.8
 
-    _patterns: list[tuple[str, str]] = [
-        (r"\b(?:disregard|ignore|forget|drop|dismiss)\s+(?:all\s+)?(?:prior|previous|above|earlier|preceding)\s+(?:instructions?|directives?|guidelines?|rules?)\b", "Instruction discard attempt"),
-        (r"\b(?:override|overwrite|replace|supersede)\s+(?:all\s+)?(?:previous|prior|existing|current)\s+(?:commands?|instructions?|directives?)\b", "Command override attempt"),
-        (r"\bnew\s+(?:set\s+of\s+)?instructions?\s*[:;\-]", "Injected instruction block"),
+    _patterns: ClassVar[list[tuple[str, str]]] = [
+        (
+            r"\b(?:disregard|ignore|forget|drop|dismiss)\s+(?:all\s+)?(?:prior|previous|above|earlier|preceding)\s+(?:instructions?|directives?|guidelines?|rules?)\b",
+            "Instruction discard attempt",
+        ),
+        (
+            r"\b(?:override|overwrite|replace|supersede)\s+(?:all\s+)?(?:previous|prior|existing|current)\s+(?:commands?|instructions?|directives?)\b",
+            "Command override attempt",
+        ),
+        (
+            r"\bnew\s+(?:set\s+of\s+)?instructions?\s*[:;\-]",
+            "Injected instruction block",
+        ),
         (r"\bsystem\s*:\s", "Fake system-level prefix"),
-        (r"\bIMPORTANT\s*[:;\-]\s*(?:ignore|disregard|forget|skip)\s+(?:all\s+)?(?:the\s+)?(?:above|previous|prior)\b", "Urgency-based instruction override"),
-        (r"\b(?:BEGIN|START)\s+(?:NEW|UPDATED|REVISED)\s+INSTRUCTIONS\b", "Injected instruction header"),
-        (r"\bthe\s+(?:real|actual|true)\s+(?:task|objective|goal|assignment)\s+is\b", "Task redefinition attempt"),
-        (r"\bactually,?\s+(?:just\s+)?(?:do|perform|execute)\s+(?:this|that)\s+instead\b", "Instruction substitution"),
-        (r"\bforget\s+(?:about\s+)?(?:everything|all(?:\s+of\s+(?:that|this))?)(?:\s+(?:and|then))\b", "Memory wipe followed by new instruction"),
+        (
+            r"\bIMPORTANT\s*[:;\-]\s*(?:ignore|disregard|forget|skip)\s+(?:all\s+)?(?:the\s+)?(?:above|previous|prior)\b",
+            "Urgency-based instruction override",
+        ),
+        (
+            r"\b(?:BEGIN|START)\s+(?:NEW|UPDATED|REVISED)\s+INSTRUCTIONS\b",
+            "Injected instruction header",
+        ),
+        (
+            r"\bthe\s+(?:real|actual|true)\s+(?:task|objective|goal|assignment)\s+is\b",
+            "Task redefinition attempt",
+        ),
+        (
+            r"\bactually,?\s+(?:just\s+)?(?:do|perform|execute)\s+(?:this|that)\s+instead\b",
+            "Instruction substitution",
+        ),
+        (
+            r"\bforget\s+(?:about\s+)?(?:everything|all(?:\s+of\s+(?:that|this))?)(?:\s+(?:and|then))\b",
+            "Memory wipe followed by new instruction",
+        ),
         (r"\[SYSTEM\]", "Fake SYSTEM tag injection"),
-        (r"\b(?:ignore|disregard|forget|skip)\s+(?:everything|anything|all)\s+(?:before|above|prior\s+to)\s+(?:this|here)\b", "Context erasure attempt"),
-        (r"\byour\s+(?:actual|real|true)\s+(?:instructions?|directives?|orders?)\s+are\b", "Fake authoritative instruction claim"),
-        (r"\b(?:override|bypass|circumvent|disable|break(?:\s+through)?|defeat|remove|disable)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:prompt|filters?|rules?|restrictions?|constraints?|guidelines?|protections?|safeguards?|settings?|instructions?|directives?|guardrails?|limits?|boundaries?)?\b", "System override or bypass attempt"),
-        (r"\b(?:turn\s+off|shut\s+off|deactivate|neutralize)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:filters?|rules?|restrictions?|constraints?|protections?|safeguards?|checks?)?\b", "Attempt to deactivate system protections"),
+        (
+            r"\b(?:ignore|disregard|forget|skip)\s+(?:everything|anything|all)\s+(?:before|above|prior\s+to)\s+(?:this|here)\b",
+            "Context erasure attempt",
+        ),
+        (
+            r"\byour\s+(?:actual|real|true)\s+(?:instructions?|directives?|orders?)\s+are\b",
+            "Fake authoritative instruction claim",
+        ),
+        (
+            r"\b(?:override|bypass|circumvent|disable|break(?:\s+through)?|defeat|remove|disable)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:prompt|filters?|rules?|restrictions?|constraints?|guidelines?|protections?|safeguards?|settings?|instructions?|directives?|guardrails?|limits?|boundaries?)?\b",
+            "System override or bypass attempt",
+        ),
+        (
+            r"\b(?:turn\s+off|shut\s+off|deactivate|neutralize)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:filters?|rules?|restrictions?|constraints?|protections?|safeguards?|checks?)?\b",
+            "Attempt to deactivate system protections",
+        ),
     ]
 
     def detect(
@@ -79,7 +117,6 @@ class InstructionOverrideDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

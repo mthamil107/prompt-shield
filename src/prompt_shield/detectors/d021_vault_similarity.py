@@ -1,8 +1,11 @@
-"""Detector that matches inputs against known attack embeddings using vector similarity."""
+"""Detector matching inputs against known attack embeddings."""
 
 from __future__ import annotations
 
-import regex  # noqa: F401 – required by detector contract
+import contextlib
+from typing import ClassVar
+
+import regex  # noqa: F401 - required by detector contract
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity
@@ -23,7 +26,7 @@ class VaultSimilarityDetector(BaseDetector):
         "Matches inputs against known attack embeddings using vector similarity"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["self_learning", "vector_similarity"]
+    tags: ClassVar[list[str]] = ["self_learning", "vector_similarity"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -66,8 +69,7 @@ class VaultSimilarityDetector(BaseDetector):
                 confidence=0.0,
                 severity=self.severity,
                 explanation=(
-                    f"Vault matches found but none above threshold "
-                    f"({threshold})"
+                    f"Vault matches found but none above threshold ({threshold})"
                 ),
             )
 
@@ -75,10 +77,8 @@ class VaultSimilarityDetector(BaseDetector):
         top_match = matches_above_threshold[0]
         severity = self.severity
         if top_match.metadata and "severity" in top_match.metadata:
-            try:
+            with contextlib.suppress(ValueError):
                 severity = Severity(top_match.metadata["severity"])
-            except ValueError:
-                pass
 
         # Build MatchDetail list
         detail_matches: list[MatchDetail] = []
@@ -86,7 +86,8 @@ class VaultSimilarityDetector(BaseDetector):
             detail_matches.append(
                 MatchDetail(
                     pattern="vault_similarity",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Vault entry '{vm.id}' matched with "

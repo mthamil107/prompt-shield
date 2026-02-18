@@ -1,6 +1,7 @@
 """MCP tool result filter — wraps MCP servers to auto-scan tool outputs."""
 
 from __future__ import annotations
+
 from typing import TYPE_CHECKING, Any
 
 from prompt_shield.models import Action
@@ -37,8 +38,11 @@ class PromptShieldMCPFilter:
         # Scan tool args
         if self.scan_tool_args and tool_name not in self.exempt_tools:
             import json
+
             args_text = json.dumps(arguments, default=str)
-            args_report = self._engine.scan(args_text, context={"gate": "tool_call", "tool": tool_name})
+            args_report = self._engine.scan(
+                args_text, context={"gate": "tool_call", "tool": tool_name}
+            )
             if args_report.action == Action.BLOCK:
                 self._stats["blocked"] += 1
                 return f"[Tool call blocked by prompt-shield: {tool_name}]"
@@ -49,12 +53,18 @@ class PromptShieldMCPFilter:
         # Scan results
         if self.scan_results and tool_name not in self.exempt_tools:
             result_text = str(result)
-            report = self._engine.scan(result_text, context={"gate": "tool_result", "tool": tool_name})
+            report = self._engine.scan(
+                result_text, context={"gate": "tool_result", "tool": tool_name}
+            )
 
             if report.detections:
                 if self.mode == "block":
                     self._stats["blocked"] += 1
-                    return f"[Tool result blocked by prompt-shield: injection detected in {tool_name}]"
+                    return (
+                        f"[Tool result blocked by "
+                        f"prompt-shield: injection "
+                        f"detected in {tool_name}]"
+                    )
                 elif self.mode == "sanitize":
                     self._stats["sanitized"] += 1
                     return self._sanitize(result_text, report)

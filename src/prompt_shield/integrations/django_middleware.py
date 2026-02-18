@@ -1,11 +1,15 @@
 """Django middleware for prompt-shield HTTP request scanning."""
 
 from __future__ import annotations
+
 import json
-from typing import Any, Callable
+from typing import TYPE_CHECKING, Any
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class PromptShieldMiddleware:
@@ -29,10 +33,16 @@ class PromptShieldMiddleware:
         for text in texts:
             if not text or not isinstance(text, str):
                 continue
-            report = self.engine.scan(text, context={"gate": "http", "source": "django"})
+            report = self.engine.scan(
+                text, context={"gate": "http", "source": "django"}
+            )
             if report.action == Action.BLOCK:
                 from django.http import JsonResponse
-                return JsonResponse({"error": "Prompt injection detected", "scan_id": report.scan_id}, status=400)
+
+                return JsonResponse(
+                    {"error": "Prompt injection detected", "scan_id": report.scan_id},
+                    status=400,
+                )
 
         return self.get_response(request)
 

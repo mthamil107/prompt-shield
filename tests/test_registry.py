@@ -1,5 +1,8 @@
 """Tests for the DetectorRegistry."""
+
 from __future__ import annotations
+
+from typing import ClassVar
 
 import pytest
 
@@ -17,7 +20,7 @@ def _make_mock_detector(detector_id: str = "mock_detector") -> BaseDetector:
         name = "Mock Detector"
         description = "A mock detector for testing"
         severity = Severity.LOW
-        tags = ["test"]
+        tags: ClassVar[list[str]] = ["test"]
         version = "0.0.1"
         author = "test"
 
@@ -103,7 +106,15 @@ class TestRegistryList:
         metadata = registry.list_metadata()
         assert len(metadata) == 1
         entry = metadata[0]
-        expected_keys = {"detector_id", "name", "description", "severity", "tags", "version", "author"}
+        expected_keys = {
+            "detector_id",
+            "name",
+            "description",
+            "severity",
+            "tags",
+            "version",
+            "author",
+        }
         assert expected_keys == set(entry.keys())
         assert entry["detector_id"] == "meta_001"
         assert entry["name"] == "Mock Detector"

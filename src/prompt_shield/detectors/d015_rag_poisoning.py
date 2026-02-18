@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -9,7 +11,7 @@ from prompt_shield.models import DetectionResult, MatchDetail, Severity
 
 
 class RAGPoisoningDetector(BaseDetector):
-    """Detects malicious content designed to be retrieved and injected via RAG pipelines.
+    """Detects malicious content injected via RAG pipelines.
 
     Adversaries embed hidden instructions in documents that are indexed by
     retrieval-augmented generation systems, causing the model to follow
@@ -23,22 +25,34 @@ class RAGPoisoningDetector(BaseDetector):
         "via RAG pipelines"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["indirect_injection"]
+    tags: ClassVar[list[str]] = ["indirect_injection"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.8
 
-    _patterns: list[tuple[str, str]] = [
+    _patterns: ClassVar[list[tuple[str, str]]] = [
         (r"when\s+this\s+document\s+is\s+retrieved", "RAG-targeted instruction"),
         (r"IMPORTANT\s+NOTE\s+FOR\s+AI:", "AI-targeted note in document"),
-        (r"instructions?\s+for\s+(the\s+)?(AI|assistant|model|LLM)", "Instructions targeting AI"),
-        (r"if\s+you\s+are\s+an?\s+(AI|language\s+model|assistant)", "AI-conditional instruction"),
-        (r"---\s*BEGIN\s+(HIDDEN|SECRET|SYSTEM)\s+INSTRUCTIONS?\s*---", "Delimiter-based injection"),
+        (
+            r"instructions?\s+for\s+(the\s+)?(AI|assistant|model|LLM)",
+            "Instructions targeting AI",
+        ),
+        (
+            r"if\s+you\s+are\s+an?\s+(AI|language\s+model|assistant)",
+            "AI-conditional instruction",
+        ),
+        (
+            r"---\s*BEGIN\s+(HIDDEN|SECRET|SYSTEM)\s+INSTRUCTIONS?\s*---",
+            "Delimiter-based injection",
+        ),
         (r"<system>\s*.*?\s*</system>", "XML-style system injection in document"),
         (r"\[INST\].*?\[/INST\]", "Instruction tags in document"),
         (r"IGNORE\s+ALL\s+PREVIOUS\s+CONTEXT", "Context override in document"),
-        (r"when\s+(an?\s+)?(AI|assistant|model)\s+reads?\s+this", "AI-targeted trigger"),
+        (
+            r"when\s+(an?\s+)?(AI|assistant|model)\s+reads?\s+this",
+            "AI-targeted trigger",
+        ),
         (r"hidden\s+instruction:", "Hidden instruction label"),
         (r"metadata:\s*\{[^}]*instructions?", "Instructions in metadata block"),
         (r"do\s+not\s+summarize\s+this\s+document,?\s+instead", "Summary deflection"),
@@ -78,7 +92,6 @@ class RAGPoisoningDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

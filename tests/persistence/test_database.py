@@ -1,7 +1,7 @@
 """Tests for the DatabaseManager."""
+
 from __future__ import annotations
 
-import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -73,8 +73,9 @@ class TestDatabaseInsert:
         with db.connection() as conn:
             conn.execute(
                 """INSERT INTO scan_history
-                   (id, timestamp, input_hash, input_length, overall_score,
-                    action_taken, detectors_fired, vault_matched, scan_duration_ms, source)
+                   (id, timestamp, input_hash, input_length,
+                    overall_score, action_taken, detectors_fired,
+                    vault_matched, scan_duration_ms, source)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     scan_id,
@@ -115,18 +116,42 @@ class TestDatabasePrune:
             # Insert an old row
             conn.execute(
                 """INSERT INTO scan_history
-                   (id, timestamp, input_hash, input_length, overall_score,
-                    action_taken, detectors_fired, vault_matched, scan_duration_ms, source)
+                   (id, timestamp, input_hash, input_length,
+                    overall_score, action_taken, detectors_fired,
+                    vault_matched, scan_duration_ms, source)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                ("old-scan", old_timestamp, "hash1", 10, 0.5, "pass", "[]", 0, 5.0, "test"),
+                (
+                    "old-scan",
+                    old_timestamp,
+                    "hash1",
+                    10,
+                    0.5,
+                    "pass",
+                    "[]",
+                    0,
+                    5.0,
+                    "test",
+                ),
             )
             # Insert a recent row
             conn.execute(
                 """INSERT INTO scan_history
-                   (id, timestamp, input_hash, input_length, overall_score,
-                    action_taken, detectors_fired, vault_matched, scan_duration_ms, source)
+                   (id, timestamp, input_hash, input_length,
+                    overall_score, action_taken, detectors_fired,
+                    vault_matched, scan_duration_ms, source)
                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-                ("new-scan", recent_timestamp, "hash2", 20, 0.3, "pass", "[]", 0, 3.0, "test"),
+                (
+                    "new-scan",
+                    recent_timestamp,
+                    "hash2",
+                    20,
+                    0.3,
+                    "pass",
+                    "[]",
+                    0,
+                    3.0,
+                    "test",
+                ),
             )
             conn.commit()
 
@@ -147,5 +172,9 @@ class TestDatabaseWALMode:
         """Database should be in WAL journal mode."""
         with db.connection() as conn:
             result = conn.execute("PRAGMA journal_mode;").fetchone()
-            journal_mode = result[0] if isinstance(result, (tuple, list)) else result["journal_mode"]
+            journal_mode = (
+                result[0]
+                if isinstance(result, (tuple, list))
+                else result["journal_mode"]
+            )
         assert journal_mode.lower() == "wal"

@@ -122,9 +122,11 @@ class TestVaultSimilarity:
     def test_default_threshold_when_attr_missing(self, detector):
         """When vault has no _similarity_threshold, fallback to 0.85."""
         mock_vault = MagicMock(spec=[])  # no attributes
-        mock_vault.query = MagicMock(return_value=[
-            FakeVaultMatch(id="x", similarity_score=0.84, metadata={}),
-        ])
+        mock_vault.query = MagicMock(
+            return_value=[
+                FakeVaultMatch(id="x", similarity_score=0.84, metadata={}),
+            ]
+        )
         detector.vault = mock_vault
 
         result = detector.detect("borderline text")

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING
 
-from prompt_shield.models import DetectionResult, Severity
+if TYPE_CHECKING:
+    from prompt_shield.models import DetectionResult, Severity
 
 
 class BaseDetector(ABC):
@@ -23,7 +25,9 @@ class BaseDetector(ABC):
     author: str
 
     @abstractmethod
-    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
+    def detect(
+        self, input_text: str, context: dict[str, object] | None = None
+    ) -> DetectionResult:
         """Analyze input text for prompt injection patterns.
 
         Args:
@@ -35,8 +39,8 @@ class BaseDetector(ABC):
         """
         ...
 
-    def setup(self, config: dict[str, object]) -> None:
+    def setup(self, config: dict[str, object]) -> None:  # noqa: B027
         """Optional: called once during engine initialization for custom config."""
 
-    def teardown(self) -> None:
+    def teardown(self) -> None:  # noqa: B027
         """Optional: cleanup resources."""

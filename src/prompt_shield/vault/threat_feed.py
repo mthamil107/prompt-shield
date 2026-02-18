@@ -6,10 +6,13 @@ import json
 import os
 import urllib.request
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from prompt_shield.exceptions import ThreatFeedError
 from prompt_shield.models import ThreatEntry, ThreatFeed
-from prompt_shield.vault.attack_vault import AttackVault
+
+if TYPE_CHECKING:
+    from prompt_shield.vault.attack_vault import AttackVault
 
 
 class ThreatFeedManager:
@@ -94,7 +97,7 @@ class ThreatFeedManager:
         """
         errors = 0
         try:
-            with open(source_path, "r", encoding="utf-8") as fh:
+            with open(source_path, encoding="utf-8") as fh:
                 raw = json.load(fh)
 
             feed = ThreatFeed.model_validate(raw)
@@ -138,10 +141,7 @@ class ThreatFeedManager:
 
         # Derive a safe local filename from the URL.
         safe_name = (
-            feed_url
-            .rsplit("/", 1)[-1]
-            .replace("?", "_")
-            .replace("&", "_")
+            feed_url.rsplit("/", 1)[-1].replace("?", "_").replace("&", "_")
         ) or "feed.json"
         if not safe_name.endswith(".json"):
             safe_name += ".json"
@@ -150,7 +150,7 @@ class ThreatFeedManager:
 
         try:
             req = urllib.request.Request(feed_url, method="GET")
-            with urllib.request.urlopen(req) as resp:  # noqa: S310
+            with urllib.request.urlopen(req) as resp:
                 data = resp.read()
 
             with open(local_path, "wb") as fh:

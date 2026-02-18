@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -18,33 +20,58 @@ class AcademicPretextDetector(BaseDetector):
 
     detector_id: str = "d018_academic_pretext"
     name: str = "Academic / Research Pretext"
-    description: str = (
-        "Detects false claims of research or educational context"
-    )
+    description: str = "Detects false claims of research or educational context"
     severity: Severity = Severity.LOW
-    tags: list[str] = ["jailbreak"]
+    tags: ClassVar[list[str]] = ["jailbreak"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.7
 
-    _patterns: list[tuple[str, str]] = [
-        (r"for\s+(?:my|a|the)\s+(?:security|cybersecurity)\s+(?:thesis|paper|research|class|course|project)", "Security research claim"),
-        (r"(?:I'?m|I\s+am)\s+a\s+(?:security\s+)?researcher\s+(?:studying|researching|investigating|working\s+on)", "Researcher claim"),
+    _patterns: ClassVar[list[tuple[str, str]]] = [
+        (
+            r"for\s+(?:my|a|the)\s+(?:security|cybersecurity)\s+(?:thesis|paper|research|class|course|project)",
+            "Security research claim",
+        ),
+        (
+            r"(?:I'?m|I\s+am)\s+a\s+(?:security\s+)?researcher\s+(?:studying|researching|investigating|working\s+on)",
+            "Researcher claim",
+        ),
         (r"for\s+educational\s+purposes?\s*(?:only)?", "Educational purpose claim"),
-        (r"(?:I'?m|I\s+am)\s+(?:writing|working\s+on)\s+(?:a|my)\s+(?:paper|thesis|dissertation|report)\s+(?:on|about)", "Paper writing claim"),
+        (
+            r"(?:I'?m|I\s+am)\s+(?:writing|working\s+on)\s+(?:a|my)\s+(?:paper|thesis|dissertation|report)\s+(?:on|about)",
+            "Paper writing claim",
+        ),
         (r"as\s+a\s+(?:cyber)?security\s+professional", "Security professional claim"),
-        (r"for\s+my\s+(?:penetration\s+testing|pentesting|security)\s+class", "Pen testing class claim"),
-        (r"academic\s+research\s+on\s+(?:vulnerabilities|security|attacks|exploits)", "Academic vulnerability research"),
+        (
+            r"for\s+my\s+(?:penetration\s+testing|pentesting|security)\s+class",
+            "Pen testing class claim",
+        ),
+        (
+            r"academic\s+research\s+on\s+(?:vulnerabilities|security|attacks|exploits)",
+            "Academic vulnerability research",
+        ),
         (r"(?:I'?m|I\s+am)\s+a\s+professor\s+teaching", "Professor claim"),
         (r"for\s+(?:a|my|the)\s+CTF\s+(?:competition|challenge|event)", "CTF claim"),
         (r"security\s+audit\s+requires", "Security audit claim"),
         (r"for\s+my\s+(?:dissertation|thesis)\b", "Dissertation claim"),
         (r"peer[\s-]reviewed\s+research", "Peer review claim"),
-        (r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:security\s+)?researcher\b", "Researcher identity claim"),
-        (r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:student|professor|academic)\s+(?:studying|researching|teaching)", "Academic identity claim"),
-        (r"(?:for|in)\s+(?:my|a|the)\s+(?:dissertation|thesis|paper|research)\s+(?:on|about|regarding)\s+(?:AI|artificial\s+intelligence|prompt|security|safety)", "Research topic claim"),
-        (r"(?:studying|researching|investigating)\s+(?:prompt\s+)?injection\s+attacks?", "Studying injection attacks"),
+        (
+            r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:security\s+)?researcher\b",
+            "Researcher identity claim",
+        ),
+        (
+            r"(?:I'?m|I\s+am)\s+(?:a\s+)?(?:student|professor|academic)\s+(?:studying|researching|teaching)",
+            "Academic identity claim",
+        ),
+        (
+            r"(?:for|in)\s+(?:my|a|the)\s+(?:dissertation|thesis|paper|research)\s+(?:on|about|regarding)\s+(?:AI|artificial\s+intelligence|prompt|security|safety)",
+            "Research topic claim",
+        ),
+        (
+            r"(?:studying|researching|investigating)\s+(?:prompt\s+)?injection\s+attacks?",
+            "Studying injection attacks",
+        ),
     ]
 
     def detect(
@@ -81,7 +108,6 @@ class AcademicPretextDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

@@ -1,11 +1,9 @@
 """Tests for configuration loading and validation."""
+
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any
-
-import pytest
-import yaml
+from typing import TYPE_CHECKING
 
 from prompt_shield.config import (
     get_action_for_severity,
@@ -15,6 +13,9 @@ from prompt_shield.config import (
     validate_config,
 )
 from prompt_shield.models import Severity
+
+if TYPE_CHECKING:
+    import pytest
 
 
 class TestLoadConfig:

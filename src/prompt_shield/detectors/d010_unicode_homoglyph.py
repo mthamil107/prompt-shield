@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import regex
+from typing import ClassVar
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity
@@ -34,7 +34,7 @@ class UnicodeHomoglyphDetector(BaseDetector):
         "Detects visually identical characters used to bypass keyword filters"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["obfuscation"]
+    tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -58,7 +58,8 @@ class UnicodeHomoglyphDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="homoglyph keyword detection",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Homoglyph-normalized text reveals hidden keywords: "
@@ -73,7 +74,8 @@ class UnicodeHomoglyphDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="mixed_scripts",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         "Text contains mixed Unicode scripts within the same "
@@ -100,7 +102,6 @@ class UnicodeHomoglyphDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} indicator(s) of unicode homoglyph "
-                f"obfuscation"
+                f"Detected {len(matches)} indicator(s) of unicode homoglyph obfuscation"
             ),
         )

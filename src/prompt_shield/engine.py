@@ -1,7 +1,8 @@
-"""Core scanning engine — orchestrates detectors, vault, feedback, and canary systems."""
+"""Core scanning engine for detectors, vault, and feedback."""
 
 from __future__ import annotations
 
+import contextlib
 import json
 import logging
 import time
@@ -55,7 +56,9 @@ class PromptShieldEngine:
         data_dir: str | None = None,
     ) -> None:
         self._config = load_config(config_path=config_path, config_dict=config_dict)
-        self._ps_config: dict[str, Any] = self._config.get("prompt_shield", self._config)
+        self._ps_config: dict[str, Any] = self._config.get(
+            "prompt_shield", self._config
+        )
 
         # Resolve data directory
         if data_dir:
@@ -165,7 +168,9 @@ class PromptShieldEngine:
             try:
                 detector.setup(det_cfg)
             except Exception as exc:
-                logger.warning("Failed to setup detector %s: %s", detector.detector_id, exc)
+                logger.warning(
+                    "Failed to setup detector %s: %s", detector.detector_id, exc
+                )
 
     @staticmethod
     def _compile_patterns(patterns: list[str]) -> list[regex.Pattern[str]]:
@@ -178,7 +183,9 @@ class PromptShieldEngine:
                 logger.warning("Invalid pattern '%s': %s", p, exc)
         return compiled
 
-    def scan(self, input_text: str, context: dict[str, object] | None = None) -> ScanReport:
+    def scan(
+        self, input_text: str, context: dict[str, object] | None = None
+    ) -> ScanReport:
         """Run all enabled detectors against input. Returns aggregated report."""
         start = time.perf_counter()
         scan_id = str(uuid.uuid4())
@@ -232,24 +239,18 @@ class PromptShieldEngine:
                 # Apply severity override from config
                 cfg_severity = det_cfg.get("severity")
                 if cfg_severity:
-                    try:
+                    with contextlib.suppress(ValueError):
                         result.severity = Severity(cfg_severity)
-                    except ValueError:
-                        pass
 
                 if result.detected and result.confidence >= threshold:
                     detections.append(result)
             except Exception as exc:
-                logger.warning(
-                    "Detector %s failed: %s", detector.detector_id, exc
-                )
+                logger.warning("Detector %s failed: %s", detector.detector_id, exc)
 
         # Aggregate risk score with ensemble bonus
         if detections:
             max_conf = max(d.confidence for d in detections)
-            bonus = self._ps_config.get("scoring", {}).get(
-                "ensemble_bonus", 0.05
-            )
+            bonus = self._ps_config.get("scoring", {}).get("ensemble_bonus", 0.05)
             risk_score = min(1.0, max_conf + bonus * (len(detections) - 1))
         else:
             risk_score = 0.0
@@ -284,22 +285,22 @@ class PromptShieldEngine:
                 if risk_score >= min_conf:
                     try:
                         top_detection = max(detections, key=lambda d: d.confidence)
-                        self._vault.store(input_text, {
-                            "detector_id": top_detection.detector_id,
-                            "severity": top_detection.severity.value,
-                            "confidence": top_detection.confidence,
-                            "source": "local",
-                            "timestamp": datetime.now(timezone.utc).isoformat(),
-                        })
+                        self._vault.store(
+                            input_text,
+                            {
+                                "detector_id": top_detection.detector_id,
+                                "severity": top_detection.severity.value,
+                                "confidence": top_detection.confidence,
+                                "source": "local",
+                                "timestamp": datetime.now(timezone.utc).isoformat(),
+                            },
+                        )
                     except Exception as exc:
                         logger.warning("Failed to store detection in vault: %s", exc)
 
         # Auto-tune check
         self._scan_count += 1
-        if (
-            self._auto_tuner
-            and self._scan_count % self._tune_interval == 0
-        ):
+        if self._auto_tuner and self._scan_count % self._tune_interval == 0:
             try:
                 self._auto_tuner.tune()
             except Exception as exc:
@@ -377,10 +378,8 @@ class PromptShieldEngine:
     def unregister_detector(self, detector_id: str) -> None:
         """Remove a detector by ID."""
         detector = self._registry.get(detector_id)
-        try:
+        with contextlib.suppress(Exception):
             detector.teardown()
-        except Exception:
-            pass
         self._registry.unregister(detector_id)
 
     def list_detectors(self) -> list[dict[str, object]]:
@@ -426,13 +425,16 @@ class PromptShieldEngine:
 
         if leaked and original_input and self._vault:
             try:
-                self._vault.store(original_input, {
-                    "detector_id": "canary_leak",
-                    "severity": "critical",
-                    "confidence": 1.0,
-                    "source": "local",
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
-                })
+                self._vault.store(
+                    original_input,
+                    {
+                        "detector_id": "canary_leak",
+                        "severity": "critical",
+                        "confidence": 1.0,
+                        "source": "local",
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                    },
+                )
             except Exception as exc:
                 logger.warning("Failed to store canary leak in vault: %s", exc)
 
@@ -460,7 +462,12 @@ class PromptShieldEngine:
             return Action.LOG
 
         # Use highest severity detection to determine action
-        severity_order = [Severity.CRITICAL, Severity.HIGH, Severity.MEDIUM, Severity.LOW]
+        severity_order = [
+            Severity.CRITICAL,
+            Severity.HIGH,
+            Severity.MEDIUM,
+            Severity.LOW,
+        ]
         for sev in severity_order:
             for d in detections:
                 if d.severity == sev:
@@ -519,7 +526,8 @@ class PromptShieldEngine:
                 conn.execute(
                     """INSERT INTO scan_history
                        (id, timestamp, input_hash, input_length, overall_score,
-                        action_taken, detectors_fired, vault_matched, scan_duration_ms, source)
+                        action_taken, detectors_fired, vault_matched,
+                        scan_duration_ms, source)
                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                     (
                         report.scan_id,
@@ -540,7 +548,5 @@ class PromptShieldEngine:
 
         # Auto-prune
         retention = history_cfg.get("retention_days", 90)
-        try:
+        with contextlib.suppress(Exception):
             self._db.prune_scan_history(retention)
-        except Exception:
-            pass

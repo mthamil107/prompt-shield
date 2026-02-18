@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -24,35 +26,56 @@ class MultiTurnEscalationDetector(BaseDetector):
         "toward policy violations."
     )
     severity: Severity = Severity.MEDIUM
-    tags: list[str] = ["direct_injection", "multi_turn"]
+    tags: ClassVar[list[str]] = ["direct_injection", "multi_turn"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.7
     _escalation_confidence: float = 0.85
 
-    _patterns: list[tuple[str, str]] = [
+    _patterns: ClassVar[list[tuple[str, str]]] = [
         (r"just a little (?:more|further|bit)", "Incremental push phrase"),
-        (r"one (?:small|tiny|little)\s+(?:exception|step|thing)", "Exception minimization"),
+        (
+            r"one (?:small|tiny|little)\s+(?:exception|step|thing)",
+            "Exception minimization",
+        ),
         (r"can you slightly", "Incremental boundary push"),
         (r"almost there,?\s*just", "Progress-based pressure"),
         (r"building on (?:that|this|the above)", "Escalation continuation"),
-        (r"take it (?:a step|one step|further|a bit) further", "Explicit escalation request"),
-        (r"now (?:can you|could you|please)?\s*(?:also|add)", "Additive request escalation"),
+        (
+            r"take it (?:a step|one step|further|a bit) further",
+            "Explicit escalation request",
+        ),
+        (
+            r"now (?:can you|could you|please)?\s*(?:also|add)",
+            "Additive request escalation",
+        ),
         (r"extend that to include", "Scope expansion request"),
         (r"just one more thing", "Incremental addition request"),
         (r"what if we also", "Hypothetical scope expansion"),
-        (r"(?:go|dig|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?deeper", "Depth escalation"),
-        (r"(?:go|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?further", "Further escalation"),
-        (r"(?:add|include)\s+(?:the\s+)?restricted\s+(?:part|section|content|info)", "Restricted content request"),
+        (
+            r"(?:go|dig|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?deeper",
+            "Depth escalation",
+        ),
+        (
+            r"(?:go|push|take\s+it)\s+(?:a\s+(?:little\s+)?)?further",
+            "Further escalation",
+        ),
+        (
+            r"(?:add|include)\s+(?:the\s+)?restricted\s+(?:part|section|content|info)",
+            "Restricted content request",
+        ),
         (r"a\s+(?:little|bit)\s+more\s+detail", "Incremental detail request"),
         (r"(?:step|notch|level)\s+further", "Step escalation"),
-        (r"without\s+the\s+(?:restrictions?|limitations?|boundaries)", "Restriction removal request"),
+        (
+            r"without\s+the\s+(?:restrictions?|limitations?|boundaries)",
+            "Restriction removal request",
+        ),
     ]
 
     # Patterns that are suspicious when found in conversation history,
     # indicating a multi-turn escalation chain is forming.
-    _history_escalation_patterns: list[str] = [
+    _history_escalation_patterns: ClassVar[list[str]] = [
         r"can you",
         r"what about",
         r"now try",
@@ -100,8 +123,8 @@ class MultiTurnEscalationDetector(BaseDetector):
         if context is not None:
             conversation_history = context.get("conversation_history")
             if isinstance(conversation_history, list) and conversation_history:
-                history_escalation_count = (
-                    self._count_history_escalation_signals(conversation_history)
+                history_escalation_count = self._count_history_escalation_signals(
+                    conversation_history
                 )
 
         if not matches and history_escalation_count < 3:
@@ -117,9 +140,7 @@ class MultiTurnEscalationDetector(BaseDetector):
         # - Base confidence from current-message pattern matches
         # - Boost if conversation history shows escalation
         if matches:
-            confidence = min(
-                1.0, self._base_confidence + 0.1 * (len(matches) - 1)
-            )
+            confidence = min(1.0, self._base_confidence + 0.1 * (len(matches) - 1))
         else:
             confidence = 0.0
 
@@ -129,8 +150,7 @@ class MultiTurnEscalationDetector(BaseDetector):
                 confidence,
                 min(
                     1.0,
-                    self._escalation_confidence
-                    + 0.05 * (history_escalation_count - 3),
+                    self._escalation_confidence + 0.05 * (history_escalation_count - 3),
                 ),
             )
 
