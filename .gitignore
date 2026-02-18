@@ -43,3 +43,6 @@ Thumbs.db
 # prompt-shield data
 .prompt_shield/
 prompt_shield.db
+
+# Windows artifacts
+nul

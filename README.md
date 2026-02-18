@@ -100,7 +100,7 @@ User Input ──> [Input Gate] ──> LLM ──> [Output Gate] ──> Respon
 
 ## Detection Showcase
 
-Real detection results from prompt-shield's test suite — **100% accuracy across 116 test prompts, zero false positives on safe inputs**. Every row below is a real scan result. See [`test_all_features.py`](test_all_features.py) for the full 116-prompt test.
+Real detection results from prompt-shield's test suite — **100% accuracy across 116 test prompts, zero false positives on safe inputs**. Every row below is a real scan result.
 
 ### Direct Injection — Blocked by regex + ML
 
@@ -391,7 +391,8 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 ## Roadmap
 
-- **v0.2.0** (current): Semantic ML detector (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, comprehensive test coverage
+- **v0.1.x** (current): 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
+- **v0.2.0**: Dify and n8n plugin integrations, improved Python 3.14 support
 - **v0.3.0**: LLM-as-judge detector, federated learning for collaborative model training, multi-modal detection (images, PDFs), attention-based detection
 
 ## License

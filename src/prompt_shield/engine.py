@@ -123,7 +123,15 @@ class PromptShieldEngine:
 
     def _init_vault(self, vault_cfg: dict[str, Any]) -> None:
         """Initialize the attack vault."""
-        from prompt_shield.vault.attack_vault import AttackVault
+        try:
+            from prompt_shield.vault.attack_vault import AttackVault
+        except Exception:
+            logger.warning(
+                "Could not load attack vault (ChromaDB may not be installed "
+                "or may not support your Python version). "
+                "Vault features will be disabled."
+            )
+            return
 
         vault_dir = self._data_dir / "vault"
         vault_dir.mkdir(parents=True, exist_ok=True)

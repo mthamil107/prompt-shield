@@ -1,6 +1,6 @@
 # Detectors
 
-prompt-shield ships with 21 built-in detectors organized into five categories. All detectors run on every scan and can be individually enabled, disabled, or tuned.
+prompt-shield ships with 22 built-in detectors organized into six categories. All detectors run on every scan and can be individually enabled, disabled, or tuned.
 
 ---
 
@@ -29,6 +29,7 @@ prompt-shield ships with 21 built-in detectors organized into five categories. A
 | `d019` | Dual Persona | Jailbreak | High | Detects attempts to create split personalities or competing response modes |
 | `d020` | Token Smuggling | Obfuscation | High | Detects splitting malicious instructions across tokens or messages |
 | `d021` | Vault Similarity | Self-Learning | High | Matches inputs against known attack embeddings using vector similarity |
+| `d022` | Semantic Classifier | ML / Semantic | High | DeBERTa-v3 transformer model that catches paraphrased attacks missed by regex |
 
 ---
 
@@ -114,6 +115,11 @@ Detects attempts to create competing personalities within the model. Catches: "r
 
 **d021 -- Vault Similarity** (High)
 The only detector that improves automatically. Queries the ChromaDB attack vault for semantically similar entries. The vault attribute is injected by the engine at startup. Returns `detected=True` if any stored entry has cosine similarity >= `similarity_threshold`. Inherits severity from the matched entry's metadata. See [Self-Learning](self-learning.md) for the full deep-dive.
+
+### ML / Semantic (d022)
+
+**d022 -- Semantic Classifier** (High)
+Uses a DeBERTa-v3 transformer model (`protectai/deberta-v3-base-prompt-injection-v2`) to classify inputs as benign or malicious. Catches paraphrased and novel attacks that bypass regex-based detectors. Runs on CPU by default; supports GPU via `device: "cuda:0"` in config.
 
 ---
 
