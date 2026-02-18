@@ -1,4 +1,4 @@
-"""prompt-shield: Self-learning prompt injection detection engine for LLM applications."""
+"""prompt-shield: Self-learning prompt injection detection engine."""
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import (
@@ -14,10 +14,10 @@ from prompt_shield.models import (
 __version__ = "0.1.1"
 
 __all__ = [
-    "PromptShieldEngine",
     "Action",
     "DetectionResult",
     "MatchDetail",
+    "PromptShieldEngine",
     "ScanReport",
     "Severity",
     "ThreatEntry",

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from prompt_shield.detectors.d005_context_manipulation import ContextManipulationDetector
+from prompt_shield.detectors.d005_context_manipulation import (
+    ContextManipulationDetector,
+)
 
 
 @pytest.fixture

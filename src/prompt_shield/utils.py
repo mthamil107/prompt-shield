@@ -9,26 +9,73 @@ import regex
 
 # Mapping of common homoglyph characters to their ASCII equivalents
 _HOMOGLYPH_MAP: dict[str, str] = {
-    "\u0410": "A", "\u0412": "B", "\u0421": "C", "\u0415": "E",
-    "\u041d": "H", "\u0406": "I", "\u041a": "K", "\u041c": "M",
-    "\u041e": "O", "\u0420": "P", "\u0422": "T", "\u0425": "X",
-    "\u0430": "a", "\u0435": "e", "\u043e": "o", "\u0440": "p",
-    "\u0441": "c", "\u0443": "y", "\u0445": "x", "\u0456": "i",
-    "\u0455": "s", "\u0458": "j",
+    "\u0410": "A",
+    "\u0412": "B",
+    "\u0421": "C",
+    "\u0415": "E",
+    "\u041d": "H",
+    "\u0406": "I",
+    "\u041a": "K",
+    "\u041c": "M",
+    "\u041e": "O",
+    "\u0420": "P",
+    "\u0422": "T",
+    "\u0425": "X",
+    "\u0430": "a",
+    "\u0435": "e",
+    "\u043e": "o",
+    "\u0440": "p",
+    "\u0441": "c",
+    "\u0443": "y",
+    "\u0445": "x",
+    "\u0456": "i",
+    "\u0455": "s",
+    "\u0458": "j",
     # Greek
-    "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z",
-    "\u0397": "H", "\u0399": "I", "\u039a": "K", "\u039c": "M",
-    "\u039d": "N", "\u039f": "O", "\u03a1": "P", "\u03a4": "T",
-    "\u03a5": "Y", "\u03a7": "X",
-    "\u03b1": "a", "\u03bf": "o", "\u03c1": "p",
+    "\u0391": "A",
+    "\u0392": "B",
+    "\u0395": "E",
+    "\u0396": "Z",
+    "\u0397": "H",
+    "\u0399": "I",
+    "\u039a": "K",
+    "\u039c": "M",
+    "\u039d": "N",
+    "\u039f": "O",
+    "\u03a1": "P",
+    "\u03a4": "T",
+    "\u03a5": "Y",
+    "\u03a7": "X",
+    "\u03b1": "a",
+    "\u03bf": "o",
+    "\u03c1": "p",
     # Fullwidth
-    "\uff21": "A", "\uff22": "B", "\uff23": "C", "\uff24": "D",
-    "\uff25": "E", "\uff26": "F", "\uff27": "G", "\uff28": "H",
-    "\uff29": "I", "\uff2a": "J", "\uff2b": "K", "\uff2c": "L",
-    "\uff2d": "M", "\uff2e": "N", "\uff2f": "O", "\uff30": "P",
-    "\uff31": "Q", "\uff32": "R", "\uff33": "S", "\uff34": "T",
-    "\uff35": "U", "\uff36": "V", "\uff37": "W", "\uff38": "X",
-    "\uff39": "Y", "\uff3a": "Z",
+    "\uff21": "A",
+    "\uff22": "B",
+    "\uff23": "C",
+    "\uff24": "D",
+    "\uff25": "E",
+    "\uff26": "F",
+    "\uff27": "G",
+    "\uff28": "H",
+    "\uff29": "I",
+    "\uff2a": "J",
+    "\uff2b": "K",
+    "\uff2c": "L",
+    "\uff2d": "M",
+    "\uff2e": "N",
+    "\uff2f": "O",
+    "\uff30": "P",
+    "\uff31": "Q",
+    "\uff32": "R",
+    "\uff33": "S",
+    "\uff34": "T",
+    "\uff35": "U",
+    "\uff36": "V",
+    "\uff37": "W",
+    "\uff38": "X",
+    "\uff39": "Y",
+    "\uff3a": "Z",
 }
 
 # Zero-width and invisible characters
@@ -56,7 +103,7 @@ def sha256_hash(text: str) -> str:
 
 
 def normalize_text(text: str) -> str:
-    """Normalize text by replacing homoglyphs, stripping invisible chars, and lowercasing."""
+    """Normalize text: replace homoglyphs, strip invisible chars."""
     result = []
     for char in text:
         if char in INVISIBLE_CHARS:
@@ -77,7 +124,7 @@ def strip_invisible(text: str) -> str:
 
 
 def has_mixed_scripts(text: str) -> bool:
-    """Check if text contains characters from multiple Unicode scripts in the same word."""
+    """Check if text mixes multiple Unicode scripts in one word."""
     words = regex.findall(r"\w+", text)
     for word in words:
         scripts: set[str] = set()

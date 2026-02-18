@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from prompt_shield.detectors.d017_hypothetical_framing import HypotheticalFramingDetector
+from prompt_shield.detectors.d017_hypothetical_framing import (
+    HypotheticalFramingDetector,
+)
 
 
 @pytest.fixture

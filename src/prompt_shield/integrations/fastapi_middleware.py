@@ -1,18 +1,24 @@
 """FastAPI middleware for prompt-shield HTTP request scanning."""
 
 from __future__ import annotations
-import json
-from typing import Any, Callable, Awaitable
+
+from typing import TYPE_CHECKING, Any
 
 try:
     from starlette.middleware.base import BaseHTTPMiddleware
-    from starlette.requests import Request
     from starlette.responses import JSONResponse, Response
-except ImportError:
-    raise ImportError("Install fastapi extras: pip install prompt-shield[fastapi]")
+except ImportError as err:
+    raise ImportError(
+        "Install fastapi extras: pip install prompt-shield[fastapi]"
+    ) from err
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
+    from starlette.requests import Request
 
 
 class PromptShieldMiddleware(BaseHTTPMiddleware):
@@ -27,7 +33,10 @@ class PromptShieldMiddleware(BaseHTTPMiddleware):
         on_detection: Callable[..., Awaitable[None]] | None = None,
     ) -> None:
         super().__init__(app)
-        self.engine = PromptShieldEngine(config_path=config_path, config_dict={"mode": mode} if mode != "block" else None)
+        self.engine = PromptShieldEngine(
+            config_path=config_path,
+            config_dict={"mode": mode} if mode != "block" else None,
+        )
         self.scan_fields = scan_fields or ["body.prompt", "body.messages.*.content"]
         self.on_detection = on_detection
 
@@ -44,13 +53,19 @@ class PromptShieldMiddleware(BaseHTTPMiddleware):
         for text in texts_to_scan:
             if not text or not isinstance(text, str):
                 continue
-            report = self.engine.scan(text, context={"gate": "http", "source": "fastapi"})
+            report = self.engine.scan(
+                text, context={"gate": "http", "source": "fastapi"}
+            )
             if report.action == Action.BLOCK:
                 if self.on_detection:
                     await self.on_detection(request, report)
                 return JSONResponse(
                     status_code=400,
-                    content={"error": "Prompt injection detected", "scan_id": report.scan_id, "risk_score": report.overall_risk_score},
+                    content={
+                        "error": "Prompt injection detected",
+                        "scan_id": report.scan_id,
+                        "risk_score": report.overall_risk_score,
+                    },
                 )
         return await call_next(request)
 

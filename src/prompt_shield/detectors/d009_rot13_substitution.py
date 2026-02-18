@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import regex
+from typing import ClassVar
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity
@@ -57,7 +57,7 @@ class Rot13SubstitutionDetector(BaseDetector):
         "Detects text encoded with character rotation or substitution ciphers"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["obfuscation"]
+    tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -78,7 +78,8 @@ class Rot13SubstitutionDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="ROT13 decode",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"ROT13-decoded text contains suspicious keywords: "
@@ -97,7 +98,8 @@ class Rot13SubstitutionDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="l33tspeak decode",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"L33tspeak-decoded text contains suspicious keywords: "
@@ -110,13 +112,16 @@ class Rot13SubstitutionDetector(BaseDetector):
         # --- Reversed text check ---
         reversed_text = input_text[::-1]
         reversed_keywords = _find_keywords(reversed_text)
-        reversed_unique = [kw for kw in reversed_keywords if kw not in original_keywords]
+        reversed_unique = [
+            kw for kw in reversed_keywords if kw not in original_keywords
+        ]
 
         if reversed_unique:
             matches.append(
                 MatchDetail(
                     pattern="reversed text decode",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Reversed text contains suspicious keywords: "

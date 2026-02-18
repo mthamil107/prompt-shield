@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -34,11 +36,9 @@ class WhitespaceInjectionDetector(BaseDetector):
 
     detector_id: str = "d011_whitespace_injection"
     name: str = "Whitespace / Zero-Width Injection"
-    description: str = (
-        "Detects hidden instructions using invisible characters"
-    )
+    description: str = "Detects hidden instructions using invisible characters"
     severity: Severity = Severity.MEDIUM
-    tags: list[str] = ["obfuscation"]
+    tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -59,9 +59,7 @@ class WhitespaceInjectionDetector(BaseDetector):
         if invisible_count > 0:
             cleaned = strip_invisible(input_text)
             cleaned_lower = cleaned.lower()
-            found_keywords = [
-                kw for kw in _SUSPICIOUS_KEYWORDS if kw in cleaned_lower
-            ]
+            found_keywords = [kw for kw in _SUSPICIOUS_KEYWORDS if kw in cleaned_lower]
 
             if found_keywords:
                 has_suspicious_content = True
@@ -86,9 +84,7 @@ class WhitespaceInjectionDetector(BaseDetector):
                 matches.append(
                     MatchDetail(
                         pattern="invisible_chars_present",
-                        matched_text=(
-                            f"[{invisible_count} invisible character(s)]"
-                        ),
+                        matched_text=(f"[{invisible_count} invisible character(s)]"),
                         position=(
                             invisible_positions[0],
                             invisible_positions[-1] + 1,
@@ -109,9 +105,7 @@ class WhitespaceInjectionDetector(BaseDetector):
                     pattern=_EXCESSIVE_SPACES_PATTERN.pattern,
                     matched_text=f"[{len(m.group())} consecutive spaces]",
                     position=(m.start(), m.end()),
-                    description=(
-                        f"Excessive consecutive spaces ({len(m.group())})"
-                    ),
+                    description=(f"Excessive consecutive spaces ({len(m.group())})"),
                 )
             )
 
@@ -123,9 +117,7 @@ class WhitespaceInjectionDetector(BaseDetector):
                     pattern=_EXCESSIVE_NEWLINES_PATTERN.pattern,
                     matched_text=f"[{len(m.group())} consecutive newlines]",
                     position=(m.start(), m.end()),
-                    description=(
-                        f"Excessive consecutive newlines ({len(m.group())})"
-                    ),
+                    description=(f"Excessive consecutive newlines ({len(m.group())})"),
                 )
             )
 
@@ -145,15 +137,13 @@ class WhitespaceInjectionDetector(BaseDetector):
         whitespace_keywords_found = False
         if has_whitespace_anomaly and not has_suspicious_content:
             normalized = regex.sub(r"\s+", " ", input_text).strip().lower()
-            ws_keywords = [
-                kw for kw in _SUSPICIOUS_KEYWORDS if kw in normalized
-            ]
+            ws_keywords = [kw for kw in _SUSPICIOUS_KEYWORDS if kw in normalized]
             if ws_keywords:
                 whitespace_keywords_found = True
                 matches.append(
                     MatchDetail(
                         pattern="whitespace_padded_keywords",
-                        matched_text=f"[normalized text contains keywords]",
+                        matched_text="[normalized text contains keywords]",
                         position=(0, len(input_text)),
                         description=(
                             f"Whitespace-padded text contains suspicious "
@@ -187,7 +177,6 @@ class WhitespaceInjectionDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} indicator(s) of "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} indicator(s) of {self.name.lower()}"
             ),
         )

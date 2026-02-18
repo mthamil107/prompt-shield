@@ -42,8 +42,7 @@ class PromptShieldAnthropic:
                 client = Anthropic()
             except ImportError as exc:
                 raise ImportError(
-                    "Install anthropic extras: "
-                    "pip install prompt-shield[anthropic]"
+                    "Install anthropic extras: pip install prompt-shield[anthropic]"
                 ) from exc
         self._client = client
         self._engine = engine or PromptShieldEngine()
@@ -60,9 +59,7 @@ class PromptShieldAnthropic:
                 texts = [content]
             elif isinstance(content, list):
                 texts = [
-                    block.get("text", "")
-                    if isinstance(block, dict)
-                    else str(block)
+                    block.get("text", "") if isinstance(block, dict) else str(block)
                     for block in content
                 ]
             else:

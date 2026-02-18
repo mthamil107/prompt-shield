@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,30 +24,75 @@ class SystemPromptExtractionDetector(BaseDetector):
         "or hidden instructions given to the model."
     )
     severity: Severity = Severity.CRITICAL
-    tags: list[str] = ["direct_injection"]
+    tags: ClassVar[list[str]] = ["direct_injection"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.85
 
-    _patterns: list[tuple[str, str]] = [
-        (r"ignore\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+instructions", "Attempt to override previous instructions"),
-        (r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)", "Request to reveal system prompt or instructions"),
-        (r"what\s+(?:are|were)\s+(?:your|the)\s+(?:initial\s+)?(?:instructions|rules|prompt|directives)", "Probing for model instructions"),
-        (r"print\s+(?:out\s+)?(?:everything|all)\s+above", "Attempt to dump preceding context"),
-        (r"(?:show|tell|reveal|display|give|share)\s+me\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|message|rules)", "Request to display system message"),
-        (r"output\s+(?:your|the)\s+(?:full\s+)?(?:configuration|config|setup|prompt)", "Request to output model configuration"),
+    _patterns: ClassVar[list[tuple[str, str]]] = [
+        (
+            r"ignore\s+(?:all\s+)?(?:previous|prior|above|earlier)\s+instructions",
+            "Attempt to override previous instructions",
+        ),
+        (
+            r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)",
+            "Request to reveal system prompt or instructions",
+        ),
+        (
+            r"what\s+(?:are|were)\s+(?:your|the)\s+(?:initial\s+)?(?:instructions|rules|prompt|directives)",
+            "Probing for model instructions",
+        ),
+        (
+            r"print\s+(?:out\s+)?(?:everything|all)\s+above",
+            "Attempt to dump preceding context",
+        ),
+        (
+            r"(?:show|tell|reveal|display|give|share)\s+me\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|message|rules)",
+            "Request to display system message",
+        ),
+        (
+            r"output\s+(?:your|the)\s+(?:full\s+)?(?:configuration|config|setup|prompt)",
+            "Request to output model configuration",
+        ),
         (r"what\s+were\s+you\s+told\s+to\s+do", "Probing for model directives"),
-        (r"(?:dump|leak|extract)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions|memory|context)", "Attempt to extract system info"),
-        (r"(?:display|reveal)\s+(?:your\s+)?hidden\s+(?:instructions|prompt|rules|context)", "Request to display hidden instructions"),
-        (r"(?:what|how)\s+(?:is|was)\s+(?:your|the)\s+(?:system|initial|original)\s+(?:prompt|message|instruction)", "Probing for system prompt content"),
-        (r"read\s+(?:back|out)\s+(?:your\s+)?(?:instructions|prompt|rules)", "Request to read back instructions"),
-        (r"(?:copy|paste|reproduce)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)", "Request to reproduce instructions"),
-        (r"(?:what(?:'s|\s+is)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|message))", "Question probing for system prompt"),
-        (r"(?:can\s+you\s+)?(?:share|tell|give|send|provide)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|directives)", "Indirect request for system prompt"),
-        (r"(?:print|show|give|tell)\s+(?:out\s+)?(?:me\s+)?(?:your|the)\s+(?:configuration|config|setup|rules)", "Request for model configuration"),
+        (
+            r"(?:dump|leak|extract)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions|memory|context)",
+            "Attempt to extract system info",
+        ),
+        (
+            r"(?:display|reveal)\s+(?:your\s+)?hidden\s+(?:instructions|prompt|rules|context)",
+            "Request to display hidden instructions",
+        ),
+        (
+            r"(?:what|how)\s+(?:is|was)\s+(?:your|the)\s+(?:system|initial|original)\s+(?:prompt|message|instruction)",
+            "Probing for system prompt content",
+        ),
+        (
+            r"read\s+(?:back|out)\s+(?:your\s+)?(?:instructions|prompt|rules)",
+            "Request to read back instructions",
+        ),
+        (
+            r"(?:copy|paste|reproduce)\s+(?:your\s+)?(?:system\s+)?(?:prompt|instructions)",
+            "Request to reproduce instructions",
+        ),
+        (
+            r"(?:what(?:'s|\s+is)\s+(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|message))",
+            "Question probing for system prompt",
+        ),
+        (
+            r"(?:can\s+you\s+)?(?:share|tell|give|send|provide)\s+(?:me\s+)?(?:your|the)\s+(?:system\s+)?(?:prompt|instructions|rules|directives)",
+            "Indirect request for system prompt",
+        ),
+        (
+            r"(?:print|show|give|tell)\s+(?:out\s+)?(?:me\s+)?(?:your|the)\s+(?:configuration|config|setup|rules)",
+            "Request for model configuration",
+        ),
         (r"(?:give|tell|show)\s+me\s+your\s+rules", "Request for model rules"),
-        (r"repeat\s+(?:your\s+)?(?:initial|original|first)\s+(?:instructions|prompt|message)", "Request to repeat initial instructions"),
+        (
+            r"repeat\s+(?:your\s+)?(?:initial|original|first)\s+(?:instructions|prompt|message)",
+            "Request to repeat initial instructions",
+        ),
     ]
 
     def detect(
@@ -82,7 +129,6 @@ class SystemPromptExtractionDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

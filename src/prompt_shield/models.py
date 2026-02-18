@@ -1,8 +1,8 @@
-"""Pydantic models for prompt-shield detection results, reports, and threat intelligence."""
+"""Pydantic models for detection results and reports."""
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime  # noqa: TC003 — Pydantic needs this at runtime
 from enum import Enum
 
 from pydantic import BaseModel, Field

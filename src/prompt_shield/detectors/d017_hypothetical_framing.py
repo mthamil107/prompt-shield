@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,13 +24,13 @@ class HypotheticalFramingDetector(BaseDetector):
         "Detects using fictional or hypothetical scenarios to bypass restrictions"
     )
     severity: Severity = Severity.MEDIUM
-    tags: list[str] = ["jailbreak"]
+    tags: ClassVar[list[str]] = ["jailbreak"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.7
 
-    _patterns: list[tuple[str, str]] = [
+    _patterns: ClassVar[list[tuple[str, str]]] = [
         (r"in\s+a\s+fictional\s+world\s+where", "Fictional world framing"),
         (r"hypothetically\s+speaking", "Hypothetical framing"),
         (r"imagine\s+you\s+had\s+no\s+restrictions", "Restriction removal framing"),
@@ -77,7 +79,6 @@ class HypotheticalFramingDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

@@ -5,10 +5,13 @@ from __future__ import annotations
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Generator
+from typing import TYPE_CHECKING
 
 from prompt_shield.exceptions import PersistenceError
 from prompt_shield.persistence.migrations import CURRENT_VERSION, MIGRATIONS
+
+if TYPE_CHECKING:
+    from collections.abc import Generator
 
 
 class DatabaseManager:
@@ -42,12 +45,15 @@ class DatabaseManager:
             conn.row_factory = sqlite3.Row
             return conn
         except sqlite3.Error as exc:
-            raise PersistenceError(f"Failed to open database at {self._db_path}: {exc}") from exc
+            raise PersistenceError(
+                f"Failed to open database at {self._db_path}: {exc}"
+            ) from exc
 
     def _current_schema_version(self) -> int:
         """Return the highest applied schema version, or 0 if none."""
         cursor = self._conn.execute(
-            "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version';"
+            "SELECT name FROM sqlite_master "
+            "WHERE type='table' AND name='schema_version';"
         )
         if cursor.fetchone() is None:
             return 0

@@ -1,6 +1,7 @@
 """Flask middleware for prompt-shield HTTP request scanning."""
 
 from __future__ import annotations
+
 import json
 from typing import Any
 
@@ -31,6 +32,7 @@ class PromptShieldMiddleware:
             body_bytes = environ["wsgi.input"].read(content_length)
             # Reset input stream for downstream
             import io
+
             environ["wsgi.input"] = io.BytesIO(body_bytes)
             body = json.loads(body_bytes)
         except Exception:
@@ -42,8 +44,16 @@ class PromptShieldMiddleware:
                 continue
             report = self.engine.scan(text, context={"gate": "http", "source": "flask"})
             if report.action == Action.BLOCK:
-                response_body = json.dumps({"error": "Prompt injection detected", "scan_id": report.scan_id}).encode()
-                start_response("400 Bad Request", [("Content-Type", "application/json"), ("Content-Length", str(len(response_body)))])
+                response_body = json.dumps(
+                    {"error": "Prompt injection detected", "scan_id": report.scan_id}
+                ).encode()
+                start_response(
+                    "400 Bad Request",
+                    [
+                        ("Content-Type", "application/json"),
+                        ("Content-Length", str(len(response_body))),
+                    ],
+                )
                 return [response_body]
 
         return self.app(environ, start_response)

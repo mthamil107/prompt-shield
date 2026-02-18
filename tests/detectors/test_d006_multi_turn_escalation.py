@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from prompt_shield.detectors.d006_multi_turn_escalation import MultiTurnEscalationDetector
+from prompt_shield.detectors.d006_multi_turn_escalation import (
+    MultiTurnEscalationDetector,
+)
 
 
 @pytest.fixture

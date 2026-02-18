@@ -13,11 +13,15 @@ from prompt_shield import __version__
 
 @click.group()
 @click.version_option(version=__version__, prog_name="prompt-shield")
-@click.option("--config", "-c", "config_path", default=None, help="Path to YAML config file")
+@click.option(
+    "--config", "-c", "config_path", default=None, help="Path to YAML config file"
+)
 @click.option("--data-dir", default=None, help="Path to data directory")
 @click.option("--json-output", "use_json", is_flag=True, help="Output as JSON")
 @click.pass_context
-def main(ctx: click.Context, config_path: str | None, data_dir: str | None, use_json: bool) -> None:
+def main(
+    ctx: click.Context, config_path: str | None, data_dir: str | None, use_json: bool
+) -> None:
     """prompt-shield: Self-learning prompt injection detection engine."""
     ctx.ensure_object(dict)
     ctx.obj["config_path"] = config_path
@@ -89,14 +93,21 @@ def _print_report(report) -> None:  # type: ignore[no-untyped-def]
         click.echo()
         click.secho("  Detections:", bold=True)
         for det in report.detections:
-            sev_colors = {"critical": "red", "high": "red", "medium": "yellow", "low": "blue"}
+            sev_colors = {
+                "critical": "red",
+                "high": "red",
+                "medium": "yellow",
+                "low": "blue",
+            }
             sev_color = sev_colors.get(det.severity.value, "white")
-            click.echo(f"    [{click.style(det.severity.value.upper(), fg=sev_color)}] "
-                        f"{det.detector_id} (confidence: {det.confidence:.2f})")
+            click.echo(
+                f"    [{click.style(det.severity.value.upper(), fg=sev_color)}] "
+                f"{det.detector_id} (confidence: {det.confidence:.2f})"
+            )
             if det.explanation:
                 click.echo(f"      {det.explanation}")
             for match in det.matches[:3]:
-                click.echo(f"      - \"{match.matched_text}\" ({match.description})")
+                click.echo(f'      - "{match.matched_text}" ({match.description})')
     else:
         click.echo()
         click.secho("  No injections detected.", fg="green")
@@ -127,7 +138,12 @@ def detectors_list(ctx: click.Context) -> None:
         click.echo()
         for d in dets:
             sev = d.get("severity", "unknown")
-            sev_colors = {"critical": "red", "high": "red", "medium": "yellow", "low": "blue"}
+            sev_colors = {
+                "critical": "red",
+                "high": "red",
+                "medium": "yellow",
+                "low": "blue",
+            }
             color = sev_colors.get(str(sev), "white")
             click.echo(
                 f"  {d['detector_id']:40s} "
@@ -255,7 +271,19 @@ def vault_search(ctx: click.Context, query: str, top: int) -> None:
     results = engine.vault.query(query, n_results=top)
 
     if use_json:
-        click.echo(json.dumps([{"id": r.id, "similarity": r.similarity_score, "metadata": r.metadata} for r in results], indent=2))
+        click.echo(
+            json.dumps(
+                [
+                    {
+                        "id": r.id,
+                        "similarity": r.similarity_score,
+                        "metadata": r.metadata,
+                    }
+                    for r in results
+                ],
+                indent=2,
+            )
+        )
     else:
         if not results:
             click.echo("  No similar attacks found in vault.")
@@ -284,7 +312,10 @@ def vault_clear(ctx: click.Context, source: str | None) -> None:
         results = engine.vault._collection.get(where={"source": source})
         if results and results["ids"]:
             engine.vault._collection.delete(ids=results["ids"])
-            click.secho(f"  Cleared {len(results['ids'])} entries with source='{source}'", fg="green")
+            click.secho(
+                f"  Cleared {len(results['ids'])} entries with source='{source}'",
+                fg="green",
+            )
         else:
             click.echo(f"  No entries found with source='{source}'")
     else:
@@ -297,10 +328,17 @@ def vault_clear(ctx: click.Context, source: str | None) -> None:
 
 @main.command("feedback")
 @click.option("--scan-id", required=True, help="Scan ID to provide feedback for")
-@click.option("--correct/--incorrect", "is_correct", required=True, help="Was the detection correct?")
+@click.option(
+    "--correct/--incorrect",
+    "is_correct",
+    required=True,
+    help="Was the detection correct?",
+)
 @click.option("--notes", default="", help="Optional notes")
 @click.pass_context
-def feedback_cmd(ctx: click.Context, scan_id: str, is_correct: bool, notes: str) -> None:
+def feedback_cmd(
+    ctx: click.Context, scan_id: str, is_correct: bool, notes: str
+) -> None:
     """Provide feedback on a scan result."""
     engine = _get_engine(ctx)
     engine.feedback(scan_id, is_correct=is_correct, notes=notes)
@@ -432,7 +470,10 @@ def test_cmd(ctx: click.Context) -> None:
                 )
 
     click.echo()
-    click.secho(f"  Results: {passed}/{total} passed, {failed} failed", fg="green" if failed == 0 else "red")
+    click.secho(
+        f"  Results: {passed}/{total} passed, {failed} failed",
+        fg="green" if failed == 0 else "red",
+    )
     if failed > 0:
         sys.exit(1)
 

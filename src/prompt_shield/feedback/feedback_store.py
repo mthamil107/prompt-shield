@@ -71,9 +71,18 @@ class FeedbackStore:
             conn = self._get_conn()
             try:
                 conn.execute(
-                    "INSERT INTO feedback (id, scan_id, detector_id, is_correct, timestamp, notes) "
+                    "INSERT INTO feedback "
+                    "(id, scan_id, detector_id, is_correct, "
+                    "timestamp, notes) "
                     "VALUES (?, ?, ?, ?, ?, ?);",
-                    (feedback_id, scan_id, detector_id, 1 if is_correct else 0, timestamp, notes),
+                    (
+                        feedback_id,
+                        scan_id,
+                        detector_id,
+                        1 if is_correct else 0,
+                        timestamp,
+                        notes,
+                    ),
                 )
                 conn.commit()
             finally:
@@ -87,7 +96,8 @@ class FeedbackStore:
         Returns
         -------
         dict
-            ``{"total": int, "true_positives": int, "false_positives": int, "fp_rate": float}``
+            ``{"total": int, "true_positives": int,
+            "false_positives": int, "fp_rate": float}``
         """
         try:
             conn = self._get_conn()

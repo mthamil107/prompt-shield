@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import pytest
 
-from prompt_shield.detectors.d011_whitespace_injection import WhitespaceInjectionDetector
+from prompt_shield.detectors.d011_whitespace_injection import (
+    WhitespaceInjectionDetector,
+)
 
 
 @pytest.fixture
@@ -51,9 +53,7 @@ class TestWhitespaceInjection:
 
     def test_confidence_boost_with_keywords(self, detector):
         # Zero-width + keyword + excessive spaces
-        result = detector.detect(
-            "ignore\u200binstructions      with extra spaces"
-        )
+        result = detector.detect("ignore\u200binstructions      with extra spaces")
         assert result.detected is True
         assert result.confidence > 0.75
 

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -46,7 +48,7 @@ class Base64PayloadDetector(BaseDetector):
     name: str = "Base64 Payload"
     description: str = "Detects base64-encoded instructions hidden in input"
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["obfuscation"]
+    tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
@@ -62,9 +64,7 @@ class Base64PayloadDetector(BaseDetector):
                 continue
 
             decoded_lower = decoded.lower()
-            found_keywords = [
-                kw for kw in _SUSPICIOUS_KEYWORDS if kw in decoded_lower
-            ]
+            found_keywords = [kw for kw in _SUSPICIOUS_KEYWORDS if kw in decoded_lower]
 
             if found_keywords:
                 matches.append(

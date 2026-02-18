@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,7 +24,7 @@ class URLInjectionDetector(BaseDetector):
         "Detects suspicious URLs injected into prompts for phishing or redirection"
     )
     severity: Severity = Severity.MEDIUM
-    tags: list[str] = ["indirect_injection"]
+    tags: ClassVar[list[str]] = ["indirect_injection"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 

@@ -1,4 +1,5 @@
 """Tests for the LeakDetector."""
+
 from __future__ import annotations
 
 import pytest
@@ -48,7 +49,9 @@ class TestPartialLeak:
 class TestCaseInsensitive:
     """Tests for case-insensitive detection."""
 
-    def test_case_insensitive(self, leak_detector: LeakDetector, canary_token: str) -> None:
+    def test_case_insensitive(
+        self, leak_detector: LeakDetector, canary_token: str
+    ) -> None:
         """Detection should be case-insensitive."""
         upper_token = canary_token.upper()
         response = f"Leaked content: {upper_token}"

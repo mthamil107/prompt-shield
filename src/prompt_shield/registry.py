@@ -1,4 +1,4 @@
-"""Detector plugin registry with auto-discovery, entry points, and manual registration."""
+"""Detector plugin registry with auto-discovery."""
 
 from __future__ import annotations
 
@@ -32,7 +32,8 @@ class DetectorRegistry:
         """Register a detector instance."""
         if not hasattr(detector, "detector_id"):
             raise RegistryError(
-                f"Detector {type(detector).__name__} missing required 'detector_id' attribute"
+                f"Detector {type(detector).__name__} missing "
+                f"required 'detector_id' attribute"
             )
         detector_id = detector.detector_id
         if detector_id in self._detectors:
@@ -61,15 +62,19 @@ class DetectorRegistry:
         """Return metadata dicts for all registered detectors."""
         result = []
         for d in self._detectors.values():
-            result.append({
-                "detector_id": d.detector_id,
-                "name": d.name,
-                "description": d.description,
-                "severity": d.severity.value if hasattr(d.severity, "value") else str(d.severity),
-                "tags": d.tags,
-                "version": d.version,
-                "author": d.author,
-            })
+            result.append(
+                {
+                    "detector_id": d.detector_id,
+                    "name": d.name,
+                    "description": d.description,
+                    "severity": d.severity.value
+                    if hasattr(d.severity, "value")
+                    else str(d.severity),
+                    "tags": d.tags,
+                    "version": d.version,
+                    "author": d.author,
+                }
+            )
         return result
 
     def auto_discover(self) -> int:
@@ -77,7 +82,6 @@ class DetectorRegistry:
 
         Returns the number of detectors discovered.
         """
-        from prompt_shield.detectors import base as _base_module
 
         count = 0
         try:
@@ -88,7 +92,7 @@ class DetectorRegistry:
 
         base_cls = _get_base_class()
 
-        for importer, modname, ispkg in pkgutil.iter_modules(
+        for _importer, modname, _ispkg in pkgutil.iter_modules(
             detectors_pkg.__path__, prefix="prompt_shield.detectors."
         ):
             if modname.endswith(".base"):
@@ -109,7 +113,9 @@ class DetectorRegistry:
                         except Exception as exc:
                             logger.warning(
                                 "Failed to instantiate detector %s from %s: %s",
-                                _name, modname, exc,
+                                _name,
+                                modname,
+                                exc,
                             )
             except Exception as exc:
                 logger.warning("Failed to import detector module %s: %s", modname, exc)
@@ -146,9 +152,7 @@ class DetectorRegistry:
                         self.register(instance)
                         count += 1
                 except Exception as exc:
-                    logger.warning(
-                        "Failed to load entry point %s: %s", ep.name, exc
-                    )
+                    logger.warning("Failed to load entry point %s: %s", ep.name, exc)
         except Exception as exc:
             logger.warning("Failed to discover entry points: %s", exc)
 

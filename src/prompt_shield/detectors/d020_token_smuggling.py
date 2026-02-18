@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -23,11 +25,11 @@ class TokenSmugglingDetector(BaseDetector):
         "Detects splitting malicious instructions across tokens or messages"
     )
     severity: Severity = Severity.HIGH
-    tags: list[str] = ["obfuscation"]
+    tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    _target_words: list[str] = [
+    _target_words: ClassVar[list[str]] = [
         "ignore",
         "instructions",
         "system",
@@ -44,7 +46,7 @@ class TokenSmugglingDetector(BaseDetector):
     )
 
     def _build_split_pattern(self, word: str) -> regex.Pattern[str]:
-        """Build a regex that matches a word with 1-3 non-alpha chars between each letter."""
+        """Build regex matching a word with separators."""
         parts = [regex.escape(ch) for ch in word]
         pattern_str = r"[\s\-_.]{1,3}".join(parts)
         return regex.compile(pattern_str, regex.IGNORECASE)
@@ -118,7 +120,8 @@ class TokenSmugglingDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="alternating_char_extraction",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120]
+                    + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Keywords found in alternating characters: "
@@ -139,7 +142,11 @@ class TokenSmugglingDetector(BaseDetector):
                         pattern="reversed_word",
                         matched_text=input_text[idx : idx + len(reversed_word)],
                         position=(idx, idx + len(reversed_word)),
-                        description=f"Reversed keyword detected: '{word}' (found as '{reversed_word}')",
+                        description=(
+                            f"Reversed keyword detected: "
+                            f"'{word}' (found as "
+                            f"'{reversed_word}')"
+                        ),
                     )
                 )
             best_confidence = max(best_confidence, 0.75)
@@ -161,7 +168,6 @@ class TokenSmugglingDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} indicator(s) of "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} indicator(s) of {self.name.lower()}"
             ),
         )

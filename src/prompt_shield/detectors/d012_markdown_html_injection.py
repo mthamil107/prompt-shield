@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import ClassVar
+
 import regex
 
 from prompt_shield.detectors.base import BaseDetector
@@ -22,13 +24,13 @@ class MarkdownHtmlInjectionDetector(BaseDetector):
         "rendering or behavior"
     )
     severity: Severity = Severity.MEDIUM
-    tags: list[str] = ["indirect_injection", "obfuscation"]
+    tags: ClassVar[list[str]] = ["indirect_injection", "obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
     _base_confidence: float = 0.75
 
-    _patterns: list[tuple[str, str]] = [
+    _patterns: ClassVar[list[tuple[str, str]]] = [
         (r"<script[\s>]", "Script tag injection"),
         (r"<img\s[^>]*onerror", "Image tag with error handler"),
         (r"<iframe[\s>]", "Iframe injection"),
@@ -77,7 +79,6 @@ class MarkdownHtmlInjectionDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} pattern(s) indicating "
-                f"{self.name.lower()}"
+                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
             ),
         )

@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import yaml
 
 from prompt_shield.exceptions import ConfigError
-from prompt_shield.models import Severity
+
+if TYPE_CHECKING:
+    from prompt_shield.models import Severity
 
 _DEFAULT_CONFIG_PATH = Path(__file__).parent / "default.yaml"
 
