@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 
 if TYPE_CHECKING:
     from prompt_shield.models import DetectionResult, Severity
@@ -20,7 +20,7 @@ class BaseDetector(ABC):
     name: str
     description: str
     severity: Severity
-    tags: list[str]
+    tags: ClassVar[list[str]]
     version: str
     author: str
 
