@@ -1,5 +1,5 @@
 [project]
-name = "prompt-shield"
+name = "prompt-shield-ai"
 version = "0.1.1"
 description = "Self-learning prompt injection detection engine for LLM applications"
 readme = "README.md"
