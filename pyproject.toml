@@ -42,7 +42,7 @@ ml = [
     "transformers>=4.30",
     "optimum[onnxruntime]>=1.12",
 ]
-all = ["prompt-shield[fastapi,flask,langchain,llamaindex,django,mcp]"]
+all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,django,mcp]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
