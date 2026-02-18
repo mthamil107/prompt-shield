@@ -1,7 +1,7 @@
 # prompt-shield
 
-[![PyPI version](https://img.shields.io/pypi/v/prompt-shield.svg)](https://pypi.org/project/prompt-shield/)
-[![Python](https://img.shields.io/pypi/pyversions/prompt-shield.svg)](https://pypi.org/project/prompt-shield/)
+[![PyPI version](https://img.shields.io/pypi/v/prompt-shield-ai.svg)](https://pypi.org/project/prompt-shield-ai/)
+[![Python](https://img.shields.io/pypi/pyversions/prompt-shield-ai.svg)](https://pypi.org/project/prompt-shield-ai/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![CI](https://github.com/prompt-shield/prompt-shield/actions/workflows/ci.yml/badge.svg)](https://github.com/prompt-shield/prompt-shield/actions/workflows/ci.yml)
 
@@ -12,11 +12,11 @@ prompt-shield detects and blocks prompt injection attacks targeting LLM-powered 
 ## Quick Install
 
 ```bash
-pip install prompt-shield                    # Core (regex detectors only)
-pip install prompt-shield[ml]               # + Semantic ML detector (DeBERTa)
-pip install prompt-shield[openai]           # + OpenAI wrapper
-pip install prompt-shield[anthropic]        # + Anthropic wrapper
-pip install prompt-shield[all]              # Everything
+pip install prompt-shield-ai                    # Core (regex detectors only)
+pip install prompt-shield-ai[ml]               # + Semantic ML detector (DeBERTa)
+pip install prompt-shield-ai[openai]           # + OpenAI wrapper
+pip install prompt-shield-ai[anthropic]        # + Anthropic wrapper
+pip install prompt-shield-ai[all]              # Everything
 ```
 
 ## 30-Second Quickstart
