@@ -1,12 +1,30 @@
 # prompt-shield Roadmap
 
-## v0.1.x (current)
+## v0.1.x
 - 22 detectors, DeBERTa ML classifier, ensemble scoring
 - OpenAI/Anthropic client wrappers
 - Self-learning vault (local ChromaDB)
 - CLI, FastAPI/Flask/Django middleware, LangChain/LlamaIndex/MCP integrations
 
-## v0.2.0 — Community, Plugins & Trust
+## v0.2.0 (current)
+
+### OWASP LLM Top 10 Compliance Mapping
+All 22 detectors mapped to OWASP LLM Top 10 (2025) categories. Coverage reports show which categories are covered and where gaps remain.
+- `prompt-shield compliance report` — formatted coverage matrix
+- `prompt-shield compliance mapping` — detector-to-OWASP mapping with optional `--detector` filter
+- JSON output support for CI/CD integration
+- Python API: `generate_compliance_report()` for programmatic access
+
+### Standardized Benchmarking
+Accuracy benchmarking framework with ML metrics (precision, recall, F1, accuracy, TPR, FPR).
+- Bundled 50-sample dataset (25 injection + 25 benign) for offline evaluation
+- Dataset loaders for CSV, JSON, and HuggingFace Hub
+- `prompt-shield benchmark accuracy --dataset sample` — run accuracy benchmarks
+- `prompt-shield benchmark performance -n 100` — throughput measurement
+- `prompt-shield benchmark datasets` — list available datasets
+- Save results to JSON for tracking over time
+
+## v0.3.0 — Community, Plugins & Trust
 
 ### Community & Integrations
 - `prompt-shield-threats` public repo — community-contributed attack fingerprints via PRs
@@ -22,25 +40,13 @@ Detect and redact personally identifiable information (SSNs, emails, credit card
 - Configurable entity types and custom patterns
 - Structured metadata in scan reports (redacted fields, entity counts)
 
-### OWASP LLM Top 10 Compliance Mapping
-Formally map all detectors to OWASP LLM Top 10 and NIST AI RMF categories. Produce compliance reports showing which risks are covered and at what confidence level.
-- `prompt-shield compliance` CLI command
-- Coverage matrix in README and docs
-- Badge showing OWASP risk coverage
-
-### Standardized Benchmarking
-Benchmark prompt-shield against public adversarial datasets to produce independently verifiable accuracy numbers.
-- Datasets: NotInject, BIPIA, ToxicChat, WildGuard, Garak, JavelinBench
-- Published results in docs with reproducible scripts
-- CI job to run benchmarks on every release
-
 ### Prometheus Metrics Endpoint
 Expose a `/metrics` endpoint for scan counts, block rates, detector hit rates, latency percentiles, and vault size — so users can plug prompt-shield into their existing monitoring stack without waiting for a dashboard.
 
 ### Docker & Helm Charts
 Production-ready container images and Kubernetes deployment manifests for enterprise adoption.
 
-## v0.3.0 — Game Changers
+## v0.4.0 — Game Changers
 
 ### 1. Live Collaborative Threat Network (Paid Hub)
 Real-time threat intelligence sharing across all deployments. Every blocked attack silently contributes an anonymized fingerprint; every user benefits instantly. CrowdStrike model for LLM security.

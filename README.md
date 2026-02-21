@@ -500,9 +500,10 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 ## Roadmap
 
-- **v0.1.x** (current): 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, OWASP LLM Top 10 compliance mapping, standardized benchmarking, CLI
-- **v0.2.0**: Community threat repo, Dify/n8n/CrewAI integrations, PII detection & redaction, Prometheus metrics endpoint, Docker & Helm charts
-- **v0.3.0**: Live collaborative threat network, adversarial red-team loop, behavioral drift detection, per-session trust scoring, SaaS dashboard, agentic honeypots, OpenTelemetry & Langfuse integration, Denial of Wallet detection, multi-language attack detection, webhook alerting
+- **v0.1.x**: 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
+- **v0.2.0** (current): OWASP LLM Top 10 compliance mapping, standardized benchmarking (accuracy metrics, dataset loaders, bundled dataset), CLI benchmark and compliance command groups
+- **v0.3.0**: Community threat repo, Dify/n8n/CrewAI integrations, PII detection & redaction, Prometheus metrics endpoint, Docker & Helm charts
+- **v0.4.0**: Live collaborative threat network, adversarial red-team loop, behavioral drift detection, per-session trust scoring, SaaS dashboard, agentic honeypots, OpenTelemetry & Langfuse integration, Denial of Wallet detection, multi-language attack detection, webhook alerting
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
 
