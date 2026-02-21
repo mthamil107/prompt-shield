@@ -68,7 +68,7 @@ class PromptLeakingDetector(BaseDetector):
             "Request for tool definition details",
         ),
         (
-            r"\b(?:dump|export|output|reveal)\s+(?:your|the)\s+(?:full\s+)?(?:memory|state|context)\b",
+            r"\b(?:dump|export|output|reveal)\s+(?:(?:your|the|my)\s+)?(?:(?:full|complete|entire)\s+)?(?:conversation\s+)?(?:memory|state|context|history)\b",
             "Attempt to dump model memory",
         ),
         (
@@ -78,6 +78,10 @@ class PromptLeakingDetector(BaseDetector):
         (
             r"\b(?:reveal|show|expose|share)\s+(?:me\s+)?(?:your|the)\s+(?:training|fine-?tuning)\s+(?:data|dataset|information)\b",
             "Request to reveal training data",
+        ),
+        (
+            r"\b(?:return|show|display|reveal|expose|output|print|give)\s+(?:me\s+)?(?:the\s+)?(?:hidden|internal|secret|private)\s+(?:chain[- ]of[- ]thought|reasoning|thought\s+process|thinking|CoT)\b",
+            "Attempt to extract hidden chain-of-thought",
         ),
     ]
 

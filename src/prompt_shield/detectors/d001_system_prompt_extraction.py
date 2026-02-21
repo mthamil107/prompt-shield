@@ -36,7 +36,7 @@ class SystemPromptExtractionDetector(BaseDetector):
             "Attempt to override previous instructions",
         ),
         (
-            r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:system\s+)?(?:prompt|instructions|rules|message|configuration)",
+            r"(?:repeat|show|display|print|reveal|output|echo|give|share|disclose|expose)\s+(?:(?:me|us)\s+)?(?:(?:your|the|my)\s+)?(?:(?:full|complete|entire|internal|hidden|secret|original)\s+)*(?:system\s+)?(?:prompt|instructions|rules|message|configuration)",
             "Request to reveal system prompt or instructions",
         ),
         (
@@ -92,6 +92,14 @@ class SystemPromptExtractionDetector(BaseDetector):
         (
             r"repeat\s+(?:your\s+)?(?:initial|original|first)\s+(?:instructions|prompt|message)",
             "Request to repeat initial instructions",
+        ),
+        (
+            r"(?:show|display|reveal|print|give|list|output|dump)\s+(?:me\s+)?(?:the\s+|your\s+)?(?:API\s+)?(?:key|keys|tokens?|secrets?|passwords?|credentials?)\s+(?:you\s+(?:are\s+)?(?:using|have|store|hold))",
+            "Request to disclose API keys or credentials",
+        ),
+        (
+            r"(?:show|display|reveal|print|list|output|dump|get)\s+(?:me\s+)?(?:the\s+|your\s+|all\s+)?(?:environment\s+variables?|env\s+vars?|\.env|config(?:uration)?\s+(?:file|values?|settings?|secrets?))",
+            "Request to disclose environment variables or config secrets",
         ),
     ]
 

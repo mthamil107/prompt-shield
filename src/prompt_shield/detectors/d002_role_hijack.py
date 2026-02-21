@@ -36,6 +36,10 @@ class RoleHijackDetector(BaseDetector):
             "DAN-style jailbreak attempt",
         ),
         (
+            r"\byou\s+are\s+now\s+(?:a\s+|an\s+|the\s+)?(?:\w+\s+)?(?:root|admin(?:istrator)?|superuser|sudo|owner|master|operator|god|super\s*admin|moderator)\b",
+            "Privileged role assignment attempt",
+        ),
+        (
             r"\b(?:act|behave|function)\s+as\s+(?:a\s+|an\s+)?(?:unrestricted|unfiltered|uncensored)\s+(?:AI|assistant|model|chatbot)\b",
             "Request to remove restrictions",
         ),

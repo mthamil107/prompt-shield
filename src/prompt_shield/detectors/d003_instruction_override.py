@@ -81,6 +81,14 @@ class InstructionOverrideDetector(BaseDetector):
             r"\b(?:turn\s+off|shut\s+off|deactivate|neutralize)\s+(?:the\s+)?(?:system|safety|security|content)\s*(?:filters?|rules?|restrictions?|constraints?|protections?|safeguards?|checks?)?\b",
             "Attempt to deactivate system protections",
         ),
+        (
+            r"\b(?:treat|consider|interpret|use|regard)\s+this\s+(?:message|input|text|prompt)\s+as\s+(?:the\s+|a\s+)?(?:system\s+)?(?:prompt|instruction|message|directive)\b",
+            "Attempt to reframe user input as system prompt",
+        ),
+        (
+            r"\bfrom\s+now\s+on\s*,?\s+(?:treat|consider|interpret|use)\s+",
+            "Persistent behavior redefinition attempt",
+        ),
     ]
 
     def detect(
