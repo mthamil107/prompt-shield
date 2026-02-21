@@ -1,6 +1,6 @@
 [project]
 name = "prompt-shield-ai"
-version = "0.1.4"
+version = "0.2.0"
 description = "Self-learning prompt injection detection engine for LLM applications"
 readme = "README.md"
 license = { text = "Apache-2.0" }
