@@ -6,12 +6,39 @@
 - Self-learning vault (local ChromaDB)
 - CLI, FastAPI/Flask/Django middleware, LangChain/LlamaIndex/MCP integrations
 
-## v0.2.0 — Community & Plugins
+## v0.2.0 — Community, Plugins & Trust
+
+### Community & Integrations
 - `prompt-shield-threats` public repo — community-contributed attack fingerprints via PRs
 - Client-side import from threat repo URL (free, no server)
 - Dify plugin (Tool type)
 - n8n community node
+- CrewAI integration
 - Get listed on awesome-llm-security lists
+
+### PII Detection & Redaction
+Detect and redact personally identifiable information (SSNs, emails, credit cards, phone numbers, API keys, secrets) before prompts reach the LLM. Extends the data exfiltration detector (d013) into a full data protection layer.
+- Redaction mode — mask sensitive data before forwarding to LLM
+- Configurable entity types and custom patterns
+- Structured metadata in scan reports (redacted fields, entity counts)
+
+### OWASP LLM Top 10 Compliance Mapping
+Formally map all detectors to OWASP LLM Top 10 and NIST AI RMF categories. Produce compliance reports showing which risks are covered and at what confidence level.
+- `prompt-shield compliance` CLI command
+- Coverage matrix in README and docs
+- Badge showing OWASP risk coverage
+
+### Standardized Benchmarking
+Benchmark prompt-shield against public adversarial datasets to produce independently verifiable accuracy numbers.
+- Datasets: NotInject, BIPIA, ToxicChat, WildGuard, Garak, JavelinBench
+- Published results in docs with reproducible scripts
+- CI job to run benchmarks on every release
+
+### Prometheus Metrics Endpoint
+Expose a `/metrics` endpoint for scan counts, block rates, detector hit rates, latency percentiles, and vault size — so users can plug prompt-shield into their existing monitoring stack without waiting for a dashboard.
+
+### Docker & Helm Charts
+Production-ready container images and Kubernetes deployment manifests for enterprise adoption.
 
 ## v0.3.0 — Game Changers
 
@@ -35,6 +62,23 @@ Hosted dashboard with real-time analytics, attack trends, team alerts, one-click
 
 ### 6. Agentic Honeypots
 Active deception beyond canary tokens. Plant realistic fake credentials, fake APIs, fake sensitive data. If the agent touches them, the session is compromised. Active defense, not just passive detection.
+
+### 7. OpenTelemetry & Langfuse Integration
+Native observability export so prompt-shield scan data flows into existing monitoring stacks.
+- OpenTelemetry spans and metrics for every scan (latency, risk score, detectors triggered)
+- Langfuse integration — trace-level prompt security annotations
+- Compatible with Datadog, Arize, WhyLabs, and any OTel collector
+
+### 8. Denial of Wallet Detection
+Detect prompts designed to trigger excessive token usage — extremely long outputs, recursive tool calls, infinite loops. A new detector category that no other open-source tool covers.
+- Token budget enforcement per session
+- Cost anomaly alerting
+
+### 9. Multi-Language Attack Detection
+Extend detectors beyond English. Attacks in non-English languages, mixed-language prompts, and transliteration-based obfuscation currently bypass English-only regex patterns.
+
+### 10. Webhook Alerting
+Real-time incident notifications to Slack, PagerDuty, Discord, email, or custom webhooks when attacks are detected or block rates spike.
 
 ---
 
