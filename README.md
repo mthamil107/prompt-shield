@@ -45,8 +45,10 @@ print(report.overall_risk_score)  # 0.95
 - **Canary Tokens** — Inject hidden tokens into prompts; detect if the LLM leaks them in responses
 - **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak detection)
 - **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; MCP filter; OpenAI/Anthropic client wrappers
+- **OWASP LLM Top 10 Compliance** — Built-in mapping of all 22 detectors to OWASP LLM Top 10 (2025) categories; generate coverage reports showing which categories are covered and gaps to fill
+- **Standardized Benchmarking** — Measure accuracy (precision, recall, F1, accuracy) against bundled or custom datasets; includes a 50-sample dataset out of the box, CSV/JSON/HuggingFace loaders, and performance benchmarking
 - **Plugin Architecture** — Write custom detectors with a simple interface; auto-discovery via entry points
-- **CLI** — Scan text, manage vault, import/export threats, provide feedback — all from the command line
+- **CLI** — Scan text, manage vault, import/export threats, run compliance reports, benchmark accuracy — all from the command line
 - **Zero External Services** — Everything runs locally: SQLite for metadata, ChromaDB for vectors, CPU-based embeddings
 
 ## Architecture
@@ -100,7 +102,7 @@ User Input ──> [Input Gate] ──> LLM ──> [Output Gate] ──> Respon
 
 ## Detection Showcase
 
-Real detection results from prompt-shield's test suite — **100% accuracy across 375 test prompts, zero false positives on safe inputs**. Every row below is a real scan result.
+Real detection results from prompt-shield's test suite — **100% accuracy across 436 test prompts, zero false positives on safe inputs**. Every row below is a real scan result.
 
 ### Direct Injection — Blocked by regex + ML
 
@@ -280,6 +282,97 @@ engine.export_threats("my-threats.json")
 engine.import_threats("community-threats.json")
 ```
 
+## OWASP LLM Top 10 Compliance
+
+prompt-shield maps all 22 detectors to the [OWASP Top 10 for LLM Applications (2025)](https://genai.owasp.org/). Generate a compliance report to see which categories are covered and where gaps remain:
+
+```bash
+# Coverage matrix showing all 10 categories
+prompt-shield compliance report
+
+# JSON output for CI/CD pipelines
+prompt-shield compliance report --json-output
+
+# View detector-to-OWASP mapping
+prompt-shield compliance mapping
+
+# Filter to a specific detector
+prompt-shield compliance mapping --detector d001_system_prompt_extraction
+```
+
+```python
+from prompt_shield import PromptShieldEngine
+from prompt_shield.compliance.owasp_mapping import generate_compliance_report
+
+engine = PromptShieldEngine()
+dets = engine.list_detectors()
+report = generate_compliance_report(
+    [d["detector_id"] for d in dets], dets
+)
+
+print(f"Coverage: {report.coverage_percentage}%")
+for cat in report.category_details:
+    status = "COVERED" if cat.covered else "GAP"
+    print(f"  {cat.category_id} {cat.name}: {status}")
+```
+
+**Category coverage with all 22 detectors:**
+
+| OWASP ID | Category | Status |
+|----------|----------|--------|
+| LLM01 | Prompt Injection | Covered (18 detectors) |
+| LLM02 | Sensitive Information Disclosure | Covered |
+| LLM03 | Supply Chain Vulnerabilities | Covered |
+| LLM06 | Excessive Agency | Covered |
+| LLM07 | System Prompt Leakage | Covered |
+| LLM08 | Vector and Embedding Weaknesses | Covered |
+| LLM10 | Unbounded Consumption | Covered |
+
+## Benchmarking
+
+Measure detection accuracy against standardized datasets using precision, recall, F1 score, and accuracy:
+
+```bash
+# Run accuracy benchmark with the bundled 50-sample dataset
+prompt-shield benchmark accuracy --dataset sample
+
+# Limit to first 20 samples
+prompt-shield benchmark accuracy --dataset sample --max-samples 20
+
+# Save results to JSON
+prompt-shield benchmark accuracy --dataset sample --save results.json
+
+# Run performance benchmark (throughput)
+prompt-shield benchmark performance -n 100
+
+# List available datasets
+prompt-shield benchmark datasets
+```
+
+```python
+from prompt_shield import PromptShieldEngine
+from prompt_shield.benchmarks.runner import run_benchmark
+
+engine = PromptShieldEngine()
+result = run_benchmark(engine, dataset_name="sample")
+
+print(f"F1: {result.metrics.f1_score:.4f}")
+print(f"Precision: {result.metrics.precision:.4f}")
+print(f"Recall: {result.metrics.recall:.4f}")
+print(f"Accuracy: {result.metrics.accuracy:.4f}")
+print(f"Throughput: {result.scans_per_second:.1f} scans/sec")
+```
+
+You can also benchmark against custom CSV or JSON datasets:
+
+```python
+from prompt_shield.benchmarks.datasets import load_csv_dataset
+from prompt_shield.benchmarks.runner import run_benchmark
+
+samples = load_csv_dataset("my_dataset.csv", text_col="text", label_col="label")
+result = run_benchmark(engine, samples=samples)
+```
+
 ## Integrations
 
 ### OpenAI / Anthropic Client Wrappers
@@ -388,6 +481,15 @@ prompt-shield threats import -s community.json
 # Feedback
 prompt-shield feedback --scan-id abc123 --correct
 prompt-shield feedback --scan-id abc123 --incorrect
+
+# OWASP compliance
+prompt-shield compliance report
+prompt-shield compliance mapping
+
+# Benchmarking
+prompt-shield benchmark accuracy --dataset sample
+prompt-shield benchmark performance -n 100
+prompt-shield benchmark datasets
 ```
 
 ## Contributing
@@ -398,8 +500,8 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 ## Roadmap
 
-- **v0.1.x** (current): 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
-- **v0.2.0**: Community threat repo, Dify/n8n/CrewAI integrations, PII detection & redaction, OWASP LLM Top 10 compliance mapping, standardized benchmarking, Prometheus metrics endpoint, Docker & Helm charts
+- **v0.1.x** (current): 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, OWASP LLM Top 10 compliance mapping, standardized benchmarking, CLI
+- **v0.2.0**: Community threat repo, Dify/n8n/CrewAI integrations, PII detection & redaction, Prometheus metrics endpoint, Docker & Helm charts
 - **v0.3.0**: Live collaborative threat network, adversarial red-team loop, behavioral drift detection, per-session trust scoring, SaaS dashboard, agentic honeypots, OpenTelemetry & Langfuse integration, Denial of Wallet detection, multi-language attack detection, webhook alerting
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
