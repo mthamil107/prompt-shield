@@ -41,3 +41,7 @@ class ThreatFeedError(PromptShieldError):
 
 class ScanError(PromptShieldError):
     """Raised when a scan operation fails."""
+
+
+class BenchmarkError(PromptShieldError):
+    """Raised when a benchmark operation fails."""

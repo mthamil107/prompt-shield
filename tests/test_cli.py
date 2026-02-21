@@ -151,3 +151,168 @@ class TestCLIConfig:
         result = runner.invoke(main, ["config", "validate", cli_config_file])
         assert result.exit_code == 0
         assert "valid" in result.output.lower()
+
+
+class TestCLICompliance:
+    """Tests for compliance commands."""
+
+    def test_compliance_report(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """compliance report should show coverage information."""
+        result = runner.invoke(
+            main,
+            ["-c", cli_config_file, "--data-dir", data_dir, "compliance", "report"],
+        )
+        assert result.exit_code == 0
+        assert "OWASP" in result.output or "Coverage" in result.output
+
+    def test_compliance_report_json(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """compliance report --json-output should produce valid JSON."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "compliance", "report",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert "owasp_version" in parsed
+        assert "coverage_percentage" in parsed
+        assert "category_details" in parsed
+
+    def test_compliance_mapping(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """compliance mapping should list detector-to-OWASP mappings."""
+        result = runner.invoke(
+            main,
+            ["-c", cli_config_file, "--data-dir", data_dir, "compliance", "mapping"],
+        )
+        assert result.exit_code == 0
+        assert "d001" in result.output or "Mapping" in result.output
+
+    def test_compliance_mapping_json(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """compliance mapping --json-output should produce valid JSON."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "compliance", "mapping",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert isinstance(parsed, dict)
+
+    def test_compliance_mapping_filter(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """compliance mapping --detector should filter to one detector."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "compliance", "mapping",
+                "--detector", "d001_system_prompt_extraction",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert "d001_system_prompt_extraction" in parsed
+
+
+class TestCLIBenchmark:
+    """Tests for benchmark commands."""
+
+    def test_benchmark_performance(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark performance should run without error."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "benchmark", "performance", "-n", "1",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "scans" in result.output.lower() or "Total" in result.output
+
+    def test_benchmark_performance_json(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark performance --json-output should produce valid JSON."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "benchmark", "performance", "-n", "1",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert "total_scans" in parsed
+
+    def test_benchmark_accuracy(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark accuracy should run with the sample dataset."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "benchmark", "accuracy", "--dataset", "sample", "--max-samples", "5",
+            ],
+        )
+        assert result.exit_code == 0
+        assert "Precision" in result.output or "Accuracy" in result.output
+
+    def test_benchmark_accuracy_json(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark accuracy --json-output should produce valid JSON."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "benchmark", "accuracy",
+                "--dataset", "sample", "--max-samples", "5",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert "metrics" in parsed
+        assert "dataset_name" in parsed
+
+    def test_benchmark_datasets(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark datasets should list available datasets."""
+        result = runner.invoke(
+            main,
+            ["-c", cli_config_file, "--data-dir", data_dir, "benchmark", "datasets"],
+        )
+        assert result.exit_code == 0
+        assert "sample" in result.output.lower()
+
+    def test_benchmark_datasets_json(
+        self, runner: CliRunner, cli_config_file: str, data_dir: str
+    ) -> None:
+        """benchmark datasets --json-output should produce valid JSON."""
+        result = runner.invoke(
+            main,
+            [
+                "-c", cli_config_file, "--data-dir", data_dir,
+                "--json-output", "benchmark", "datasets",
+            ],
+        )
+        assert result.exit_code == 0
+        parsed = json.loads(result.output)
+        assert isinstance(parsed, list)
+        assert any(d["id"] == "sample" for d in parsed)
