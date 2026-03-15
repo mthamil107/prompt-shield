@@ -1,0 +1,37 @@
+{
+  "name": "n8n-nodes-prompt-shield",
+  "version": "0.1.0",
+  "description": "n8n community node for Prompt Shield - scan text for prompt injection attacks and PII",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "prompt-injection",
+    "pii-detection",
+    "security"
+  ],
+  "license": "MIT",
+  "files": [
+    "dist"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/PromptShieldApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/PromptShield/PromptShield.node.js"
+    ]
+  },
+  "scripts": {
+    "build": "tsc",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.0",
+    "n8n-workflow": "*"
+  }
+}

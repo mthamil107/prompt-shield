@@ -1,0 +1,24 @@
+{
+	"node": "n8n-nodes-base.promptShield",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["AI", "Miscellaneous"],
+	"resources": {
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/mthamil107/prompt-shield"
+			}
+		]
+	},
+	"alias": [
+		"prompt injection",
+		"pii",
+		"redact",
+		"security",
+		"shield",
+		"scan"
+	],
+	"subcategories": {
+		"AI": ["Miscellaneous"]
+	}
+}
