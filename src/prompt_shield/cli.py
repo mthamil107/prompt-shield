@@ -797,10 +797,16 @@ def redteam() -> None:
 @click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
 @click.option("--category", "-cat", default=None, help="Specific category to test")
 @click.option(
-    "--api-key", default=None, help="Anthropic API key (or set ANTHROPIC_API_KEY)"
+    "--provider", "-p", default="anthropic",
+    type=click.Choice(["anthropic", "openai"]),
+    help="LLM provider (anthropic or openai)",
 )
 @click.option(
-    "--model", default="claude-sonnet-4-20250514", help="Claude model to use"
+    "--api-key", default=None, help="API key (or set ANTHROPIC_API_KEY / OPENAI_API_KEY)"
+)
+@click.option(
+    "--model", "-m", default=None,
+    help="Model name (default: claude-sonnet-4-20250514 for anthropic, gpt-4o for openai)",
 )
 @click.option(
     "--max-tokens", "max_tokens_budget", default=50000, type=int,
@@ -815,8 +821,9 @@ def redteam_run(
     ctx: click.Context,
     duration: int,
     category: str | None,
+    provider: str,
     api_key: str | None,
-    model: str,
+    model: str | None,
     max_tokens_budget: int,
     json_output: bool,
 ) -> None:
@@ -827,8 +834,8 @@ def redteam_run(
         from prompt_shield.redteam.runner import RedTeamRunner
     except ImportError:
         click.secho(
-            "Error: The anthropic SDK is required for red team mode.\n"
-            "Install it with: pip install anthropic",
+            f"Error: The {provider} SDK is required for red team mode.\n"
+            f"Install it with: pip install {provider}",
             fg="red",
             err=True,
         )
@@ -839,6 +846,7 @@ def redteam_run(
     try:
         runner = RedTeamRunner(
             engine=engine,
+            provider=provider,
             api_key=api_key,
             model=model,
             max_tokens_budget=max_tokens_budget,
@@ -853,7 +861,8 @@ def redteam_run(
         click.echo()
         click.secho("  Starting adversarial self-testing (red team)...", bold=True)
         click.echo(f"  Duration: {duration} minutes")
-        click.echo(f"  Model: {model}")
+        model_display = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
+        click.echo(f"  Provider: {provider} | Model: {model_display}")
         click.echo(f"  Token budget: {max_tokens_budget}")
         if categories:
             click.echo(f"  Categories: {', '.join(categories)}")
@@ -888,9 +897,17 @@ def redteam_run(
 
 @main.command("attackme")
 @click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
-@click.option("--api-key", default=None, help="Anthropic API key (or set ANTHROPIC_API_KEY)")
+@click.option(
+    "--provider", "-p", default="anthropic",
+    type=click.Choice(["anthropic", "openai"]),
+    help="LLM provider",
+)
+@click.option("--api-key", default=None, help="API key (or set env var)")
+@click.option("--model", "-m", default=None, help="Model name")
 @click.pass_context
-def attackme(ctx: click.Context, duration: int, api_key: str | None) -> None:
+def attackme(
+    ctx: click.Context, duration: int, provider: str, api_key: str | None, model: str | None
+) -> None:
     """Quick shortcut: run red team self-testing against all attack categories."""
     use_json = ctx.obj.get("json", False)
 
@@ -898,7 +915,7 @@ def attackme(ctx: click.Context, duration: int, api_key: str | None) -> None:
         from prompt_shield.redteam.runner import RedTeamRunner
     except ImportError:
         click.secho(
-            "Error: pip install anthropic",
+            f"Error: pip install {provider}",
             fg="red",
             err=True,
         )
@@ -907,7 +924,7 @@ def attackme(ctx: click.Context, duration: int, api_key: str | None) -> None:
     engine = _get_engine(ctx)
 
     try:
-        runner = RedTeamRunner(engine=engine, api_key=api_key)
+        runner = RedTeamRunner(engine=engine, provider=provider, api_key=api_key, model=model)
     except (ValueError, ImportError) as exc:
         click.secho(f"Error: {exc}", fg="red", err=True)
         sys.exit(1)
@@ -915,7 +932,8 @@ def attackme(ctx: click.Context, duration: int, api_key: str | None) -> None:
     if not use_json:
         click.echo()
         click.secho("  ATTACK ME — Red team self-test", bold=True)
-        click.echo(f"  Duration: {duration} minutes | All 12 categories")
+        model_name = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
+        click.echo(f"  Duration: {duration} minutes | Provider: {provider}/{model_name} | All 12 categories")
         click.echo()
 
     report = runner.run(duration_minutes=duration, verbose=not use_json)

@@ -1,4 +1,4 @@
-"""Core red team runner that generates attacks via Claude and tests them against prompt-shield."""
+"""Core red team runner that generates attacks via LLM API and tests them against prompt-shield."""
 
 from __future__ import annotations
 
@@ -100,38 +100,56 @@ Return your attacks as a JSON array of strings: ["attack1", "attack2", ...]
 Return ONLY the JSON array, no other text.
 """
 
+# Supported providers and their default models
+PROVIDERS = {
+    "anthropic": {
+        "default_model": "claude-sonnet-4-20250514",
+        "env_key": "ANTHROPIC_API_KEY",
+        "install": "pip install anthropic",
+    },
+    "openai": {
+        "default_model": "gpt-4o",
+        "env_key": "OPENAI_API_KEY",
+        "install": "pip install openai",
+    },
+}
+
 
 class RedTeamRunner:
-    """Generates adversarial attacks via Claude API and tests them against prompt-shield."""
+    """Generates adversarial attacks via LLM API and tests them against prompt-shield.
+
+    Supports both Anthropic (Claude) and OpenAI (GPT) as attack generators.
+    """
 
     def __init__(
         self,
         engine: Any | None = None,
+        provider: str = "anthropic",
         api_key: str | None = None,
-        model: str = "claude-sonnet-4-20250514",
+        model: str | None = None,
         max_tokens_budget: int = 50000,
     ) -> None:
-        self._model = model
+        if provider not in PROVIDERS:
+            raise ValueError(
+                f"Unknown provider '{provider}'. Supported: {', '.join(PROVIDERS.keys())}"
+            )
+
+        self._provider = provider
+        provider_info = PROVIDERS[provider]
+        self._model = model or provider_info["default_model"]
         self._max_tokens_budget = max_tokens_budget
         self._tokens_used = 0
 
         # Resolve API key
-        self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        self._api_key = api_key or os.environ.get(provider_info["env_key"])
         if not self._api_key:
             raise ValueError(
-                "Anthropic API key required. Pass api_key or set ANTHROPIC_API_KEY env var."
+                f"{provider.capitalize()} API key required. "
+                f"Pass api_key or set {provider_info['env_key']} env var."
             )
 
-        # Lazy-import anthropic
-        try:
-            import anthropic  # noqa: F811
-        except ImportError:
-            raise ImportError(
-                "The anthropic SDK is required for red team mode. "
-                "Install it with: pip install anthropic"
-            ) from None
-
-        self._client = anthropic.Anthropic(api_key=self._api_key)
+        # Initialize the appropriate client
+        self._client = _create_client(provider, self._api_key)
 
         # Create or use provided engine
         if engine is not None:
@@ -154,7 +172,7 @@ class RedTeamRunner:
                 }
             )
 
-        self._bypass_threshold = 0.5  # risk_score below this counts as bypass
+        self._bypass_threshold = 0.5
 
     def run(
         self,
@@ -163,9 +181,6 @@ class RedTeamRunner:
         verbose: bool = True,
     ) -> RedTeamReport:
         """Run the red team loop for the specified duration.
-
-        Generates attacks using Claude, tests them against the engine,
-        and collects results. Rotates through attack categories each iteration.
 
         Args:
             duration_minutes: Maximum duration in minutes.
@@ -177,7 +192,6 @@ class RedTeamRunner:
         """
         active_categories = categories or list(ATTACK_CATEGORIES.keys())
 
-        # Validate categories
         for cat in active_categories:
             if cat not in ATTACK_CATEGORIES:
                 raise ValueError(
@@ -193,7 +207,6 @@ class RedTeamRunner:
         previous_bypasses: list[dict[str, str]] = []
 
         while time.monotonic() < deadline:
-            # Check token budget
             if self._tokens_used >= self._max_tokens_budget:
                 if verbose:
                     _log(
@@ -208,21 +221,18 @@ class RedTeamRunner:
             if verbose:
                 _log(
                     f"[{len(results)} attacks, {sum(bypasses_by_category.values())} bypasses] "
-                    f"Generating attacks for: {category}"
+                    f"Generating attacks for: {category} (via {self._provider}/{self._model})"
                 )
 
-            # Generate attacks
             try:
                 attacks = self._generate_attacks(category, previous_bypasses)
             except Exception as exc:
                 logger.warning("Failed to generate attacks for %s: %s", category, exc)
                 if verbose:
                     _log(f"  Error generating attacks: {exc}")
-                # Rate limit pause even on error
                 time.sleep(2)
                 continue
 
-            # Test each attack
             for attack_prompt in attacks:
                 if time.monotonic() >= deadline:
                     break
@@ -239,7 +249,6 @@ class RedTeamRunner:
                     previous_bypasses.append(
                         {"category": category, "prompt": attack_prompt}
                     )
-                    # Keep a rolling window of recent bypasses for context
                     if len(previous_bypasses) > 20:
                         previous_bypasses = previous_bypasses[-20:]
 
@@ -250,7 +259,6 @@ class RedTeamRunner:
                             f"{preview}..."
                         )
 
-            # Rate limit: pause between API calls
             time.sleep(2)
 
         elapsed = time.monotonic() - start_time
@@ -271,13 +279,7 @@ class RedTeamRunner:
     def _generate_attacks(
         self, category: str, previous_bypasses: list[dict[str, str]]
     ) -> list[str]:
-        """Call Claude API to generate attack prompts for the given category.
-
-        Includes previous bypasses so Claude can evolve its strategies.
-
-        Returns:
-            A list of attack prompt strings.
-        """
+        """Call LLM API to generate attack prompts for the given category."""
         category_desc = ATTACK_CATEGORIES[category]
 
         user_parts: list[str] = [
@@ -302,39 +304,15 @@ class RedTeamRunner:
         )
 
         user_message = "\n".join(user_parts)
-
-        response = self._client.messages.create(
-            model=self._model,
-            max_tokens=4096,
-            system=_SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": user_message}],
+        text, tokens = _call_llm(
+            self._client, self._provider, self._model, _SYSTEM_PROMPT, user_message
         )
-
-        # Track token usage
-        if hasattr(response, "usage") and response.usage:
-            self._tokens_used += (
-                getattr(response.usage, "input_tokens", 0)
-                + getattr(response.usage, "output_tokens", 0)
-            )
-
-        # Parse the response
-        text = ""
-        for block in response.content:
-            if hasattr(block, "text"):
-                text += block.text
+        self._tokens_used += tokens
 
         return _parse_attack_list(text)
 
     def _test_attack(self, prompt: str, category: str) -> AttackResult:
-        """Run a single attack prompt through the engine and determine if it bypassed.
-
-        Args:
-            prompt: The attack prompt to test.
-            category: The attack category.
-
-        Returns:
-            An AttackResult indicating whether the attack bypassed the firewall.
-        """
+        """Run a single attack prompt through the engine and determine if it bypassed."""
         try:
             report = self._engine.scan(prompt)
             action = report.action.value
@@ -342,7 +320,6 @@ class RedTeamRunner:
             detections = [d.detector_id for d in report.detections]
         except Exception as exc:
             logger.warning("Scan failed for attack prompt: %s", exc)
-            # Treat scan errors as non-bypasses
             return AttackResult(
                 category=category,
                 prompt=prompt,
@@ -352,7 +329,6 @@ class RedTeamRunner:
                 detections=[],
             )
 
-        # A bypass occurs when the attack is not blocked/flagged
         bypassed = action == "pass" or risk_score < self._bypass_threshold
 
         return AttackResult(
@@ -365,17 +341,76 @@ class RedTeamRunner:
         )
 
 
-def _parse_attack_list(text: str) -> list[str]:
-    """Parse a JSON array of attack strings from Claude's response.
+def _create_client(provider: str, api_key: str) -> Any:
+    """Create the appropriate LLM client."""
+    if provider == "anthropic":
+        try:
+            import anthropic
+        except ImportError:
+            raise ImportError(
+                "The anthropic SDK is required. Install it with: pip install anthropic"
+            ) from None
+        return anthropic.Anthropic(api_key=api_key)
 
-    Handles cases where Claude wraps the JSON in markdown code blocks.
-    """
+    if provider == "openai":
+        try:
+            import openai
+        except ImportError:
+            raise ImportError(
+                "The openai SDK is required. Install it with: pip install openai"
+            ) from None
+        return openai.OpenAI(api_key=api_key)
+
+    raise ValueError(f"Unknown provider: {provider}")
+
+
+def _call_llm(
+    client: Any, provider: str, model: str, system: str, user_message: str
+) -> tuple[str, int]:
+    """Call the LLM and return (response_text, tokens_used)."""
+    if provider == "anthropic":
+        response = client.messages.create(
+            model=model,
+            max_tokens=4096,
+            system=system,
+            messages=[{"role": "user", "content": user_message}],
+        )
+        text = ""
+        for block in response.content:
+            if hasattr(block, "text"):
+                text += block.text
+        tokens = 0
+        if hasattr(response, "usage") and response.usage:
+            tokens = (
+                getattr(response.usage, "input_tokens", 0)
+                + getattr(response.usage, "output_tokens", 0)
+            )
+        return text, tokens
+
+    if provider == "openai":
+        response = client.chat.completions.create(
+            model=model,
+            max_tokens=4096,
+            messages=[
+                {"role": "system", "content": system},
+                {"role": "user", "content": user_message},
+            ],
+        )
+        text = response.choices[0].message.content or ""
+        tokens = 0
+        if hasattr(response, "usage") and response.usage:
+            tokens = getattr(response.usage, "total_tokens", 0)
+        return text, tokens
+
+    raise ValueError(f"Unknown provider: {provider}")
+
+
+def _parse_attack_list(text: str) -> list[str]:
+    """Parse a JSON array of attack strings from the LLM response."""
     cleaned = text.strip()
 
-    # Remove markdown code block wrapping if present
     if cleaned.startswith("```"):
         lines = cleaned.split("\n")
-        # Remove first line (```json or ```) and last line (```)
         lines = [l for l in lines if not l.strip().startswith("```")]
         cleaned = "\n".join(lines).strip()
 
@@ -386,7 +421,6 @@ def _parse_attack_list(text: str) -> list[str]:
     except json.JSONDecodeError:
         pass
 
-    # Fallback: try to find a JSON array in the text
     start = cleaned.find("[")
     end = cleaned.rfind("]")
     if start != -1 and end != -1 and end > start:
@@ -397,7 +431,7 @@ def _parse_attack_list(text: str) -> list[str]:
         except json.JSONDecodeError:
             pass
 
-    logger.warning("Could not parse attack list from Claude response")
+    logger.warning("Could not parse attack list from LLM response")
     return []
 
 
