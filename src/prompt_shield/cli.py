@@ -883,5 +883,57 @@ def redteam_run(
         sys.exit(1)
 
 
+# --- attackme (quick shortcut for red team) ---
+
+
+@main.command("attackme")
+@click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
+@click.option("--api-key", default=None, help="Anthropic API key (or set ANTHROPIC_API_KEY)")
+@click.pass_context
+def attackme(ctx: click.Context, duration: int, api_key: str | None) -> None:
+    """Quick shortcut: run red team self-testing against all attack categories."""
+    use_json = ctx.obj.get("json", False)
+
+    try:
+        from prompt_shield.redteam.runner import RedTeamRunner
+    except ImportError:
+        click.secho(
+            "Error: pip install anthropic",
+            fg="red",
+            err=True,
+        )
+        sys.exit(1)
+
+    engine = _get_engine(ctx)
+
+    try:
+        runner = RedTeamRunner(engine=engine, api_key=api_key)
+    except (ValueError, ImportError) as exc:
+        click.secho(f"Error: {exc}", fg="red", err=True)
+        sys.exit(1)
+
+    if not use_json:
+        click.echo()
+        click.secho("  ATTACK ME — Red team self-test", bold=True)
+        click.echo(f"  Duration: {duration} minutes | All 12 categories")
+        click.echo()
+
+    report = runner.run(duration_minutes=duration, verbose=not use_json)
+
+    if use_json:
+        click.echo(report.model_dump_json(indent=2))
+    else:
+        click.echo(report.summary())
+
+    if report.bypass_rate > 0.20:
+        if not use_json:
+            click.secho(
+                f"\n  WARNING: Bypass rate {report.bypass_rate:.1%} exceeds 20% threshold.",
+                fg="red",
+                bold=True,
+            )
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

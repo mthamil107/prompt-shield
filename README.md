@@ -465,6 +465,9 @@ pip install anthropic
 # Set API key
 export ANTHROPIC_API_KEY=sk-ant-...
 
+# Quick shortcut — just type "attackme"
+prompt-shield attackme
+
 # Run for 10 minutes (default)
 prompt-shield redteam run
 
@@ -629,7 +632,11 @@ prompt-shield pii scan "My email is user@example.com"
 prompt-shield pii redact "My SSN is 123-45-6789"
 prompt-shield --json-output pii redact "user@example.com"
 
-# Red team (requires ANTHROPIC_API_KEY)
+# Red team — quick shortcut (requires ANTHROPIC_API_KEY)
+prompt-shield attackme
+prompt-shield attackme --duration 60
+
+# Red team — full options
 prompt-shield redteam run --duration 10
 prompt-shield redteam run --category multilingual
 
