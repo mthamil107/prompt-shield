@@ -46,10 +46,11 @@ print(report.overall_risk_score)  # 0.95
 - **Canary Tokens** — Inject hidden tokens into prompts; detect if the LLM leaks them in responses
 - **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak detection)
 - **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; MCP filter; OpenAI/Anthropic client wrappers
-- **OWASP LLM Top 10 Compliance** — Built-in mapping of all 22 detectors to OWASP LLM Top 10 (2025) categories; generate coverage reports showing which categories are covered and gaps to fill
+- **OWASP LLM Top 10 Compliance** — Built-in mapping of all 23 detectors to OWASP LLM Top 10 (2025) categories; generate coverage reports showing which categories are covered and gaps to fill
 - **Standardized Benchmarking** — Measure accuracy (precision, recall, F1, accuracy) against bundled or custom datasets; includes a 50-sample dataset out of the box, CSV/JSON/HuggingFace loaders, and performance benchmarking
+- **Adversarial Self-Testing (Red Team Loop)** — Use Claude to continuously attack prompt-shield across 12 attack categories, report bypasses, and evolve strategies; `prompt-shield redteam run --duration 60`
 - **Plugin Architecture** — Write custom detectors with a simple interface; auto-discovery via entry points
-- **CLI** — Scan text, manage vault, import/export threats, run compliance reports, benchmark accuracy — all from the command line
+- **CLI** — Scan text, manage vault, import/export threats, run compliance reports, benchmark accuracy, red team testing — all from the command line
 - **Zero External Services** — Everything runs locally: SQLite for metadata, ChromaDB for vectors, CPU-based embeddings
 
 ## Architecture
@@ -451,6 +452,65 @@ prompt_shield:
 
 PII redaction is also integrated into AgentGuard's sanitize flow — when `data_mode="sanitize"`, detected PII is automatically replaced with entity-type-aware placeholders instead of the generic `[REDACTED by prompt-shield]`.
 
+## Adversarial Self-Testing (Red Team Loop)
+
+Use Claude as an automated red team to continuously attack prompt-shield, discover bypasses, and evolve attack strategies. No other open-source tool has this built-in.
+
+### CLI
+
+```bash
+# Install anthropic SDK
+pip install anthropic
+
+# Set API key
+export ANTHROPIC_API_KEY=sk-ant-...
+
+# Run for 10 minutes (default)
+prompt-shield redteam run
+
+# Run for 1 hour
+prompt-shield redteam run --duration 60
+
+# Test specific attack category
+prompt-shield redteam run --category multilingual
+
+# JSON output for CI/CD
+prompt-shield --json-output redteam run --duration 5
+```
+
+### Python API
+
+```python
+from prompt_shield.redteam import RedTeamRunner
+
+runner = RedTeamRunner(api_key="sk-ant-...")
+report = runner.run(duration_minutes=30)
+
+print(f"Bypass rate: {report.bypass_rate:.1%}")
+print(f"Bypasses: {report.total_bypasses}/{report.total_attacks}")
+for category, count in report.bypasses_by_category.items():
+    print(f"  {category}: {count}")
+```
+
+### Attack Categories
+
+The red team tests across 12 attack categories based on 2025-2026 security research:
+
+| Category | Description |
+|----------|-------------|
+| `multilingual` | Injections in French, Chinese, Arabic, Hindi, etc. |
+| `cipher_encoding` | Hex, leetspeak, Morse, Caesar cipher, URL encoding |
+| `many_shot` | 10-20 fake Q&A pairs exploiting in-context learning |
+| `educational_reframing` | HILL-style academic reframing of harmful queries |
+| `token_smuggling_advanced` | Unicode combining marks, variation selectors |
+| `tool_disguised` | Payloads hidden in fake JSON tool call structures |
+| `multi_turn_semantic` | Benign messages that collectively escalate |
+| `dual_intention` | Harmful requests masked by legitimate business context |
+| `system_prompt_extraction` | Creative indirect extraction attempts |
+| `data_exfiltration_creative` | Exfiltration avoiding obvious keywords |
+| `role_hijack_subtle` | Gradual persona shifts without obvious patterns |
+| `obfuscation_novel` | Word splitting, reversed text, emoji substitution |
+
 ## Integrations
 
 ### OpenAI / Anthropic Client Wrappers
@@ -569,6 +629,10 @@ prompt-shield pii scan "My email is user@example.com"
 prompt-shield pii redact "My SSN is 123-45-6789"
 prompt-shield --json-output pii redact "user@example.com"
 
+# Red team (requires ANTHROPIC_API_KEY)
+prompt-shield redteam run --duration 10
+prompt-shield redteam run --category multilingual
+
 # Benchmarking
 prompt-shield benchmark accuracy --dataset sample
 prompt-shield benchmark performance -n 100
@@ -585,8 +649,8 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 - **v0.1.x**: 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
 - **v0.2.0**: OWASP LLM Top 10 compliance mapping, standardized benchmarking (accuracy metrics, dataset loaders, bundled dataset), CLI benchmark and compliance command groups
-- **v0.3.0** (current): PII detection & redaction (d023 detector, standalone redactor, CLI `pii scan`/`pii redact`), community threat repo, Dify/n8n/CrewAI integrations, Prometheus metrics endpoint, Docker & Helm charts
-- **v0.4.0**: Live collaborative threat network, adversarial red-team loop, behavioral drift detection, per-session trust scoring, SaaS dashboard, agentic honeypots, OpenTelemetry & Langfuse integration, Denial of Wallet detection, multi-language attack detection, webhook alerting
+- **v0.3.0** (current): PII detection & redaction, adversarial self-testing (red team loop), Dify plugin, n8n community node, awesome list submissions
+- **v0.4.0**: Close 12 security gaps (multilingual, cipher bypass, many-shot, multimodal, HILL, TokenBreak, tool-disguised, multi-turn semantic, dual intention, MCP protocol, document parsing, fuzzing resistance), text normalization pipeline, output scanning, live threat network, behavioral drift detection, SaaS dashboard
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
 
