@@ -454,28 +454,34 @@ PII redaction is also integrated into AgentGuard's sanitize flow — when `data_
 
 ## Adversarial Self-Testing (Red Team Loop)
 
-Use Claude as an automated red team to continuously attack prompt-shield, discover bypasses, and evolve attack strategies. No other open-source tool has this built-in.
+Use Claude or GPT as an automated red team to continuously attack prompt-shield, discover bypasses, and evolve attack strategies. Supports both Anthropic and OpenAI as attack generators. No other open-source tool has this built-in.
 
 ### CLI
 
 ```bash
-# Install anthropic SDK
-pip install anthropic
+# Install SDK (pick one or both)
+pip install anthropic    # for Claude
+pip install openai       # for GPT
 
 # Set API key
-export ANTHROPIC_API_KEY=sk-ant-...
+export ANTHROPIC_API_KEY=sk-ant-...   # for Claude
+export OPENAI_API_KEY=sk-...          # for GPT
 
 # Quick shortcut — just type "attackme"
 prompt-shield attackme
 
-# Run for 10 minutes (default)
-prompt-shield redteam run
+# Use GPT instead of Claude
+prompt-shield attackme --provider openai
+
+# Choose a specific model
+prompt-shield attackme --provider anthropic --model claude-sonnet-4-20250514
+prompt-shield attackme --provider openai --model gpt-4o-mini
 
 # Run for 1 hour
-prompt-shield redteam run --duration 60
+prompt-shield attackme --duration 60
 
-# Test specific attack category
-prompt-shield redteam run --category multilingual
+# Full options
+prompt-shield redteam run --provider openai --model gpt-4o --duration 30 --category multilingual
 
 # JSON output for CI/CD
 prompt-shield --json-output redteam run --duration 5
@@ -486,7 +492,12 @@ prompt-shield --json-output redteam run --duration 5
 ```python
 from prompt_shield.redteam import RedTeamRunner
 
+# With Claude (default)
 runner = RedTeamRunner(api_key="sk-ant-...")
+report = runner.run(duration_minutes=30)
+
+# With GPT
+runner = RedTeamRunner(provider="openai", api_key="sk-...", model="gpt-4o")
 report = runner.run(duration_minutes=30)
 
 print(f"Bypass rate: {report.bypass_rate:.1%}")
