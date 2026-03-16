@@ -49,44 +49,80 @@ Expose a `/metrics` endpoint for scan counts, block rates, detector hit rates, l
 ### Docker & Helm Charts
 Production-ready container images and Kubernetes deployment manifests for enterprise adoption.
 
-## v0.4.0 — Game Changers
+## v0.4.0 — Closing the Gaps
 
-### 1. Live Collaborative Threat Network (Paid Hub)
-Real-time threat intelligence sharing across all deployments. Every blocked attack silently contributes an anonymized fingerprint; every user benefits instantly. CrowdStrike model for LLM security.
+### Gap Analysis (2025-2026 Research)
+Security research audit identified 12 attack techniques that bypass prompt-shield's current 23 detectors. Sources: ACL 2025, NSS 2025, CSA 2026, arXiv, OWASP LLM01:2025, AWS Security, NVIDIA.
+
+#### P0 — Critical Gaps (prompt-shield is blind)
+| Gap | Attack | Impact | New Detector |
+|-----|--------|--------|-------------|
+| GAP 9 | Multilingual attacks (French, Chinese, Arabic injections) | All 22 regex detectors are English-only | d024: Multilingual injection detection |
+| GAP 8 | Cipher/encoding bypass (hex, leetspeak, Morse, Caesar) | Only base64 and ROT13 decoded | d025: Multi-encoding decoder |
+| GAP 5 | Many-shot jailbreaking (50-200 fake Q&A pairs) | No prompt length/structure analysis | d026: Structural anomaly detector |
+
+#### P1 — High Priority
+| Gap | Attack | Impact | Fix |
+|-----|--------|--------|-----|
+| GAP 1 | Multimodal injection (images, audio, EXIF) | Text-only scanning architecture | d027: Multimodal scanner (OCR + metadata) |
+| GAP 2 | HILL (educational reframing of harmful queries) | Looks like normal academic questions | d028: Intent classifier |
+| GAP 4 | TokenBreak (Unicode combining marks, variation selectors) | Only 14 invisible chars in d011 | Expand d010/d011 Unicode coverage |
+| GAP 6 | Tool-disguised attacks (iMIST via RL) | d014 is keyword-only | d029: Structured payload scanner |
+
+#### P2 — Medium Priority
+| Gap | Attack | Fix |
+|-----|--------|-----|
+| GAP 7 | Sophisticated multi-turn (semantic escalation, no keywords) | Enhance d006 with topic drift tracking |
+| GAP 12 | Dual intention escape (harmful intent in legitimate request) | d030: Embedded intent detector |
+| GAP 10 | MCP/agent protocol exploitation | Protocol-level scanning utilities |
+| GAP 3 | Prompt-in-content (hidden text in PDFs/docs) | Document parsing utilities |
+| GAP 11 | Fuzzing-generated jailbreaks (99% success rate) | Shift weight to ML classifiers |
+
+#### Architectural Fixes
+- **Text normalization pipeline** — Strip invisible chars + map homoglyphs BEFORE running all detectors (currently only d010/d011 do this)
+- **Multi-encoding preprocessor** — Decode base64, hex, URL-encoding, ROT13, leetspeak in a single pass, then re-scan decoded output
+- **Remove 512-token limit on d022** — Attacks after token 512 bypass ML entirely; chunk and scan
+- **Output scanning** — Detect when injection succeeded by scanning model responses
+
+### Adversarial Self-Testing (Red Team Loop) ← NEW
+LLM-powered red team that continuously attacks prompt-shield, reports bypasses, and auto-generates fixes.
+- `prompt-shield redteam` CLI command — runs Claude/OpenAI as attacker against prompt-shield
+- Configurable time budget (e.g., `--duration 1h`)
+- Covers all 12 gap categories: multilingual, cipher, many-shot, multimodal, HILL, TokenBreak, tool-disguised, multi-turn, dual-intention, MCP, document, fuzzing
+- Generates detailed report: attacks tried, bypasses found, severity, suggested fixes
+- Auto-fix mode: generates new regex patterns or detector code for discovered bypasses
+- Python API: `RedTeamRunner` class for programmatic use
+- No other open-source tool has this: attack → detect → fix → re-attack loop
+
+### Live Collaborative Threat Network (Paid Hub)
+Real-time threat intelligence sharing across all deployments. Every blocked attack silently contributes an anonymized fingerprint; every user benefits instantly.
 - Phase 1: Free community threat repo on GitHub (build traction first)
 - Phase 2: Central hub API (Fly.io + Supabase pgvector) — only when 500+ stars / active demand
 - Phase 3: Freemium tiers — Community (read-only, delayed), Contributor (real-time), Pro ($29/mo dashboard + analytics), Enterprise ($99+/mo SLA + on-prem)
 
-### 2. Adversarial Self-Testing (Red Team Loop)
-Use an LLM to continuously attack prompt-shield, evolve bypass strategies, and auto-generate new detector rules. A red team that never sleeps.
-
-### 3. Behavioral Drift Detection
+### Behavioral Drift Detection
 Monitor LLM outputs — not just inputs. Detect when model behavior diverges from its baseline (tone shift, instruction leakage, unexpected tool calls). Flag compromised sessions regardless of what the input looked like.
 
-### 4. Per-Session Trust Scoring
+### Per-Session Trust Scoring
 Track user behavior across a conversation. Build a risk profile over time. Detect slow multi-turn escalation attacks that look safe message-by-message but form an attack pattern in aggregate.
 
-### 5. SaaS Dashboard
-Hosted dashboard with real-time analytics, attack trends, team alerts, one-click threshold tuning, and deployment management. The library is distribution; the platform is the product.
+### SaaS Dashboard
+Hosted dashboard with real-time analytics, attack trends, team alerts, one-click threshold tuning, and deployment management.
 
-### 6. Agentic Honeypots
-Active deception beyond canary tokens. Plant realistic fake credentials, fake APIs, fake sensitive data. If the agent touches them, the session is compromised. Active defense, not just passive detection.
+### Agentic Honeypots
+Active deception beyond canary tokens. Plant realistic fake credentials, fake APIs, fake sensitive data. If the agent touches them, the session is compromised.
 
-### 7. OpenTelemetry & Langfuse Integration
+### OpenTelemetry & Langfuse Integration
 Native observability export so prompt-shield scan data flows into existing monitoring stacks.
 - OpenTelemetry spans and metrics for every scan (latency, risk score, detectors triggered)
 - Langfuse integration — trace-level prompt security annotations
-- Compatible with Datadog, Arize, WhyLabs, and any OTel collector
 
-### 8. Denial of Wallet Detection
-Detect prompts designed to trigger excessive token usage — extremely long outputs, recursive tool calls, infinite loops. A new detector category that no other open-source tool covers.
+### Denial of Wallet Detection
+Detect prompts designed to trigger excessive token usage — extremely long outputs, recursive tool calls, infinite loops.
 - Token budget enforcement per session
 - Cost anomaly alerting
 
-### 9. Multi-Language Attack Detection
-Extend detectors beyond English. Attacks in non-English languages, mixed-language prompts, and transliteration-based obfuscation currently bypass English-only regex patterns.
-
-### 10. Webhook Alerting
+### Webhook Alerting
 Real-time incident notifications to Slack, PagerDuty, Discord, email, or custom webhooks when attacks are detected or block rates spike.
 
 ---

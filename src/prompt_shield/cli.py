@@ -785,5 +785,103 @@ def benchmark_datasets(ctx: click.Context) -> None:
         click.echo()
 
 
+# --- redteam ---
+
+
+@main.group()
+def redteam() -> None:
+    """Adversarial self-testing (red team loop)."""
+
+
+@redteam.command("run")
+@click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
+@click.option("--category", "-cat", default=None, help="Specific category to test")
+@click.option(
+    "--api-key", default=None, help="Anthropic API key (or set ANTHROPIC_API_KEY)"
+)
+@click.option(
+    "--model", default="claude-sonnet-4-20250514", help="Claude model to use"
+)
+@click.option(
+    "--max-tokens", "max_tokens_budget", default=50000, type=int,
+    help="Maximum token budget for API calls",
+)
+@click.option(
+    "--json-output", "json_output", is_flag=True, default=False,
+    help="Output report as JSON",
+)
+@click.pass_context
+def redteam_run(
+    ctx: click.Context,
+    duration: int,
+    category: str | None,
+    api_key: str | None,
+    model: str,
+    max_tokens_budget: int,
+    json_output: bool,
+) -> None:
+    """Run adversarial self-testing against prompt-shield."""
+    use_json = json_output or ctx.obj.get("json", False)
+
+    try:
+        from prompt_shield.redteam.runner import RedTeamRunner
+    except ImportError:
+        click.secho(
+            "Error: The anthropic SDK is required for red team mode.\n"
+            "Install it with: pip install anthropic",
+            fg="red",
+            err=True,
+        )
+        sys.exit(1)
+
+    engine = _get_engine(ctx)
+
+    try:
+        runner = RedTeamRunner(
+            engine=engine,
+            api_key=api_key,
+            model=model,
+            max_tokens_budget=max_tokens_budget,
+        )
+    except (ValueError, ImportError) as exc:
+        click.secho(f"Error: {exc}", fg="red", err=True)
+        sys.exit(1)
+
+    categories = [category] if category else None
+
+    if not use_json:
+        click.echo()
+        click.secho("  Starting adversarial self-testing (red team)...", bold=True)
+        click.echo(f"  Duration: {duration} minutes")
+        click.echo(f"  Model: {model}")
+        click.echo(f"  Token budget: {max_tokens_budget}")
+        if categories:
+            click.echo(f"  Categories: {', '.join(categories)}")
+        else:
+            click.echo("  Categories: all")
+        click.echo()
+
+    report = runner.run(
+        duration_minutes=duration,
+        categories=categories,
+        verbose=not use_json,
+    )
+
+    if use_json:
+        click.echo(report.model_dump_json(indent=2))
+    else:
+        click.echo(report.summary())
+
+    # Exit with code 1 if bypass rate exceeds 20%
+    if report.bypass_rate > 0.20:
+        if not use_json:
+            click.secho(
+                f"\n  WARNING: Bypass rate {report.bypass_rate:.1%} exceeds 20% threshold.",
+                fg="red",
+                bold=True,
+            )
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()
