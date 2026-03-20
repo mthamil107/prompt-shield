@@ -1,0 +1,48 @@
+# Version control
+.git
+.gitignore
+
+# Python caches
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+dist
+build
+
+# Testing / coverage
+.pytest_cache
+htmlcov
+.coverage
+.mypy_cache
+.ruff_cache
+
+# Environment / secrets
+.env
+.env.*
+
+# Node / plugin artifacts
+node_modules
+plugins/n8n/node_modules
+plugins/n8n/package-lock.json
+
+# IDE / editor
+.vscode
+.idea
+*.swp
+*.swo
+
+# Claude tooling
+.claude
+
+# Documentation source (not needed in image)
+docs
+tests
+posts
+examples
+mkdocs.yml
+
+# Misc
+*.md
+LICENSE
+Makefile

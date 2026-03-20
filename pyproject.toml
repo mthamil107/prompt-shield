@@ -35,6 +35,7 @@ flask = ["flask>=2.0"]
 langchain = ["langchain-core>=0.1"]
 llamaindex = ["llama-index-core>=0.10"]
 django = ["django>=4.0"]
+crewai = ["crewai>=0.70", "crewai-tools>=0.12"]
 mcp = ["mcp>=1.0"]
 openai = ["openai>=1.0"]
 anthropic = ["anthropic>=0.30"]
@@ -42,7 +43,7 @@ ml = [
     "transformers>=4.30",
     "optimum[onnxruntime]>=1.12",
 ]
-all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,django,mcp,openai,anthropic,ml]"]
+all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,django,crewai,mcp,openai,anthropic,ml]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -56,6 +57,8 @@ dev = [
 
 [project.scripts]
 prompt-shield = "prompt_shield.cli:main"
+prompt-shield-hook = "prompt_shield.hooks:prompt_shield_hook"
+prompt-shield-pii-hook = "prompt_shield.hooks:prompt_shield_pii_hook"
 
 [project.entry-points."prompt_shield.detectors"]
 

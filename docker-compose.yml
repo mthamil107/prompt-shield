@@ -1,0 +1,21 @@
+services:
+  prompt-shield:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PROMPT_SHIELD_MODE=block
+      - PROMPT_SHIELD_THRESHOLD=0.7
+      - PROMPT_SHIELD_DATA_DIR=/home/shield/data
+    volumes:
+      - shield-data:/home/shield/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+
+volumes:
+  shield-data:
