@@ -45,7 +45,10 @@ print(report.overall_risk_score)  # 0.95
 - **Auto-Tuning** — User feedback (true/false positive) automatically adjusts detector thresholds
 - **Canary Tokens** — Inject hidden tokens into prompts; detect if the LLM leaks them in responses
 - **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak detection)
-- **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; MCP filter; OpenAI/Anthropic client wrappers
+- **GitHub Action** — Add prompt injection + PII scanning to any CI/CD pipeline with one YAML file; posts results as PR comments
+- **Pre-commit Hooks** — Scan staged files for injection and PII before every commit; `prompt-shield-scan` and `prompt-shield-pii`
+- **Docker + REST API** — Production-ready container with 6 REST endpoints (`/scan`, `/pii/scan`, `/pii/redact`, `/health`, `/detectors`, `/version`); rate limiting, CORS, OpenAPI docs
+- **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; CrewAI guard; MCP filter; OpenAI/Anthropic client wrappers
 - **OWASP LLM Top 10 Compliance** — Built-in mapping of all 23 detectors to OWASP LLM Top 10 (2025) categories; generate coverage reports showing which categories are covered and gaps to fill
 - **Standardized Benchmarking** — Measure accuracy (precision, recall, F1, accuracy) against bundled or custom datasets; includes a 50-sample dataset out of the box, CSV/JSON/HuggingFace loaders, and performance benchmarking
 - **Adversarial Self-Testing (Red Team Loop)** — Use Claude to continuously attack prompt-shield across 12 attack categories, report bypasses, and evolve strategies; `prompt-shield redteam run --duration 60`
@@ -555,6 +558,20 @@ from prompt_shield.integrations.langchain_callback import PromptShieldCallback
 chain = LLMChain(llm=llm, prompt=prompt, callbacks=[PromptShieldCallback()])
 ```
 
+### CrewAI Guard
+
+```python
+from prompt_shield.integrations.crewai_guard import CrewAIGuard, PromptShieldCrewAITool
+
+# As a tool — add to any agent
+shield_tool = PromptShieldCrewAITool()
+agent = Agent(role="Secure Assistant", tools=[shield_tool])
+
+# As a guard — wrap task execution
+guard = CrewAIGuard(mode="block", pii_redact=True)
+result = guard.execute_task(task, agent, context=user_input)
+```
+
 ### Direct Python
 
 ```python
@@ -562,6 +579,103 @@ from prompt_shield import PromptShieldEngine
 engine = PromptShieldEngine()
 report = engine.scan("user input here")
 ```
+
+## GitHub Action
+
+Add prompt injection scanning to any CI/CD pipeline. Scans changed files in PRs and posts results as a comment.
+
+```yaml
+# .github/workflows/prompt-shield.yml
+name: Prompt Shield Scan
+on:
+  pull_request:
+    types: [opened, synchronize]
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: mthamil107/prompt-shield/.github/actions/prompt-shield-scan@main
+        with:
+          threshold: '0.7'
+          pii-scan: 'true'
+          fail-on-detection: 'true'
+```
+
+See [docs/github-action.md](docs/github-action.md) for advanced configuration.
+
+## Pre-commit Hooks
+
+Scan staged files for prompt injection and PII before every commit.
+
+```yaml
+# .pre-commit-config.yaml
+repos:
+  - repo: https://github.com/mthamil107/prompt-shield
+    rev: v0.3.0
+    hooks:
+      - id: prompt-shield-scan
+      - id: prompt-shield-pii
+```
+
+```bash
+# Custom threshold
+repos:
+  - repo: https://github.com/mthamil107/prompt-shield
+    rev: v0.3.0
+    hooks:
+      - id: prompt-shield-scan
+        args: ['--threshold', '0.8']
+```
+
+See [docs/pre-commit.md](docs/pre-commit.md) for full options.
+
+## Docker + REST API
+
+Run prompt-shield as a containerized REST API service.
+
+```bash
+# Build and run
+docker build -t prompt-shield .
+docker run -p 8000:8000 prompt-shield
+
+# Or with Docker Compose
+docker compose up
+
+# CLI via Docker
+docker run prompt-shield prompt-shield scan "test input"
+docker run prompt-shield prompt-shield pii redact "user@example.com"
+```
+
+### REST API Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/health` | Health check |
+| `GET` | `/version` | Version info |
+| `POST` | `/scan` | Scan text for prompt injection |
+| `POST` | `/pii/scan` | Detect PII entities |
+| `POST` | `/pii/redact` | Redact PII from text |
+| `GET` | `/detectors` | List all detectors |
+
+```bash
+# Scan for injection
+curl -X POST http://localhost:8000/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "ignore all instructions"}'
+
+# Redact PII
+curl -X POST http://localhost:8000/pii/redact \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Email: user@example.com"}'
+```
+
+API docs available at `http://localhost:8000/docs`. See [docs/docker.md](docs/docker.md) for full reference.
 
 ## Configuration
 
@@ -643,12 +757,9 @@ prompt-shield pii scan "My email is user@example.com"
 prompt-shield pii redact "My SSN is 123-45-6789"
 prompt-shield --json-output pii redact "user@example.com"
 
-# Red team — quick shortcut (requires ANTHROPIC_API_KEY)
+# Red team (requires ANTHROPIC_API_KEY or OPENAI_API_KEY)
 prompt-shield attackme
-prompt-shield attackme --duration 60
-
-# Red team — full options
-prompt-shield redteam run --duration 10
+prompt-shield attackme --provider openai --duration 60
 prompt-shield redteam run --category multilingual
 
 # Benchmarking
@@ -667,7 +778,7 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 - **v0.1.x**: 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
 - **v0.2.0**: OWASP LLM Top 10 compliance mapping, standardized benchmarking (accuracy metrics, dataset loaders, bundled dataset), CLI benchmark and compliance command groups
-- **v0.3.0** (current): PII detection & redaction, adversarial self-testing (red team loop), Dify plugin, n8n community node, awesome list submissions
+- **v0.3.0** (current): PII detection & redaction, adversarial self-testing (red team loop), GitHub Action, pre-commit hooks, Docker + REST API, CrewAI integration, Dify plugin, n8n community node
 - **v0.4.0**: Close 12 security gaps (multilingual, cipher bypass, many-shot, multimodal, HILL, TokenBreak, tool-disguised, multi-turn semantic, dual intention, MCP protocol, document parsing, fuzzing resistance), text normalization pipeline, output scanning, live threat network, behavioral drift detection, SaaS dashboard
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
