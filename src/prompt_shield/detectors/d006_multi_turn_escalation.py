@@ -71,6 +71,31 @@ class MultiTurnEscalationDetector(BaseDetector):
             r"without\s+the\s+(?:restrictions?|limitations?|boundaries)",
             "Restriction removal request",
         ),
+        # Harmful topic escalation patterns
+        (
+            r"(?:synthes|manufactur|produc)\w*\s+(?:the\s+)?(?:most\s+)?(?:energetic|explosive|dangerous|lethal|toxic)\s+(?:compound|substance|material|chemical)",
+            "Harmful synthesis request",
+        ),
+        (
+            r"(?:how\s+(?:much|many)\s+(?:would\s+)?(?:be\s+)?(?:needed|required)\s+(?:for\s+)?(?:a\s+)?(?:large|mass|significant|maximum))",
+            "Quantity escalation for harmful purposes",
+        ),
+        (
+            r"(?:what\s+(?:quantities|amounts|volumes)\s+(?:would\s+)?(?:be\s+)?(?:needed|required)).*(?:large-scale|mass|significant|maximum|lethal|fatal)",
+            "Quantity with harmful modifiers",
+        ),
+        (
+            r"(?:can\s+you\s+(?:describe|detail|explain)\s+(?:the\s+)?(?:exact|specific|precise|detailed)\s+(?:process|steps|procedure|method|synthesis)\s+for)",
+            "Requesting exact harmful processes",
+        ),
+        (
+            r"(?:now|next|then|also)\s+(?:tell|show|explain|describe)\s+(?:me\s+)?(?:how\s+to|the\s+way\s+to|the\s+process\s+(?:for|of))\s+(?:actually\s+)?(?:make|build|create|synthesize|produce|manufacture)",
+            "Escalating from theory to practical instructions",
+        ),
+        (
+            r"(?:without\s+(?:any\s+)?(?:safety|security|legal|ethical)\s+(?:concern|consideration|restriction|limitation|guideline))",
+            "Asking to bypass safety considerations",
+        ),
     ]
 
     # Patterns that are suspicious when found in conversation history,

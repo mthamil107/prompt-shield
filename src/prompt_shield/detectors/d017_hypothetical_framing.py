@@ -43,6 +43,31 @@ class HypotheticalFramingDetector(BaseDetector):
         (r"as\s+a\s+novelist\s+writing", "Novelist pretext"),
         (r"imagine\s+there\s+are\s+no\s+rules", "No rules framing"),
         (r"pretend\s+this\s+is\s+fiction", "Fiction framing"),
+        # Dual intention patterns — harmful requests masked by legitimate business context
+        (
+            r"(?:write|create|draft|prepare)\s+(?:a\s+)?(?:cybersecurity|security|pentest|penetration)\s+(?:training|awareness|report|document|playbook).*(?:show|demonstrat|includ|document).*(?:attack|exploit|hack|breach|malware|ransomware|phishing)",
+            "Dual intention: security document with attack details",
+        ),
+        (
+            r"(?:incident\s+response|red\s+team|security\s+training|compliance)\s+.*(?:document|playbook|report|template).*(?:exact\s+steps|realistic|actual|working)\s+.*(?:attack|exploit|ransomware|phishing|exfiltrat|malware)",
+            "Dual intention: incident response with realistic attack steps",
+        ),
+        (
+            r"(?:penetration\s+test|pentest|red\s+team)\s+(?:report|template|exercise)\s+.*(?:actual|working|realistic|real)\s+(?:exploit|payload|code|command)",
+            "Dual intention: pentest report with working exploits",
+        ),
+        (
+            r"(?:security\s+awareness|training\s+(?:document|material))\s+.*(?:realistic|real|actual|working)\s+(?:phishing|attack|exploit|payload)",
+            "Dual intention: training material with real attacks",
+        ),
+        (
+            r"(?:social\s+engineering)\s+(?:script|template|playbook|scenario).*(?:realistic|actual|demonstrate|manipulat)",
+            "Dual intention: social engineering script",
+        ),
+        (
+            r"(?:for\s+(?:our|the)\s+(?:security|compliance|red)\s+team).*(?:document|create|draft|write).*(?:how\s+(?:an?\s+)?(?:attacker|threat\s+actor|adversary|hacker))",
+            "Dual intention: team document on attacker methods",
+        ),
     ]
 
     def detect(
