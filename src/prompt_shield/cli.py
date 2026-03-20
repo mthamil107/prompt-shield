@@ -785,5 +785,173 @@ def benchmark_datasets(ctx: click.Context) -> None:
         click.echo()
 
 
+# --- redteam ---
+
+
+@main.group()
+def redteam() -> None:
+    """Adversarial self-testing (red team loop)."""
+
+
+@redteam.command("run")
+@click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
+@click.option("--category", "-cat", default=None, help="Specific category to test")
+@click.option(
+    "--provider", "-p", default="anthropic",
+    type=click.Choice(["anthropic", "openai"]),
+    help="LLM provider (anthropic or openai)",
+)
+@click.option(
+    "--api-key", default=None, help="API key (or set ANTHROPIC_API_KEY / OPENAI_API_KEY)"
+)
+@click.option(
+    "--model", "-m", default=None,
+    help="Model name (default: claude-sonnet-4-20250514 for anthropic, gpt-4o for openai)",
+)
+@click.option(
+    "--max-tokens", "max_tokens_budget", default=50000, type=int,
+    help="Maximum token budget for API calls",
+)
+@click.option(
+    "--json-output", "json_output", is_flag=True, default=False,
+    help="Output report as JSON",
+)
+@click.pass_context
+def redteam_run(
+    ctx: click.Context,
+    duration: int,
+    category: str | None,
+    provider: str,
+    api_key: str | None,
+    model: str | None,
+    max_tokens_budget: int,
+    json_output: bool,
+) -> None:
+    """Run adversarial self-testing against prompt-shield."""
+    use_json = json_output or ctx.obj.get("json", False)
+
+    try:
+        from prompt_shield.redteam.runner import RedTeamRunner
+    except ImportError:
+        click.secho(
+            f"Error: The {provider} SDK is required for red team mode.\n"
+            f"Install it with: pip install {provider}",
+            fg="red",
+            err=True,
+        )
+        sys.exit(1)
+
+    engine = _get_engine(ctx)
+
+    try:
+        runner = RedTeamRunner(
+            engine=engine,
+            provider=provider,
+            api_key=api_key,
+            model=model,
+            max_tokens_budget=max_tokens_budget,
+        )
+    except (ValueError, ImportError) as exc:
+        click.secho(f"Error: {exc}", fg="red", err=True)
+        sys.exit(1)
+
+    categories = [category] if category else None
+
+    if not use_json:
+        click.echo()
+        click.secho("  Starting adversarial self-testing (red team)...", bold=True)
+        click.echo(f"  Duration: {duration} minutes")
+        model_display = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
+        click.echo(f"  Provider: {provider} | Model: {model_display}")
+        click.echo(f"  Token budget: {max_tokens_budget}")
+        if categories:
+            click.echo(f"  Categories: {', '.join(categories)}")
+        else:
+            click.echo("  Categories: all")
+        click.echo()
+
+    report = runner.run(
+        duration_minutes=duration,
+        categories=categories,
+        verbose=not use_json,
+    )
+
+    if use_json:
+        click.echo(report.model_dump_json(indent=2))
+    else:
+        click.echo(report.summary())
+
+    # Exit with code 1 if bypass rate exceeds 20%
+    if report.bypass_rate > 0.20:
+        if not use_json:
+            click.secho(
+                f"\n  WARNING: Bypass rate {report.bypass_rate:.1%} exceeds 20% threshold.",
+                fg="red",
+                bold=True,
+            )
+        sys.exit(1)
+
+
+# --- attackme (quick shortcut for red team) ---
+
+
+@main.command("attackme")
+@click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
+@click.option(
+    "--provider", "-p", default="anthropic",
+    type=click.Choice(["anthropic", "openai"]),
+    help="LLM provider",
+)
+@click.option("--api-key", default=None, help="API key (or set env var)")
+@click.option("--model", "-m", default=None, help="Model name")
+@click.pass_context
+def attackme(
+    ctx: click.Context, duration: int, provider: str, api_key: str | None, model: str | None
+) -> None:
+    """Quick shortcut: run red team self-testing against all attack categories."""
+    use_json = ctx.obj.get("json", False)
+
+    try:
+        from prompt_shield.redteam.runner import RedTeamRunner
+    except ImportError:
+        click.secho(
+            f"Error: pip install {provider}",
+            fg="red",
+            err=True,
+        )
+        sys.exit(1)
+
+    engine = _get_engine(ctx)
+
+    try:
+        runner = RedTeamRunner(engine=engine, provider=provider, api_key=api_key, model=model)
+    except (ValueError, ImportError) as exc:
+        click.secho(f"Error: {exc}", fg="red", err=True)
+        sys.exit(1)
+
+    if not use_json:
+        click.echo()
+        click.secho("  ATTACK ME — Red team self-test", bold=True)
+        model_name = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
+        click.echo(f"  Duration: {duration} minutes | Provider: {provider}/{model_name} | All 12 categories")
+        click.echo()
+
+    report = runner.run(duration_minutes=duration, verbose=not use_json)
+
+    if use_json:
+        click.echo(report.model_dump_json(indent=2))
+    else:
+        click.echo(report.summary())
+
+    if report.bypass_rate > 0.20:
+        if not use_json:
+            click.secho(
+                f"\n  WARNING: Bypass rate {report.bypass_rate:.1%} exceeds 20% threshold.",
+                fg="red",
+                bold=True,
+            )
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     main()

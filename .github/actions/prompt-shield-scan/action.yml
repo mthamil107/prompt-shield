@@ -1,0 +1,174 @@
+name: "Prompt Shield Scan"
+description: "Scan pull request files for prompt injection attacks and PII using prompt-shield-ai"
+author: "prompt-shield"
+
+branding:
+  icon: "shield"
+  color: "blue"
+
+inputs:
+  threshold:
+    description: "Risk score threshold (0.0 - 1.0). Detections at or above this score trigger findings."
+    required: false
+    default: "0.7"
+  mode:
+    description: "Scan mode: block (fail on detection), flag (warn only), monitor (log only)"
+    required: false
+    default: "block"
+  scan-patterns:
+    description: "Comma-separated glob patterns for files to scan"
+    required: false
+    default: "**/*.py,**/*.js,**/*.ts,**/*.md,**/*.txt,**/*.yaml,**/*.yml,**/*.json"
+  pii-scan:
+    description: "Enable PII scanning alongside prompt injection detection"
+    required: false
+    default: "true"
+  fail-on-detection:
+    description: "Fail the workflow step if detections are found above threshold"
+    required: false
+    default: "true"
+  python-version:
+    description: "Python version to use for scanning"
+    required: false
+    default: "3.12"
+
+outputs:
+  scan-results:
+    description: "JSON string containing full scan results"
+    value: ${{ steps.scan.outputs.results }}
+  detection-count:
+    description: "Number of files with detections above threshold"
+    value: ${{ steps.scan.outputs.detection_count }}
+  pii-count:
+    description: "Number of files with PII findings"
+    value: ${{ steps.scan.outputs.pii_count }}
+  has-detections:
+    description: "Whether any detections were found (true/false)"
+    value: ${{ steps.scan.outputs.has_detections }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install prompt-shield-ai
+      shell: bash
+      run: |
+        pip install --quiet prompt-shield-ai
+
+    - name: Get changed files
+      id: changed-files
+      shell: bash
+      env:
+        SCAN_PATTERNS: ${{ inputs.scan-patterns }}
+      run: |
+        # Get list of files changed in the PR
+        changed=$(git diff --name-only --diff-filter=ACMR ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} 2>/dev/null || git diff --name-only --diff-filter=ACMR HEAD~1)
+
+        if [ -z "$changed" ]; then
+          echo "No changed files found."
+          echo "files=" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        # Convert scan patterns to an array
+        IFS=',' read -ra PATTERNS <<< "$SCAN_PATTERNS"
+
+        # Filter changed files against scan patterns
+        matched_files=""
+        for file in $changed; do
+          if [ ! -f "$file" ]; then
+            continue
+          fi
+          for pattern in "${PATTERNS[@]}"; do
+            pattern=$(echo "$pattern" | xargs)  # trim whitespace
+            # Use bash extended globbing for matching
+            if [[ "$file" == $pattern ]] || [[ "$file" =~ \.(py|js|ts|md|txt|yaml|yml|json)$ ]]; then
+              matched_files="$matched_files $file"
+              break
+            fi
+          done
+        done
+
+        matched_files=$(echo "$matched_files" | xargs)  # trim
+        echo "Matched files for scanning: $matched_files"
+        echo "files=$matched_files" >> "$GITHUB_OUTPUT"
+
+    - name: Run prompt-shield scan
+      id: scan
+      if: steps.changed-files.outputs.files != ''
+      shell: bash
+      env:
+        INPUT_THRESHOLD: ${{ inputs.threshold }}
+        INPUT_MODE: ${{ inputs.mode }}
+        INPUT_PII_SCAN: ${{ inputs.pii-scan }}
+        INPUT_FAIL_ON_DETECTION: ${{ inputs.fail-on-detection }}
+        CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
+      run: |
+        python "${{ github.action_path }}/scan.py" \
+          --threshold "$INPUT_THRESHOLD" \
+          --mode "$INPUT_MODE" \
+          --pii-scan "$INPUT_PII_SCAN" \
+          --fail-on-detection "$INPUT_FAIL_ON_DETECTION" \
+          --files $CHANGED_FILES
+
+    - name: Post PR comment
+      if: steps.changed-files.outputs.files != '' && always()
+      uses: actions/github-script@v7
+      env:
+        SCAN_SUMMARY: ${{ steps.scan.outputs.summary }}
+        HAS_DETECTIONS: ${{ steps.scan.outputs.has_detections }}
+      with:
+        script: |
+          const summary = process.env.SCAN_SUMMARY;
+          if (!summary) {
+            console.log('No scan summary to post.');
+            return;
+          }
+
+          // Find existing comment from this action to update
+          const { data: comments } = await github.rest.issues.listComments({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+          });
+
+          const marker = '<!-- prompt-shield-scan -->';
+          const existing = comments.find(c => c.body.includes(marker));
+          const body = `${marker}\n${summary}`;
+
+          if (existing) {
+            await github.rest.issues.updateComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              comment_id: existing.id,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: body,
+            });
+          }
+
+    - name: No files to scan
+      if: steps.changed-files.outputs.files == ''
+      shell: bash
+      run: |
+        echo "No matching files changed in this PR. Skipping scan."
+        echo "results={}" >> "$GITHUB_OUTPUT"
+        echo "detection_count=0" >> "$GITHUB_OUTPUT"
+        echo "pii_count=0" >> "$GITHUB_OUTPUT"
+        echo "has_detections=false" >> "$GITHUB_OUTPUT"
+
+    - name: Enforce failure policy
+      if: steps.scan.outputs.has_detections == 'true' && inputs.fail-on-detection == 'true' && inputs.mode == 'block'
+      shell: bash
+      run: |
+        echo "::error::Prompt injection detected in PR files. See scan results above."
+        exit 1

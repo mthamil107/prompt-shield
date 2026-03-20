@@ -1,0 +1,17 @@
+- id: prompt-shield-scan
+  name: Prompt Shield Scan
+  description: Scan staged files for prompt injection patterns
+  entry: prompt-shield-hook
+  language: python
+  types: [text]
+  minimum_pre_commit_version: "3.0.0"
+  require_serial: true
+
+- id: prompt-shield-pii
+  name: Prompt Shield PII Scan
+  description: Scan staged files for PII (emails, phone numbers, SSNs, etc.)
+  entry: prompt-shield-pii-hook
+  language: python
+  types: [text]
+  minimum_pre_commit_version: "3.0.0"
+  require_serial: true

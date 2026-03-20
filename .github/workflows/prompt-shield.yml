@@ -1,0 +1,28 @@
+name: Prompt Shield Scan
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  scan:
+    name: Scan for Prompt Injection
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Prompt Shield scan
+        uses: ./.github/actions/prompt-shield-scan
+        with:
+          threshold: "0.7"
+          mode: "block"
+          pii-scan: "true"
+          fail-on-detection: "true"
