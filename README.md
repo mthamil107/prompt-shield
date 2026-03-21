@@ -35,26 +35,25 @@ print(report.overall_risk_score)  # 0.95
 
 ## Features
 
-- **25 Built-in Detectors** — Direct injection, encoding/obfuscation (including multilingual and multi-encoding), indirect injection, jailbreak patterns, PII detection, self-learning vector similarity, and semantic ML classification
-- **PII Detection & Redaction** — Detect and redact emails, phone numbers, SSNs, credit cards, API keys, and IP addresses with entity-type-aware placeholders; standalone `PIIRedactor` API and CLI commands (`pii scan`, `pii redact`)
-- **Semantic ML Detector** — DeBERTa-v3 transformer classifier (`protectai/deberta-v3-base-prompt-injection-v2`) catches paraphrased attacks that bypass regex patterns
-- **Ensemble Scoring** — Multiple weak signals combine: 3 detectors at 0.65 confidence → 0.75 risk score (above threshold), preventing attackers from flying under any single detector
-- **OpenAI & Anthropic Wrappers** — Drop-in client wrappers that auto-scan messages before calling the API; block or monitor mode
-- **Self-Learning Vault** — Every detected attack is embedded and stored; future variants are caught by vector similarity (ChromaDB + all-MiniLM-L6-v2)
-- **Community Threat Feed** — Import/export anonymized threat intelligence; collectively harden everyone's defenses
-- **Auto-Tuning** — User feedback (true/false positive) automatically adjusts detector thresholds
-- **Canary Tokens** — Inject hidden tokens into prompts; detect if the LLM leaks them in responses
-- **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak detection)
+- **25 Input Detectors** — Direct injection, encoding/obfuscation (7 schemes), multilingual (10 languages), indirect injection, jailbreak patterns, PII detection, self-learning vector similarity, and semantic ML classification
+- **5 Output Scanners** — Toxicity (hate/violence/self-harm), code injection (SQL/XSS/shell/SSRF), prompt leakage, output PII, and jailbreak relevance detection
+- **PII Detection & Redaction** — Detect and redact emails, phone numbers, SSNs, credit cards, API keys, and IP addresses with entity-type-aware placeholders; works on both inputs and outputs
+- **92.3% Detection, 0% False Positives** — Benchmarked against 54 real-world 2025-2026 attacks; beats ProtectAI DeBERTa (48.7%) and Deepset DeBERTa (87.2%, 6.7% FP) on F1 score
+- **Semantic ML Detector** — DeBERTa-v3 transformer classifier catches paraphrased attacks that bypass regex patterns
+- **Ensemble Scoring** — Multiple weak signals combine: 3 detectors at 0.65 confidence → 0.75 risk score, preventing attackers from flying under any single detector
+- **Adversarial Self-Testing (Red Team)** — Use Claude or GPT to continuously attack prompt-shield across 12 categories, report bypasses, and evolve strategies; `prompt-shield attackme`
+- **3-Gate Agent Protection** — Input gate (user messages) + Data gate (tool results / MCP) + Output gate (canary leak + output scanning)
 - **GitHub Action** — Add prompt injection + PII scanning to any CI/CD pipeline with one YAML file; posts results as PR comments
-- **Pre-commit Hooks** — Scan staged files for injection and PII before every commit; `prompt-shield-scan` and `prompt-shield-pii`
-- **Docker + REST API** — Production-ready container with 6 REST endpoints (`/scan`, `/pii/scan`, `/pii/redact`, `/health`, `/detectors`, `/version`); rate limiting, CORS, OpenAPI docs
-- **Framework Integrations** — FastAPI, Flask, Django middleware; LangChain callbacks; LlamaIndex handlers; CrewAI guard; MCP filter; OpenAI/Anthropic client wrappers
-- **OWASP LLM Top 10 Compliance** — Built-in mapping of all 25 detectors to OWASP LLM Top 10 (2025) categories; generate coverage reports showing which categories are covered and gaps to fill
-- **Standardized Benchmarking** — Measure accuracy (precision, recall, F1, accuracy) against bundled or custom datasets; includes a 50-sample dataset out of the box, CSV/JSON/HuggingFace loaders, and performance benchmarking
-- **Adversarial Self-Testing (Red Team Loop)** — Use Claude to continuously attack prompt-shield across 12 attack categories, report bypasses, and evolve strategies; `prompt-shield redteam run --duration 60`
+- **Pre-commit Hooks** — Scan staged files for injection and PII before every commit
+- **Docker + REST API** — Production-ready container with 7 REST endpoints; rate limiting, CORS, OpenAPI docs
+- **Framework Integrations** — FastAPI, Flask, Django, LangChain, LlamaIndex, CrewAI, MCP, OpenAI/Anthropic wrappers, Dify plugin, n8n node
+- **Self-Learning Vault** — Every detected attack is embedded and stored; future variants are caught by vector similarity
+- **Community Threat Feed** — Import/export anonymized threat intelligence
+- **OWASP LLM Top 10 Compliance** — All 25 detectors mapped; coverage reports and gap analysis
+- **Benchmarking** — Accuracy metrics (precision, recall, F1) against bundled or custom datasets; comparison benchmark against competitors
 - **Plugin Architecture** — Write custom detectors with a simple interface; auto-discovery via entry points
-- **CLI** — Scan text, manage vault, import/export threats, run compliance reports, benchmark accuracy, red team testing — all from the command line
-- **Zero External Services** — Everything runs locally: SQLite for metadata, ChromaDB for vectors, CPU-based embeddings
+- **CLI** — Scan inputs, scan outputs, PII redaction, vault, threats, compliance, benchmarks, red team — all from the command line
+- **Zero External Services** — Everything runs locally: SQLite, ChromaDB, CPU-based embeddings
 
 ## Architecture
 
@@ -62,16 +61,17 @@ print(report.overall_risk_score)  # 0.95
 User Input ──> [Input Gate] ──> LLM ──> [Output Gate] ──> Response
                     |                        |
                     v                        v
-              prompt-shield              Canary Check
-              25 Detectors (10 languages)
-              + ML Classifier (DeBERTa)
-              + Ensemble Scoring
-              + Vault Similarity
-                    |
-                    v
-          ┌─────────────────┐
-          │   Attack Vault   │ <── Community Threat Feed
-          │   (ChromaDB)     │ <── Auto-store detections
+              INPUT SCANNING            OUTPUT SCANNING
+              25 Detectors              5 Output Scanners
+              (10 languages)            - Toxicity
+              + ML Classifier           - Code Injection
+              + Ensemble Scoring        - Prompt Leakage
+              + Vault Similarity        - Output PII
+                    |                   - Relevance/Jailbreak
+                    v                        |
+          ┌─────────────────┐                v
+          │   Attack Vault   │ <──    Canary Check
+          │   (ChromaDB)     │ <──  Community Threat Feed
           └─────────────────┘
                     ^
                     |
@@ -482,6 +482,56 @@ prompt_shield:
 
 PII redaction is also integrated into AgentGuard's sanitize flow — when `data_mode="sanitize"`, detected PII is automatically replaced with entity-type-aware placeholders instead of the generic `[REDACTED by prompt-shield]`.
 
+## Output Scanning
+
+Scan LLM responses for harmful content, code injection, prompt leakage, PII, and jailbreak compliance. 5 output scanners complement the 25 input detectors for full input + output protection.
+
+### CLI
+
+```bash
+# Scan LLM output for harmful content
+prompt-shield output scan "Here is how to build a bomb: Step 1..."
+
+# Scan with JSON output
+prompt-shield --json-output output scan "Your API key is sk-abc123..."
+
+# List all output scanners
+prompt-shield output scanners
+```
+
+### Python API
+
+```python
+from prompt_shield.output_scanners.engine import OutputScanEngine
+
+engine = OutputScanEngine()
+report = engine.scan("Sure! Here's how to hack a server: Step 1...")
+
+print(report.flagged)  # True
+for flag in report.flags:
+    print(f"  {flag.scanner_id}: {flag.categories}")
+```
+
+### REST API
+
+```bash
+curl -X POST http://localhost:8000/output/scan \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Here is the system prompt: You are a helpful assistant..."}'
+```
+
+### Output Scanners
+
+| Scanner | Detects | Categories |
+|---------|---------|------------|
+| **Toxicity** | Hate speech, violence, self-harm, sexual content, dangerous instructions | `hate_speech`, `violence`, `self_harm`, `sexual_explicit`, `dangerous_instructions` |
+| **Code Injection** | SQL injection, shell commands, XSS, path traversal, SSRF, deserialization | `sql_injection`, `shell_injection`, `xss`, `path_traversal`, `ssrf`, `deserialization` |
+| **Prompt Leakage** | System prompt exposure, secret/API key leaks, instruction leaks | `prompt_leakage`, `secret_leakage`, `instruction_leakage` |
+| **Output PII** | PII in LLM responses (emails, SSNs, credit cards, etc.) | All 6 PII entity types |
+| **Relevance** | Jailbreak persona adoption, DAN mode, unrestricted claims | `jailbreak_compliance`, `jailbreak_persona` |
+
+Output scanning is also integrated into AgentGuard's Gate 3b — after the canary check, all 5 output scanners run automatically.
+
 ## Adversarial Self-Testing (Red Team Loop)
 
 Use Claude or GPT as an automated red team to continuously attack prompt-shield, discover bypasses, and evolve attack strategies. Supports both Anthropic and OpenAI as attack generators. No other open-source tool has this built-in.
@@ -688,6 +738,7 @@ docker run prompt-shield prompt-shield pii redact "user@example.com"
 | `POST` | `/scan` | Scan text for prompt injection |
 | `POST` | `/pii/scan` | Detect PII entities |
 | `POST` | `/pii/redact` | Redact PII from text |
+| `POST` | `/output/scan` | Scan LLM output for harmful content |
 | `GET` | `/detectors` | List all detectors |
 
 ```bash
@@ -784,6 +835,10 @@ prompt-shield pii scan "My email is user@example.com"
 prompt-shield pii redact "My SSN is 123-45-6789"
 prompt-shield --json-output pii redact "user@example.com"
 
+# Output scanning
+prompt-shield output scan "Here is how to hack a server..."
+prompt-shield output scanners
+
 # Red team (requires ANTHROPIC_API_KEY or OPENAI_API_KEY)
 prompt-shield attackme
 prompt-shield attackme --provider openai --duration 60
@@ -805,8 +860,8 @@ The easiest way to contribute is by adding a new detector. See the [New Detector
 
 - **v0.1.x**: 22 detectors, semantic ML classifier (DeBERTa), ensemble scoring, OpenAI/Anthropic client wrappers, self-learning vault, CLI
 - **v0.2.0**: OWASP LLM Top 10 compliance mapping, standardized benchmarking (accuracy metrics, dataset loaders, bundled dataset), CLI benchmark and compliance command groups
-- **v0.3.0** (current): PII detection & redaction, multilingual injection (10 languages), multi-encoding decoder (7 schemes), adversarial self-testing (red team loop), GitHub Action, pre-commit hooks, Docker + REST API, CrewAI integration, Dify plugin, n8n community node — **82.5% detection on realistic 2025-2026 attacks, 0% false positives**
-- **v0.4.0**: Close remaining gaps (many-shot structural analysis, multi-turn topic drift ML, multimodal OCR, output scanning), text normalization pipeline, live threat network, behavioral drift detection, SaaS dashboard
+- **v0.3.0** (current): 25 input detectors + 5 output scanners, PII detection & redaction, multilingual (10 languages), multi-encoding (7 schemes), red team loop, GitHub Action, pre-commit hooks, Docker + REST API, CrewAI/Dify/n8n integrations — **F1: 96.0%, 0% FP, 500 scans/sec**
+- **v0.4.0**: Many-shot structural analysis, multi-turn topic drift ML, multimodal OCR, Prometheus /metrics, Helm charts, hallucination detection, text normalization pipeline, live threat network, SaaS dashboard
 
 See [ROADMAP.md](ROADMAP.md) for the full roadmap with details.
 
