@@ -212,6 +212,44 @@ def scan_protectai_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[st
     return results, elapsed
 
 
+def scan_piguard(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
+    """Scan with PIGuard (ACL 2025, leolee99/PIGuard)."""
+    try:
+        from transformers import pipeline as hf_pipeline
+    except ImportError:
+        print("  SKIP: transformers not installed", file=sys.stderr)
+        return [], 0
+
+    classifier = hf_pipeline(
+        "text-classification",
+        model="leolee99/PIGuard",
+        truncation=True,
+        max_length=512,
+        trust_remote_code=True,
+    )
+
+    results = []
+    start = time.perf_counter()
+    for prompt, category, is_attack in prompts:
+        try:
+            out = classifier(prompt)[0]
+            # PIGuard labels: BENIGN / INJECTION (check both casings)
+            detected = out["label"].upper() in ("INJECTION", "MALICIOUS", "LABEL_1")
+            score = out["score"] if detected else 1.0 - out["score"]
+        except Exception:
+            detected = False
+            score = 0.0
+        results.append({
+            "prompt": prompt[:60],
+            "category": category,
+            "is_attack": is_attack,
+            "detected": detected,
+            "score": score,
+        })
+    elapsed = time.perf_counter() - start
+    return results, elapsed
+
+
 def scan_meta_prompt_guard(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
     """Scan with Meta Llama Prompt Guard 2 (86M)."""
     try:
@@ -345,6 +383,7 @@ def main():
         ("prompt-shield (regex only)", scan_prompt_shield),
         ("prompt-shield (regex + ML)", scan_prompt_shield_with_ml),
         ("ProtectAI DeBERTa v2", scan_protectai_deberta),
+        ("PIGuard (ACL 2025)", scan_piguard),
         ("Meta Prompt Guard 2", scan_meta_prompt_guard),
         ("Deepset DeBERTa v3", scan_deepset_deberta),
     ]
