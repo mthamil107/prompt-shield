@@ -128,26 +128,9 @@ print(report.overall_risk_score)  # 0.95
 
 ## Architecture
 
-```
-User Input --> [Input Gate] --> LLM --> [Output Gate] --> Response
-                    |                        |
-                    v                        v
-              INPUT SCANNING            OUTPUT SCANNING
-              25 Detectors              5 Output Scanners
-              (10 languages)            - Toxicity
-              + ML Classifier           - Code Injection
-              + Ensemble Scoring        - Prompt Leakage
-              + Vault Similarity        - Output PII
-                    |                   - Relevance/Jailbreak
-                    v                        |
-          +-------------------+              v
-          |   Attack Vault    | <--    Canary Check
-          |   (ChromaDB)      | <--  Community Threat Feed
-          +-------------------+
-                    ^
-                    |
-              [Data Gate] <-- Tool Results / MCP / RAG
-```
+<p align="center">
+  <img src="architecture.png" alt="prompt-shield architecture" width="900" />
+</p>
 
 ## Built-in Detectors
 
