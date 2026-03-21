@@ -5,9 +5,10 @@ identity:
     en_US: Prompt Shield
   description:
     en_US: >-
-      Local prompt injection detection and PII redaction. Scans text for
-      injection attacks, detects PII entities, and redacts sensitive data.
-      All processing is performed locally.
+      Local prompt injection detection, output scanning, and PII redaction.
+      Scans text for injection attacks, detects harmful LLM output, identifies
+      PII entities, and redacts sensitive data. All processing is performed
+      locally.
   icon: ../_assets/icon.svg
   tags:
     - utilities
@@ -16,3 +17,4 @@ tools:
   - tools/scan.yaml
   - tools/pii_scan.yaml
   - tools/pii_redact.yaml
+  - tools/output_scan.yaml

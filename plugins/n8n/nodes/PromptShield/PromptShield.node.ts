@@ -53,6 +53,12 @@ export class PromptShield implements INodeType {
 						description: 'Redact personally identifiable information from text',
 						action: 'Redact PII from text',
 					},
+					{
+						name: 'Output Scan',
+						value: 'outputScan',
+						description: 'Scan LLM output for harmful content (toxicity, code injection, prompt leakage, PII)',
+						action: 'Scan LLM output for harmful content',
+					},
 				],
 				default: 'scan',
 			},
@@ -113,6 +119,9 @@ export class PromptShield implements INodeType {
 						break;
 					case 'piiRedact':
 						args.push('pii', 'redact');
+						break;
+					case 'outputScan':
+						args.push('output', 'scan');
 						break;
 					default:
 						throw new NodeOperationError(

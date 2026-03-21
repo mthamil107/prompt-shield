@@ -6,9 +6,10 @@ label:
   en_US: Prompt Shield
 description:
   en_US: >-
-    Local prompt injection detection and PII redaction powered by prompt-shield.
-    Scans text for prompt injection attacks, detects PII entities, and redacts
-    sensitive information. All processing runs locally with no external API calls.
+    Local prompt injection detection, output scanning, and PII redaction powered
+    by prompt-shield. Scans text for prompt injection attacks, detects harmful LLM
+    output, identifies PII entities, and redacts sensitive information. All
+    processing runs locally with no external API calls.
 icon: _assets/icon.svg
 resource:
   memory: 268435456

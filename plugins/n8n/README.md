@@ -24,11 +24,12 @@ npm install n8n-nodes-prompt-shield
 
 ## Operations
 
-| Operation   | Description                                      |
-|-------------|--------------------------------------------------|
-| Scan        | Scan text for prompt injection attacks            |
-| PII Scan    | Scan text for personally identifiable information |
-| PII Redact  | Redact PII from text, replacing it with placeholders |
+| Operation    | Description                                      |
+|--------------|--------------------------------------------------|
+| Scan         | Scan text for prompt injection attacks            |
+| PII Scan     | Scan text for personally identifiable information |
+| PII Redact   | Redact PII from text, replacing it with placeholders |
+| Output Scan  | Scan LLM output for harmful content (toxicity, code injection, prompt leakage, PII) |
 
 ## Configuration
 
@@ -44,7 +45,7 @@ The **Prompt Shield** credentials allow you to configure the path to the `prompt
 
 | Parameter    | Type    | Description                                | Default |
 |--------------|---------|--------------------------------------------|---------|
-| Operation    | Options | The operation to perform (Scan, PII Scan, PII Redact) | Scan    |
+| Operation    | Options | The operation to perform (Scan, PII Scan, PII Redact, Output Scan) | Scan    |
 | Input Text   | String  | The text to analyze                        | —       |
 | JSON Output  | Boolean | Return structured JSON output              | true    |
 
@@ -70,6 +71,13 @@ The **Prompt Shield** credentials allow you to configure the path to the `prompt
 2. Set **Operation** to **PII Redact**
 3. Enter text containing PII in **Input Text**
 4. Execute to get the redacted text output
+
+### Scan LLM Output
+
+1. Add the **Prompt Shield** node to your workflow
+2. Set **Operation** to **Output Scan**
+3. Enter the LLM-generated text in **Input Text**
+4. Execute to check for toxicity, code injection, prompt leakage, and PII
 
 ## AI Tool Usage
 

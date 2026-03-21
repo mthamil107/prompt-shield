@@ -1,0 +1,26 @@
+identity:
+  name: output_scan
+  author: prompt-shield
+  label:
+    en_US: Output Scan
+description:
+  human:
+    en_US: >-
+      Scan LLM output for harmful content including toxicity, code injection,
+      prompt leakage, PII, and jailbreak compliance
+  llm: >-
+    Scan LLM output text for harmful content such as toxicity, code injection,
+    system prompt leakage, PII exposure, and jailbreak persona adoption
+parameters:
+  - name: output_text
+    type: string
+    required: true
+    label:
+      en_US: Output Text
+    human_description:
+      en_US: The LLM output text to scan
+    llm_description: The LLM-generated text to scan for harmful content
+    form: llm
+extra:
+  python:
+    source: tools/output_scan.py

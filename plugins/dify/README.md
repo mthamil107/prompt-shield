@@ -16,6 +16,10 @@ Detects personally identifiable information in text, including email addresses, 
 
 Redacts PII from text by replacing sensitive data with entity-type-aware placeholders (e.g., `[EMAIL_REDACTED]`, `[PHONE_REDACTED]`). Returns the redacted text along with counts of what was redacted.
 
+### Output Scan (`output_scan`)
+
+Scans LLM output for harmful content including toxicity, code injection, system prompt leakage, PII exposure, and jailbreak persona adoption. Returns whether the output was flagged, along with details about each flag raised.
+
 ## Installation
 
 1. Ensure `prompt-shield-ai` is installed in your Dify plugin runtime environment:
