@@ -212,6 +212,43 @@ def scan_protectai_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[st
     return results, elapsed
 
 
+def scan_meta_prompt_guard(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
+    """Scan with Meta Llama Prompt Guard 2 (86M)."""
+    try:
+        from transformers import pipeline as hf_pipeline
+    except ImportError:
+        print("  SKIP: transformers not installed", file=sys.stderr)
+        return [], 0
+
+    classifier = hf_pipeline(
+        "text-classification",
+        model="meta-llama/Llama-Prompt-Guard-2-86M",
+        truncation=True,
+        max_length=512,
+    )
+
+    results = []
+    start = time.perf_counter()
+    for prompt, category, is_attack in prompts:
+        try:
+            out = classifier(prompt)[0]
+            # Prompt Guard labels: BENIGN, INJECTION, JAILBREAK
+            detected = out["label"] in ("INJECTION", "JAILBREAK")
+            score = out["score"] if detected else 1.0 - out["score"]
+        except Exception:
+            detected = False
+            score = 0.0
+        results.append({
+            "prompt": prompt[:60],
+            "category": category,
+            "is_attack": is_attack,
+            "detected": detected,
+            "score": score,
+        })
+    elapsed = time.perf_counter() - start
+    return results, elapsed
+
+
 def scan_deepset_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
     """Scan with Deepset DeBERTa v3 injection classifier."""
     try:
@@ -308,6 +345,7 @@ def main():
         ("prompt-shield (regex only)", scan_prompt_shield),
         ("prompt-shield (regex + ML)", scan_prompt_shield_with_ml),
         ("ProtectAI DeBERTa v2", scan_protectai_deberta),
+        ("Meta Prompt Guard 2", scan_meta_prompt_guard),
         ("Deepset DeBERTa v3", scan_deepset_deberta),
     ]
 
