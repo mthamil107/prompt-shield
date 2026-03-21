@@ -130,6 +130,9 @@ prompt_shield:
         api_key: true
         ip_address: true
       custom_patterns: []
+    d025_multi_encoding:
+      enabled: true
+      severity: high
 
   allowlist:
     patterns: []

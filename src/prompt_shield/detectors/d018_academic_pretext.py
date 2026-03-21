@@ -72,6 +72,35 @@ class AcademicPretextDetector(BaseDetector):
             r"(?:studying|researching|investigating)\s+(?:prompt\s+)?injection\s+attacks?",
             "Studying injection attacks",
         ),
+        # HILL-style educational reframing patterns
+        (
+            r"(?:for\s+(?:my|our)\s+(?:thesis|dissertation|research\s+paper|capstone))\s*[,.]?\s*(?:could\s+you|can\s+you|please)?\s*(?:walk\s+me\s+through|explain|describe|detail|outline).*(?:synthes|manufactur|produc|develop|creat|build|construct)",
+            "Educational reframing: thesis with synthesis request",
+        ),
+        (
+            r"(?:i'?m\s+a\s+(?:professor|lecturer|instructor|teacher))\s+(?:preparing|writing|creating|developing)\s+(?:lecture\s+notes|course\s+material|teaching\s+material).*(?:explain|describe|walk\s+through|detail).*(?:process|synthesis|procedure|technique|method)",
+            "Educational reframing: professor preparing lecture on process",
+        ),
+        (
+            r"(?:from\s+an?\s+(?:academic|scholarly|scientific|educational|theoretical)\s+perspective).*(?:challenge|feasib|approach|method|technique|develop|creat|produc|synthes)",
+            "Educational reframing: academic perspective on methods",
+        ),
+        (
+            r"(?:i'?m\s+writing\s+(?:a\s+)?(?:textbook|book|manual|guide)\s+(?:chapter|section)).*(?:realistic|detailed|specific|concrete|practical)\s+(?:example|scenario|case\s+stud|demonstrat)",
+            "Educational reframing: textbook with realistic examples",
+        ),
+        (
+            r"(?:as\s+part\s+of\s+(?:our|the)\s+(?:curriculum|course|program|training)).*(?:document|create|demonstrate|show|provide).*(?:realistic|actual|real-world|practical)",
+            "Educational reframing: curriculum with realistic content",
+        ),
+        (
+            r"(?:could\s+you\s+(?:walk\s+me\s+through|provide\s+a\s+(?:step-by-step|detailed)\s+(?:breakdown|explanation|guide))).*(?:synthesis|process|procedure|pathway|mechanism).*(?:compound|substance|material|chemical|energetic|explosive|controlled)",
+            "Educational reframing: step-by-step synthesis of controlled substance",
+        ),
+        (
+            r"(?:step-by-step|detailed)\s+(?:breakdown|explanation|walkthrough|guide)\s+(?:of\s+)?(?:the\s+)?(?:(?:chemical|industrial|technical)\s+)?(?:process|synthesis|procedure|pathway|method)\s+(?:for|of|to)\s+(?:produc|manufactur|creat|synthe|develop)",
+            "Educational reframing: detailed process walkthrough for production",
+        ),
     ]
 
     def detect(

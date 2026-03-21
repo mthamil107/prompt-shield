@@ -46,3 +46,6 @@ prompt_shield.db
 
 # Windows artifacts
 nul
+plugins/n8n/node_modules/
+plugins/n8n/dist/
+plugins/n8n/package-lock.json

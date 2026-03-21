@@ -12,7 +12,7 @@ from prompt_shield.compliance.owasp_mapping import (
 )
 
 
-# All 23 built-in detector IDs
+# All 25 built-in detector IDs
 ALL_DETECTOR_IDS = [
     "d001_system_prompt_extraction",
     "d002_role_hijack",
@@ -37,6 +37,8 @@ ALL_DETECTOR_IDS = [
     "d021_vault_similarity",
     "d022_semantic_classifier",
     "d023_pii_detection",
+    "d024_multilingual_injection",
+    "d025_multi_encoding",
 ]
 
 # Fake metadata matching the IDs
@@ -76,14 +78,14 @@ class TestOwaspIdValidity:
 
 
 class TestComplianceReportFull:
-    """Report generated with all 23 detectors."""
+    """Report generated with all 25 detectors."""
 
     @pytest.fixture
     def full_report(self):
         return generate_compliance_report(ALL_DETECTOR_IDS, ALL_DETECTOR_METADATA)
 
     def test_total_detectors(self, full_report) -> None:
-        assert full_report.total_detectors == 23
+        assert full_report.total_detectors == 25
 
     def test_owasp_version(self, full_report) -> None:
         assert full_report.owasp_version == "2025"

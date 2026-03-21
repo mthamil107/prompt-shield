@@ -43,6 +43,39 @@ class ToolFunctionAbuseDetector(BaseDetector):
         (r"use\s+your\s+code\s+interpreter", "Code interpreter abuse"),
         (r"rm\s+-rf", "Destructive command"),
         (r"DROP\s+TABLE", "SQL destructive command"),
+        # JSON / tool-call / MCP injection patterns
+        (
+            r'"(?:function|tool|action|command)"\s*:\s*"[^"]*(?:execute|delete|remove|drop|shutdown|override|bypass)"',
+            "JSON with dangerous function names",
+        ),
+        (
+            r'"result"\s*:\s*"[^"]*(?:ignore\s+(?:all\s+)?(?:previous\s+)?instructions|you\s+are\s+now|new\s+instructions|system\s+prompt|override)',
+            "Injection in tool result field",
+        ),
+        (
+            r'"content"\s*:\s*"[^"]*(?:SYSTEM\s+OVERRIDE|IMPORTANT|IGNORE|NEW\s+INSTRUCTION|ADMIN|BYPASS)"',
+            "Injection in content field with shouty keywords",
+        ),
+        (
+            r"(?:tool|api|function|mcp)\s*(?:response|result|output|return)\s*:\s*\{",
+            "Fake tool response structure",
+        ),
+        (
+            r'"jsonrpc"\s*:\s*"2\.0".*"result".*(?:ignore|override|bypass|new\s+instruction|system\s+prompt)',
+            "MCP/JSON-RPC injection",
+        ),
+        (
+            r'\{\s*"(?:api_response|tool_response|server_response|mcp_response)"\s*:',
+            "Fake API response wrapper",
+        ),
+        (
+            r"(?:SYSTEM\s+OVERRIDE|NEW\s+DIRECTIVE|ADMIN\s+COMMAND|PRIORITY\s+INSTRUCTION)\s*:",
+            "Authority-claiming keywords in structured data",
+        ),
+        (
+            r'"arguments"\s*:\s*\{[^}]*(?:rm\s+-rf|drop\s+table|delete\s+from|os\.system|exec\(|eval\()',
+            "Dangerous commands in function arguments",
+        ),
     ]
 
     def detect(

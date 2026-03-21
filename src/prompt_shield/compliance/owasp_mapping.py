@@ -124,6 +124,8 @@ DETECTOR_OWASP_MAP: dict[str, list[str]] = {
     "d021_vault_similarity": ["LLM01"],
     "d022_semantic_classifier": ["LLM01"],
     "d023_pii_detection": ["LLM02"],
+    "d024_multilingual_injection": ["LLM01"],
+    "d025_multi_encoding": ["LLM01"],
 }
 
 # All valid OWASP category IDs for validation
