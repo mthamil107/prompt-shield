@@ -270,8 +270,8 @@ def scan_meta_prompt_guard(prompts: list[tuple[str, str, bool]]) -> list[dict[st
     for prompt, category, is_attack in prompts:
         try:
             out = classifier(prompt)[0]
-            # Prompt Guard labels: BENIGN, INJECTION, JAILBREAK
-            detected = out["label"] in ("INJECTION", "JAILBREAK")
+            # Prompt Guard labels: BENIGN/LABEL_0, INJECTION/LABEL_1, JAILBREAK/LABEL_2
+            detected = out["label"] in ("INJECTION", "JAILBREAK", "LABEL_1", "LABEL_2")
             score = out["score"] if detected else 1.0 - out["score"]
         except Exception:
             detected = False

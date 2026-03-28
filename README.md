@@ -27,10 +27,11 @@ prompt-shield detects and blocks prompt injection attacks targeting LLM-powered 
 
 | Scanner | F1 Score | Detection | False Positives | Speed |
 |---------|----------|-----------|-----------------|-------|
-| **prompt-shield** | **96.0%** | **92.3%** | **0.0%** | **485/sec** |
-| Deepset DeBERTa v3 | 91.9% | 87.2% | 6.7% | 9/sec |
+| **prompt-shield** | **96.0%** | **92.3%** | **0.0%** | **555/sec** |
+| Deepset DeBERTa v3 | 91.9% | 87.2% | 6.7% | 10/sec |
 | PIGuard (ACL 2025) | 76.9% | 64.1% | 6.7% | 12/sec |
-| ProtectAI DeBERTa v2 | 65.5% | 48.7% | 0.0% | 12/sec |
+| ProtectAI DeBERTa v2 | 65.5% | 48.7% | 0.0% | 15/sec |
+| Meta Prompt Guard 2 | 44.0% | 28.2% | 0.0% | 10/sec |
 
 > Reproduce it yourself: `python tests/benchmark_comparison.py`
 
@@ -189,17 +190,17 @@ Tested on 54 real-world attack prompts from 2025-2026 security research (ACL, NS
 
 ### Per-Category Breakdown
 
-| Category | prompt-shield | Deepset | PIGuard | ProtectAI |
-|----------|:---:|:---:|:---:|:---:|
-| Basic injection | **100%** | 100% | 80% | 100% |
-| Known encodings | **100%** | 100% | 80% | 40% |
-| Multilingual (10 lang) | **100%** | 100% | 60% | 100% |
-| Cipher/encoding | 80% | **100%** | **100%** | 20% |
-| Educational reframing | **80%** | 20% | 20% | 0% |
-| Tool-disguised (JSON/MCP) | **100%** | 100% | 100% | 80% |
-| Dual intention | **80%** | 80% | 20% | 0% |
-| Novel obfuscation | **100%** | 100% | 50% | 50% |
-| **Benign (FP rate)** | **0%** | 7% | 7% | **0%** |
+| Category | prompt-shield | Deepset | PIGuard | ProtectAI | Meta PG2 |
+|----------|:---:|:---:|:---:|:---:|:---:|
+| Basic injection | **100%** | 100% | 80% | 100% | 60% |
+| Known encodings | **100%** | 100% | 80% | 40% | 0% |
+| Multilingual (10 lang) | **100%** | 100% | 60% | 100% | **100%** |
+| Cipher/encoding | 80% | **100%** | **100%** | 20% | 0% |
+| Educational reframing | **80%** | 20% | 20% | 0% | 0% |
+| Tool-disguised (JSON/MCP) | **100%** | 100% | 100% | 80% | 40% |
+| Dual intention | **80%** | 80% | 20% | 0% | 0% |
+| Novel obfuscation | **100%** | 100% | 50% | 50% | 25% |
+| **Benign (FP rate)** | **0%** | 7% | 7% | **0%** | **0%** |
 
 > **Why prompt-shield wins:** ML classifiers see tokens. They don't decode hex. They don't parse JSON tool calls. They struggle with educational reframing. prompt-shield combines 25 pattern detectors with ML - each catches what the other misses.
 
