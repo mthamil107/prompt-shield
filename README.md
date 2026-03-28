@@ -5,7 +5,7 @@
 <h1 align="center">prompt-shield</h1>
 
 <p align="center">
-  <strong>Self-learning prompt injection detection engine for LLM applications</strong>
+  <strong>Secure your agent prompts. Detect. Redact. Protect.</strong>
 </p>
 
 <p align="center">
@@ -13,6 +13,11 @@
   <a href="https://pypi.org/project/prompt-shield-ai/"><img src="https://img.shields.io/pypi/pyversions/prompt-shield-ai.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.npmjs.com/package/n8n-nodes-prompt-shield"><img src="https://img.shields.io/npm/v/n8n-nodes-prompt-shield.svg?label=n8n" alt="npm" /></a>
+  <img src="https://img.shields.io/badge/detectors-25-brightgreen" alt="25 detectors" />
+  <img src="https://img.shields.io/badge/output_scanners-5-blue" alt="5 output scanners" />
+  <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
+  <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
+  <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
 </p>
 
 <p align="center">
@@ -21,19 +26,58 @@
 
 ---
 
-prompt-shield detects and blocks prompt injection attacks targeting LLM-powered applications. It combines **25 input detectors** (covering 10 languages and 7 encoding schemes) with **5 output scanners**, a semantic ML classifier (DeBERTa), ensemble scoring, and a self-hardening feedback loop.
+Self-learning prompt injection detection engine that protects LLM applications with **25 input detectors** (10 languages, 7 encoding schemes), **5 output scanners** (toxicity, code injection, prompt leakage, PII, jailbreak detection), a semantic ML classifier (DeBERTa), ensemble scoring, and a self-hardening feedback loop that gets smarter with every attack.
 
-**Benchmarked against 4 competitors on 54 real-world 2025-2026 attacks:**
+### Benchmarked against 5 open-source competitors on 54 real-world 2025-2026 attacks:
 
-| Scanner | F1 Score | Detection | False Positives | Speed |
-|---------|----------|-----------|-----------------|-------|
-| **prompt-shield** | **96.0%** | **92.3%** | **0.0%** | **555/sec** |
-| Deepset DeBERTa v3 | 91.9% | 87.2% | 6.7% | 10/sec |
-| PIGuard (ACL 2025) | 76.9% | 64.1% | 6.7% | 12/sec |
-| ProtectAI DeBERTa v2 | 65.5% | 48.7% | 0.0% | 15/sec |
-| Meta Prompt Guard 2 | 44.0% | 28.2% | 0.0% | 10/sec |
+<table>
+<tr>
+<th>Scanner</th>
+<th>F1 Score</th>
+<th>Detection</th>
+<th>False Positives</th>
+<th>Speed</th>
+</tr>
+<tr style="font-weight:bold; background:#f0fff0">
+<td>prompt-shield</td>
+<td>96.0%</td>
+<td>92.3%</td>
+<td>0.0%</td>
+<td>555/sec</td>
+</tr>
+<tr>
+<td>Deepset DeBERTa v3</td>
+<td>91.9%</td>
+<td>87.2%</td>
+<td>6.7%</td>
+<td>10/sec</td>
+</tr>
+<tr>
+<td>PIGuard (ACL 2025)</td>
+<td>76.9%</td>
+<td>64.1%</td>
+<td>6.7%</td>
+<td>12/sec</td>
+</tr>
+<tr>
+<td>ProtectAI DeBERTa v2</td>
+<td>65.5%</td>
+<td>48.7%</td>
+<td>0.0%</td>
+<td>15/sec</td>
+</tr>
+<tr>
+<td>Meta Prompt Guard 2</td>
+<td>44.0%</td>
+<td>28.2%</td>
+<td>0.0%</td>
+<td>10/sec</td>
+</tr>
+</table>
 
-> Reproduce it yourself: `python tests/benchmark_comparison.py`
+<p align="center">
+  <sub>Reproduce it yourself: <code>pip install prompt-shield-ai && python tests/benchmark_comparison.py</code></sub>
+</p>
 
 ---
 
