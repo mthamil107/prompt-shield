@@ -1,1 +1,1 @@
-"""Canary token generation and leak detection."""
+"""Canary token generation, leak detection, and invisible watermarking."""

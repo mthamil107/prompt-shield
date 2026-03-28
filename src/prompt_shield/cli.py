@@ -591,38 +591,115 @@ def compliance() -> None:
 
 
 @compliance.command("report")
+@click.option(
+    "--framework",
+    type=click.Choice(["owasp-llm", "owasp-agentic", "eu-ai-act", "all"]),
+    default="owasp-llm",
+    help="Compliance framework to report on",
+)
 @click.pass_context
-def compliance_report(ctx: click.Context) -> None:
-    """Show OWASP LLM Top 10 coverage matrix."""
-    from prompt_shield.compliance.owasp_mapping import generate_compliance_report
+def compliance_report(ctx: click.Context, framework: str) -> None:
+    """Show compliance coverage matrix for a given framework."""
+    from prompt_shield.compliance.owasp_mapping import (
+        generate_agentic_compliance_report,
+        generate_compliance_report,
+        generate_eu_ai_act_report,
+    )
 
     engine = _get_engine(ctx)
     use_json = ctx.obj.get("json", False)
 
     dets = engine.list_detectors()
     det_ids = [d["detector_id"] for d in dets]
-    report = generate_compliance_report(det_ids, dets)
 
-    if use_json:
-        click.echo(report.model_dump_json(indent=2))
-    else:
-        click.echo()
-        click.secho(
-            f"  OWASP LLM Top 10 ({report.owasp_version}) Coverage Report", bold=True
-        )
-        click.echo(f"  Detectors: {report.total_detectors}")
-        click.echo(
-            f"  Coverage: {report.categories_covered}/{report.categories_covered + report.categories_not_covered} "
-            f"({report.coverage_percentage}%)"
-        )
-        click.echo()
-        for cat in report.category_details:
-            status = click.style("COVERED", fg="green") if cat.covered else click.style("GAP", fg="red")
-            click.echo(f"  {cat.category_id:6s} {cat.name:42s} [{status}]")
-            if cat.covered:
-                for det_id, det_name in zip(cat.detector_ids, cat.detector_names):
-                    click.echo(f"           - {det_id} ({det_name})")
-        click.echo()
+    frameworks = (
+        ["owasp-llm", "owasp-agentic", "eu-ai-act"] if framework == "all" else [framework]
+    )
+
+    for fw in frameworks:
+        if fw == "owasp-llm":
+            report = generate_compliance_report(det_ids, dets)
+            if use_json:
+                click.echo(report.model_dump_json(indent=2))
+            else:
+                click.echo()
+                click.secho(
+                    f"  OWASP LLM Top 10 ({report.owasp_version}) Coverage Report",
+                    bold=True,
+                )
+                click.echo(f"  Detectors: {report.total_detectors}")
+                click.echo(
+                    f"  Coverage: {report.categories_covered}/"
+                    f"{report.categories_covered + report.categories_not_covered} "
+                    f"({report.coverage_percentage}%)"
+                )
+                click.echo()
+                for cat in report.category_details:
+                    status = (
+                        click.style("COVERED", fg="green")
+                        if cat.covered
+                        else click.style("GAP", fg="red")
+                    )
+                    click.echo(f"  {cat.category_id:6s} {cat.name:42s} [{status}]")
+                    if cat.covered:
+                        for det_id, det_name in zip(cat.detector_ids, cat.detector_names):
+                            click.echo(f"           - {det_id} ({det_name})")
+                click.echo()
+
+        elif fw == "owasp-agentic":
+            agentic_report = generate_agentic_compliance_report()
+            if use_json:
+                click.echo(agentic_report.model_dump_json(indent=2))
+            else:
+                click.echo()
+                click.secho(
+                    f"  OWASP Agentic Top 10 ({agentic_report.owasp_version}) Coverage Report",
+                    bold=True,
+                )
+                click.echo(f"  Features: {agentic_report.total_features}")
+                click.echo(
+                    f"  Coverage: {agentic_report.categories_covered}/"
+                    f"{agentic_report.categories_covered + agentic_report.categories_not_covered} "
+                    f"({agentic_report.coverage_percentage}%)"
+                )
+                click.echo()
+                for cat in agentic_report.category_details:
+                    status = (
+                        click.style("COVERED", fg="green")
+                        if cat.covered
+                        else click.style("GAP", fg="red")
+                    )
+                    click.echo(f"  {cat.category_id:6s} {cat.name:42s} [{status}]")
+                    if cat.covered:
+                        for feat_id in cat.detector_ids:
+                            click.echo(f"           - {feat_id}")
+                click.echo()
+
+        elif fw == "eu-ai-act":
+            eu_report = generate_eu_ai_act_report()
+            if use_json:
+                click.echo(eu_report.model_dump_json(indent=2))
+            else:
+                click.echo()
+                click.secho("  EU AI Act Coverage Report", bold=True)
+                click.echo(
+                    f"  Coverage: {eu_report.articles_covered}/{eu_report.articles_total} "
+                    f"({eu_report.coverage_percentage}%)"
+                )
+                click.echo()
+                for art in eu_report.article_details:
+                    status = (
+                        click.style("COVERED", fg="green")
+                        if art.covered
+                        else click.style("GAP", fg="red")
+                    )
+                    click.echo(
+                        f"  {art.article_id:8s} {art.name:42s} [{status}]"
+                    )
+                    if art.covered:
+                        for item in art.coverage_items:
+                            click.echo(f"           - {item}")
+                click.echo()
 
 
 @compliance.command("mapping")

@@ -5,10 +5,17 @@ from __future__ import annotations
 import pytest
 
 from prompt_shield.compliance.owasp_mapping import (
+    DETECTOR_AGENTIC_MAP,
     DETECTOR_OWASP_MAP,
+    EU_AI_ACT_ARTICLES,
+    OWASP_AGENTIC_TOP_10,
     OWASP_LLM_TOP_10,
+    PROMPT_SHIELD_EU_AI_ACT_COVERAGE,
+    _VALID_AGENTIC_IDS,
     _VALID_OWASP_IDS,
+    generate_agentic_compliance_report,
     generate_compliance_report,
+    generate_eu_ai_act_report,
 )
 
 
@@ -39,6 +46,7 @@ ALL_DETECTOR_IDS = [
     "d023_pii_detection",
     "d024_multilingual_injection",
     "d025_multi_encoding",
+    "d026_denial_of_wallet",
 ]
 
 # Fake metadata matching the IDs
@@ -85,7 +93,7 @@ class TestComplianceReportFull:
         return generate_compliance_report(ALL_DETECTOR_IDS, ALL_DETECTOR_METADATA)
 
     def test_total_detectors(self, full_report) -> None:
-        assert full_report.total_detectors == 25
+        assert full_report.total_detectors == 26
 
     def test_owasp_version(self, full_report) -> None:
         assert full_report.owasp_version == "2025"
@@ -154,3 +162,97 @@ class TestCoveragePercentage:
     def test_zero_coverage_percentage(self) -> None:
         report = generate_compliance_report([], [])
         assert report.coverage_percentage == 0.0
+
+
+# ---------------------------------------------------------------------------
+# OWASP Agentic Applications Top 10 (2026)
+# ---------------------------------------------------------------------------
+
+
+class TestAgenticTop10Structure:
+    """Validate the OWASP Agentic Top 10 data structure."""
+
+    def test_agentic_top_10_has_ten_entries(self) -> None:
+        assert len(OWASP_AGENTIC_TOP_10) == 10
+
+    def test_agentic_ids_are_unique(self) -> None:
+        ids = [cat.id for cat in OWASP_AGENTIC_TOP_10]
+        assert len(ids) == len(set(ids))
+
+    def test_agentic_ids_start_with_asi(self) -> None:
+        for cat in OWASP_AGENTIC_TOP_10:
+            assert cat.id.startswith("ASI"), f"{cat.id} does not start with ASI"
+
+    def test_all_agentic_mapped_ids_are_valid(self) -> None:
+        for feat_id, cat_ids in DETECTOR_AGENTIC_MAP.items():
+            for cid in cat_ids:
+                assert cid in _VALID_AGENTIC_IDS, (
+                    f"Feature {feat_id} references invalid Agentic ID {cid}"
+                )
+
+
+class TestAgenticComplianceReport:
+    """Report generated from the agentic compliance mapping."""
+
+    @pytest.fixture
+    def full_agentic_report(self):
+        return generate_agentic_compliance_report()
+
+    def test_agentic_compliance_report(self, full_agentic_report) -> None:
+        report = full_agentic_report
+        assert report.owasp_version == "2026"
+        assert report.framework == "owasp-agentic"
+        assert len(report.category_details) == 10
+        assert report.categories_covered + report.categories_not_covered == 10
+        assert 0.0 <= report.coverage_percentage <= 100.0
+
+    def test_agentic_most_categories_covered(self, full_agentic_report) -> None:
+        # ASI03 (Identity & Privilege Abuse) is currently a known gap
+        assert full_agentic_report.categories_covered >= 9
+        assert full_agentic_report.coverage_percentage >= 90.0
+
+    def test_agentic_partial_features(self) -> None:
+        report = generate_agentic_compliance_report(
+            feature_ids=["d001_system_prompt_extraction"]
+        )
+        assert report.total_features == 1
+        covered_ids = [c.category_id for c in report.category_details if c.covered]
+        assert "ASI01" in covered_ids
+        assert "ASI04" in covered_ids
+
+    def test_agentic_empty_features(self) -> None:
+        report = generate_agentic_compliance_report(feature_ids=[])
+        assert report.total_features == 0
+        assert report.categories_covered == 0
+        assert report.coverage_percentage == 0.0
+
+
+# ---------------------------------------------------------------------------
+# EU AI Act
+# ---------------------------------------------------------------------------
+
+
+class TestEuAiActCoverage:
+    """Validate EU AI Act mapping and report generation."""
+
+    def test_eu_ai_act_coverage(self) -> None:
+        report = generate_eu_ai_act_report()
+        assert report.framework == "eu-ai-act"
+        assert report.articles_total == len(EU_AI_ACT_ARTICLES)
+        assert report.articles_covered == len(EU_AI_ACT_ARTICLES)  # all covered
+        assert report.coverage_percentage == 100.0
+
+    def test_eu_ai_act_articles_have_coverage_items(self) -> None:
+        for article in EU_AI_ACT_ARTICLES:
+            items = PROMPT_SHIELD_EU_AI_ACT_COVERAGE.get(article.id, [])
+            assert len(items) > 0, f"{article.id} has no coverage items"
+
+    def test_eu_ai_act_article_ids_are_unique(self) -> None:
+        ids = [a.id for a in EU_AI_ACT_ARTICLES]
+        assert len(ids) == len(set(ids))
+
+    def test_eu_ai_act_report_details(self) -> None:
+        report = generate_eu_ai_act_report()
+        for detail in report.article_details:
+            assert detail.covered is True
+            assert len(detail.coverage_items) > 0

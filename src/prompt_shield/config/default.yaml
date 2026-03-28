@@ -2,6 +2,16 @@ prompt_shield:
   mode: block
   threshold: 0.7
 
+  parallel: true
+  max_workers: 4
+
+  alerting:
+    enabled: false
+    webhooks:
+      - url: ""
+        events: ["block"]
+        headers: {}
+
   actions:
     critical: block
     high: block
@@ -133,6 +143,9 @@ prompt_shield:
     d025_multi_encoding:
       enabled: true
       severity: high
+    d026_denial_of_wallet:
+      enabled: true
+      severity: medium
 
   allowlist:
     patterns: []

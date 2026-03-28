@@ -7,6 +7,7 @@ import json
 import logging
 import time
 import uuid
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -108,6 +109,18 @@ class PromptShieldEngine:
         # Initialize detector registry
         self._registry = DetectorRegistry()
         self._init_detectors()
+
+        # Parallel execution settings
+        self._parallel = self._ps_config.get("parallel", True)
+        self._max_workers = self._ps_config.get("max_workers", 4)
+
+        # Initialize webhook alerter (if enabled)
+        self._alerter = None
+        alerting_cfg = self._ps_config.get("alerting", {})
+        if alerting_cfg.get("enabled", False):
+            from prompt_shield.alerting.webhook import WebhookAlerter
+
+            self._alerter = WebhookAlerter(alerting_cfg)
 
         # Compile allowlist/blocklist patterns
         self._allowlist_patterns = self._compile_patterns(
@@ -224,36 +237,31 @@ class PromptShieldEngine:
                     risk_score=1.0,
                 )
 
-        # Run all enabled detectors
-        detections: list[DetectionResult] = []
-        total_run = 0
-
+        # Build list of detectors to run with their configs/thresholds
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]] = []
         for detector in self._registry.list_all():
             det_cfg = get_detector_config(self._config, detector.detector_id)
             if not det_cfg.get("enabled", True):
                 continue
 
-            # Get effective threshold (may be auto-tuned)
             threshold = det_cfg.get("threshold", self._ps_config.get("threshold", 0.7))
             if self._auto_tuner:
                 threshold = self._auto_tuner.get_effective_threshold(
                     detector.detector_id, threshold
                 )
+            detectors_to_run.append((detector, det_cfg, threshold))
 
-            total_run += 1
-            try:
-                result = detector.detect(input_text, context=ctx)
+        total_run = len(detectors_to_run)
+        detections: list[DetectionResult] = []
 
-                # Apply severity override from config
-                cfg_severity = det_cfg.get("severity")
-                if cfg_severity:
-                    with contextlib.suppress(ValueError):
-                        result.severity = Severity(cfg_severity)
-
-                if result.detected and result.confidence >= threshold:
-                    detections.append(result)
-            except Exception as exc:
-                logger.warning("Detector %s failed: %s", detector.detector_id, exc)
+        if self._parallel and total_run > 1:
+            detections = self._run_detectors_parallel(
+                detectors_to_run, input_text, ctx
+            )
+        else:
+            detections = self._run_detectors_sequential(
+                detectors_to_run, input_text, ctx
+            )
 
         # Aggregate risk score with ensemble bonus
         if detections:
@@ -305,6 +313,11 @@ class PromptShieldEngine:
                         )
                     except Exception as exc:
                         logger.warning("Failed to store detection in vault: %s", exc)
+
+        # Fire webhook alerts (non-blocking)
+        if self._alerter is not None:
+            event = report.action.value  # "block", "flag", "log", "pass"
+            self._alerter.alert(event, report)
 
         # Auto-tune check
         self._scan_count += 1
@@ -457,6 +470,70 @@ class PromptShieldEngine:
     def config(self) -> dict[str, Any]:
         """Access the loaded configuration."""
         return self._config
+
+    def _run_detectors_sequential(
+        self,
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]],
+        input_text: str,
+        ctx: dict[str, object],
+    ) -> list[DetectionResult]:
+        """Run detectors sequentially and collect results."""
+        detections: list[DetectionResult] = []
+        for detector, det_cfg, threshold in detectors_to_run:
+            try:
+                result = detector.detect(input_text, context=ctx)
+
+                cfg_severity = det_cfg.get("severity")
+                if cfg_severity:
+                    with contextlib.suppress(ValueError):
+                        result.severity = Severity(cfg_severity)
+
+                if result.detected and result.confidence >= threshold:
+                    detections.append(result)
+            except Exception as exc:
+                logger.warning("Detector %s failed: %s", detector.detector_id, exc)
+        return detections
+
+    def _run_detectors_parallel(
+        self,
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]],
+        input_text: str,
+        ctx: dict[str, object],
+    ) -> list[DetectionResult]:
+        """Run detectors in parallel using ThreadPoolExecutor."""
+        detections: list[DetectionResult] = []
+
+        def _run_one(
+            detector: BaseDetector, det_cfg: dict[str, Any], threshold: float
+        ) -> DetectionResult | None:
+            result = detector.detect(input_text, context=ctx)
+
+            cfg_severity = det_cfg.get("severity")
+            if cfg_severity:
+                with contextlib.suppress(ValueError):
+                    result.severity = Severity(cfg_severity)
+
+            if result.detected and result.confidence >= threshold:
+                return result
+            return None
+
+        with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
+            futures = {
+                executor.submit(_run_one, detector, det_cfg, threshold): detector
+                for detector, det_cfg, threshold in detectors_to_run
+            }
+            for future in as_completed(futures):
+                detector = futures[future]
+                try:
+                    result = future.result()
+                    if result is not None:
+                        detections.append(result)
+                except Exception as exc:
+                    logger.warning(
+                        "Detector %s failed: %s", detector.detector_id, exc
+                    )
+
+        return detections
 
     def _determine_action(
         self, detections: list[DetectionResult], risk_score: float
