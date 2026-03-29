@@ -118,6 +118,7 @@ def scan_prompt_shield(prompts: list[tuple[str, str, bool]]) -> list[dict[str, A
             "prompt_shield": {
                 "mode": "block",
                 "threshold": 0.7,
+                "parallel": False,
                 "vault": {"enabled": False},
                 "feedback": {"enabled": False},
                 "canary": {"enabled": False},
@@ -152,6 +153,7 @@ def scan_prompt_shield_with_ml(prompts: list[tuple[str, str, bool]]) -> list[dic
             "prompt_shield": {
                 "mode": "block",
                 "threshold": 0.7,
+                "parallel": False,
                 "vault": {"enabled": False},
                 "feedback": {"enabled": False},
                 "canary": {"enabled": False},
