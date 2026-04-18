@@ -1,0 +1,64 @@
+# prompt-shield baseline metrics — v0.3.3
+# Captured: 2026-04-18 (before v0.4.0 phase 0/4 work)
+# Source commit: c9e7583 (Merge pull request #15 from mthamil107/dev)
+#
+# This file is the regression gate. tests/regression_check.py parses it and
+# compares current benchmark output against these numbers. Any drop below
+# the tolerances defined in regression_check.py fails the check.
+#
+# Update this file ONLY when a metric genuinely improves — never to paper
+# over a regression.
+
+===============================================================================
+PYTEST SUMMARY
+===============================================================================
+total_passed: 765
+total_failed: 0
+duration_seconds: 214
+
+===============================================================================
+BENCHMARK: tests/benchmark_realistic.py
+===============================================================================
+overall_attacks_total: 57
+overall_blocked: 47
+overall_detection_rate_pct: 82.5
+benign_total: 15
+benign_false_positive_count: 0
+benign_false_positive_rate_pct: 0.0
+
+# per-category detection rates (% of attacks blocked)
+category.basic_injection:              100
+category.encoding_known:               100
+category.pii:                          100
+category.multilingual:                 100
+category.cipher_encoding:               80
+category.many_shot:                     50
+category.educational_reframing:         80
+category.token_smuggling_advanced:      80
+category.tool_disguised:               100
+category.multi_turn_semantic:           20
+category.dual_intention:                80
+category.obfuscation_novel:             80
+
+===============================================================================
+BENCHMARK: tests/benchmark_public_datasets.py
+===============================================================================
+# prompt-shield row only — competitor numbers are not regression-gated.
+# These numbers are from the REGEX-ONLY engine (d022 semantic classifier
+# is explicitly disabled in the benchmark script for speed). F1 is low
+# because deepset/prompt-injections is dominated by semantic attacks that
+# regex alone cannot match. Not re-run by tests/regression_check.py
+# (HF dataset + model download is too slow for a gate); run manually via:
+#   python tests/benchmark_public_datasets.py
+deepset.precision_pct: 100.0
+deepset.recall_pct:      1.7
+deepset.f1_pct:          3.3
+deepset.accuracy_pct:   49.1
+deepset.fpr_pct:         0.0
+deepset.tp:  1
+deepset.tn: 56
+deepset.fp:  0
+deepset.fn: 59
+notinject.fp_count:    3
+notinject.fp_rate_pct: 0.9
+notinject.total:     339
