@@ -33,9 +33,7 @@ class PromptShieldMiddleware:
         for text in texts:
             if not text or not isinstance(text, str):
                 continue
-            report = self.engine.scan(
-                text, context={"gate": "http", "source": "django"}
-            )
+            report = self.engine.scan(text, context={"gate": "http", "source": "django"})
             if report.action == Action.BLOCK:
                 from django.http import JsonResponse
 

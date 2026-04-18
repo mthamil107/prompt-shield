@@ -195,8 +195,7 @@ class RedTeamRunner:
         for cat in active_categories:
             if cat not in ATTACK_CATEGORIES:
                 raise ValueError(
-                    f"Unknown category '{cat}'. "
-                    f"Available: {', '.join(ATTACK_CATEGORIES.keys())}"
+                    f"Unknown category '{cat}'. Available: {', '.join(ATTACK_CATEGORIES.keys())}"
                 )
 
         start_time = time.monotonic()
@@ -243,21 +242,14 @@ class RedTeamRunner:
                 results.append(result)
 
                 if result.bypassed:
-                    bypasses_by_category[category] = (
-                        bypasses_by_category.get(category, 0) + 1
-                    )
-                    previous_bypasses.append(
-                        {"category": category, "prompt": attack_prompt}
-                    )
+                    bypasses_by_category[category] = bypasses_by_category.get(category, 0) + 1
+                    previous_bypasses.append({"category": category, "prompt": attack_prompt})
                     if len(previous_bypasses) > 20:
                         previous_bypasses = previous_bypasses[-20:]
 
                     if verbose:
                         preview = attack_prompt[:60].replace("\n", " ")
-                        _log(
-                            f"  BYPASS found (score={result.risk_score:.2f}): "
-                            f"{preview}..."
-                        )
+                        _log(f"  BYPASS found (score={result.risk_score:.2f}): {preview}...")
 
             time.sleep(2)
 
@@ -381,9 +373,8 @@ def _call_llm(
                 text += block.text
         tokens = 0
         if hasattr(response, "usage") and response.usage:
-            tokens = (
-                getattr(response.usage, "input_tokens", 0)
-                + getattr(response.usage, "output_tokens", 0)
+            tokens = getattr(response.usage, "input_tokens", 0) + getattr(
+                response.usage, "output_tokens", 0
             )
         return text, tokens
 
@@ -411,7 +402,7 @@ def _parse_attack_list(text: str) -> list[str]:
 
     if cleaned.startswith("```"):
         lines = cleaned.split("\n")
-        lines = [l for l in lines if not l.strip().startswith("```")]
+        lines = [ln for ln in lines if not ln.strip().startswith("```")]
         cleaned = "\n".join(lines).strip()
 
     try:

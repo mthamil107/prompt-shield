@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import regex
 
 from prompt_shield.models import RedactionResult
@@ -76,12 +78,8 @@ class PIIRedactor:
                 entity_type, f"[{entity_type.value.upper()}_REDACTED]"
             )
             result = result[:start] + replacement + result[end:]
-            entity_counts[entity_type.value] = (
-                entity_counts.get(entity_type.value, 0) + 1
-            )
-            redacted_entities.append(
-                {"entity_type": entity_type.value, "original": matched_text}
-            )
+            entity_counts[entity_type.value] = entity_counts.get(entity_type.value, 0) + 1
+            redacted_entities.append({"entity_type": entity_type.value, "original": matched_text})
 
         redacted_entities.reverse()
 
@@ -93,7 +91,7 @@ class PIIRedactor:
             redacted_entities=redacted_entities,
         )
 
-    def redact_with_detections(self, text: str, matches: list[dict]) -> str:
+    def redact_with_detections(self, text: str, matches: list[dict[str, Any]]) -> str:
         """Redact text using pre-existing detection matches from d023.
 
         Each match dict should have 'description' with '[entity_type] ...' prefix
@@ -111,9 +109,7 @@ class PIIRedactor:
             description = match.get("description", "")
 
             # Parse [entity_type] prefix
-            replacement = self._replacements.get(
-                EntityType.EMAIL, "[PII_REDACTED]"
-            )  # fallback
+            replacement = self._replacements.get(EntityType.EMAIL, "[PII_REDACTED]")  # fallback
             if description.startswith("["):
                 closing = description.find("]")
                 if closing > 0:

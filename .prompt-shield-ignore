@@ -1,0 +1,52 @@
+# Files that legitimately contain attack vocabulary and must be excluded
+# from the CI self-scan to prevent expected-positive detections from
+# failing the build. One glob per line. `#` comments and blank lines
+# are skipped. Honoured by .github/actions/prompt-shield-scan/scan.py
+# in addition to any --ignore-patterns passed on the command line.
+#
+# Why this file is broad: prompt-shield runs itself against its own
+# repository in CI. Every detector source embeds regex attack patterns,
+# every test file drives the detectors with attack inputs, every
+# fixture contains attack strings, and the documentation describes
+# attack techniques. Scanning any of these is tautological. The
+# self-scan is only meaningful for files that shouldn't contain
+# attacks by design (config, infrastructure, third-party content).
+
+# All library code: detectors, output scanners, integrations, CLI,
+# API, alerting, benchmarks, PII, red team, persistence, vault,
+# feedback — every module works with attack strings as data.
+src/prompt_shield/**
+src/prompt_shield/*
+
+# All tests: by definition exercise the detectors with attack inputs.
+tests/**
+tests/*
+
+# All docs: attack taxonomies, research posts, detector descriptions.
+docs/**
+docs/*
+
+# Examples: demonstrate attacks.
+examples/**
+examples/*
+
+# Top-level README / CHANGELOG discuss attack examples.
+README.md
+CHANGELOG.md
+CONTRIBUTING.md
+SECURITY.md
+PROJECT_CONTEXT.md
+
+# Build / packaging artefacts that may include detector names and
+# attack-category labels.
+pyproject.toml
+*.egg-info/**
+dist/**
+build/**
+htmlcov/**
+
+# The scan action itself (the scanner code) contains detector names and
+# attack-string handling — scanning it is circular.
+.github/**
+.github/actions/**
+.github/workflows/**

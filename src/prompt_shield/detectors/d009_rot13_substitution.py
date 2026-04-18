@@ -53,17 +53,13 @@ class Rot13SubstitutionDetector(BaseDetector):
 
     detector_id: str = "d009_rot13_substitution"
     name: str = "ROT13 / Character Substitution"
-    description: str = (
-        "Detects text encoded with character rotation or substitution ciphers"
-    )
+    description: str = "Detects text encoded with character rotation or substitution ciphers"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
@@ -78,8 +74,7 @@ class Rot13SubstitutionDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="ROT13 decode",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"ROT13-decoded text contains suspicious keywords: "
@@ -98,8 +93,7 @@ class Rot13SubstitutionDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="l33tspeak decode",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"L33tspeak-decoded text contains suspicious keywords: "
@@ -112,20 +106,16 @@ class Rot13SubstitutionDetector(BaseDetector):
         # --- Reversed text check ---
         reversed_text = input_text[::-1]
         reversed_keywords = _find_keywords(reversed_text)
-        reversed_unique = [
-            kw for kw in reversed_keywords if kw not in original_keywords
-        ]
+        reversed_unique = [kw for kw in reversed_keywords if kw not in original_keywords]
 
         if reversed_unique:
             matches.append(
                 MatchDetail(
                     pattern="reversed text decode",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
-                        f"Reversed text contains suspicious keywords: "
-                        f"{', '.join(reversed_unique)}"
+                        f"Reversed text contains suspicious keywords: {', '.join(reversed_unique)}"
                     ),
                 )
             )
@@ -148,7 +138,6 @@ class Rot13SubstitutionDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} obfuscation method(s) hiding "
-                f"suspicious instructions"
+                f"Detected {len(matches)} obfuscation method(s) hiding suspicious instructions"
             ),
         )

@@ -61,9 +61,7 @@ class PromptShieldMCPFilter:
                 if self.mode == "block":
                     self._stats["blocked"] += 1
                     return (
-                        f"[Tool result blocked by "
-                        f"prompt-shield: injection "
-                        f"detected in {tool_name}]"
+                        f"[Tool result blocked by prompt-shield: injection detected in {tool_name}]"
                     )
                 elif self.mode == "sanitize":
                     self._stats["sanitized"] += 1

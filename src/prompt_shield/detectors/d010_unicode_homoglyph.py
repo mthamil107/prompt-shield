@@ -30,17 +30,13 @@ class UnicodeHomoglyphDetector(BaseDetector):
 
     detector_id: str = "d010_unicode_homoglyph"
     name: str = "Unicode Homoglyph"
-    description: str = (
-        "Detects visually identical characters used to bypass keyword filters"
-    )
+    description: str = "Detects visually identical characters used to bypass keyword filters"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
@@ -58,8 +54,7 @@ class UnicodeHomoglyphDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="homoglyph keyword detection",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Homoglyph-normalized text reveals hidden keywords: "
@@ -74,8 +69,7 @@ class UnicodeHomoglyphDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="mixed_scripts",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         "Text contains mixed Unicode scripts within the same "
@@ -101,7 +95,5 @@ class UnicodeHomoglyphDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} indicator(s) of unicode homoglyph obfuscation"
-            ),
+            explanation=(f"Detected {len(matches)} indicator(s) of unicode homoglyph obfuscation"),
         )

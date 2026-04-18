@@ -58,13 +58,15 @@ class PIIDetectionDetector(BaseDetector):
 
         custom = config.get("custom_patterns", [])
         if isinstance(custom, list):
-            self._custom_patterns = [(p.get("pattern", ""), p.get("description", "Custom PII pattern")) for p in custom if isinstance(p, dict) and p.get("pattern")]
+            self._custom_patterns = [
+                (p.get("pattern", ""), p.get("description", "Custom PII pattern"))
+                for p in custom
+                if isinstance(p, dict) and p.get("pattern")
+            ]
 
         self._compile_patterns()
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         entity_counts: dict[str, int] = {}
 
@@ -78,9 +80,7 @@ class PIIDetectionDetector(BaseDetector):
                         description=f"[{entity_type.value}] {description}",
                     )
                 )
-                entity_counts[entity_type.value] = (
-                    entity_counts.get(entity_type.value, 0) + 1
-                )
+                entity_counts[entity_type.value] = entity_counts.get(entity_type.value, 0) + 1
 
         # Custom patterns (no entity type prefix)
         for pattern_str, description in self._custom_patterns:

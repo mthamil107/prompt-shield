@@ -69,15 +69,12 @@ def _validate_schema(
         allowed = type_map.get(expected_type, ())
         if allowed and not isinstance(data, allowed):
             actual = type(data).__name__
-            violations.append(
-                f"{path}: expected type '{expected_type}', got '{actual}'"
-            )
+            violations.append(f"{path}: expected type '{expected_type}', got '{actual}'")
             return violations  # no point drilling further on wrong type
 
     # --- enum ---
-    if "enum" in schema:
-        if data not in schema["enum"]:
-            violations.append(f"{path}: value {data!r} not in enum {schema['enum']}")
+    if "enum" in schema and data not in schema["enum"]:
+        violations.append(f"{path}: value {data!r} not in enum {schema['enum']}")
 
     # --- object-level checks ---
     if isinstance(data, dict):
@@ -92,20 +89,14 @@ def _validate_schema(
         for key in data:
             child_path = f"{path}.{key}"
             if key in properties:
-                violations.extend(
-                    _validate_schema(data[key], properties[key], child_path)
-                )
+                violations.extend(_validate_schema(data[key], properties[key], child_path))
             elif additional is False:
-                violations.append(
-                    f"{path}: unexpected additional property '{key}'"
-                )
+                violations.append(f"{path}: unexpected additional property '{key}'")
 
     # --- array-level checks ---
     if isinstance(data, list) and "items" in schema:
         for idx, item in enumerate(data):
-            violations.extend(
-                _validate_schema(item, schema["items"], f"{path}[{idx}]")
-            )
+            violations.extend(_validate_schema(item, schema["items"], f"{path}[{idx}]"))
 
     return violations
 
@@ -175,17 +166,14 @@ class SchemaValidationScanner(BaseOutputScanner):
     def __init__(self, schema: dict[str, Any] | None = None) -> None:
         self._default_schema = schema
         self._compiled_injection = [
-            (re.compile(pat, re.IGNORECASE), desc)
-            for pat, desc in self._INJECTION_PATTERNS
+            (re.compile(pat, re.IGNORECASE), desc) for pat, desc in self._INJECTION_PATTERNS
         ]
 
     # ------------------------------------------------------------------
     # Public API
     # ------------------------------------------------------------------
 
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         matches: list[MatchDetail] = []
         categories: set[str] = set()
 
@@ -206,13 +194,10 @@ class SchemaValidationScanner(BaseOutputScanner):
             # Not JSON at all -- nothing to validate.
             return self._pass()
 
-        parsed, json_start, json_end = extraction
+        parsed, _json_start, _json_end = extraction
 
         # 2. Schema validation ---------------------------------------------------
-        schema = (
-            (context or {}).get("expected_schema")  # type: ignore[arg-type]
-            or self._default_schema
-        )
+        schema = (context or {}).get("expected_schema") or self._default_schema
         if schema is not None and isinstance(schema, dict):
             violations = _validate_schema(parsed, schema)
             for v in violations:
@@ -262,14 +247,10 @@ class SchemaValidationScanner(BaseOutputScanner):
                             description=f"Suspicious field '{key}' at {path}.{key}",
                         )
                     )
-                found |= self._check_suspicious_fields(
-                    value, matches, f"{path}.{key}"
-                )
+                found |= self._check_suspicious_fields(value, matches, f"{path}.{key}")
         elif isinstance(data, list):
             for idx, item in enumerate(data):
-                found |= self._check_suspicious_fields(
-                    item, matches, f"{path}[{idx}]"
-                )
+                found |= self._check_suspicious_fields(item, matches, f"{path}[{idx}]")
         return found
 
     def _check_injection_in_values(
@@ -281,14 +262,10 @@ class SchemaValidationScanner(BaseOutputScanner):
         found = False
         if isinstance(data, dict):
             for key, value in data.items():
-                found |= self._check_injection_in_values(
-                    value, matches, f"{path}.{key}"
-                )
+                found |= self._check_injection_in_values(value, matches, f"{path}.{key}")
         elif isinstance(data, list):
             for idx, item in enumerate(data):
-                found |= self._check_injection_in_values(
-                    item, matches, f"{path}[{idx}]"
-                )
+                found |= self._check_injection_in_values(item, matches, f"{path}[{idx}]")
         elif isinstance(data, str):
             for compiled, description in self._compiled_injection:
                 m = compiled.search(data)
@@ -341,6 +318,4 @@ def _looks_like_json(text: str) -> bool:
     if stripped.startswith(("{", "[", '"')):
         return True
     # Markdown-style JSON fences
-    if "```json" in stripped or "```JSON" in stripped:
-        return True
-    return False
+    return "```json" in stripped or "```JSON" in stripped

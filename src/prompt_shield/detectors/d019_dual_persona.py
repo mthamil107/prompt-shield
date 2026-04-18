@@ -20,9 +20,7 @@ class DualPersonaDetector(BaseDetector):
 
     detector_id: str = "d019_dual_persona"
     name: str = "Dual Persona"
-    description: str = (
-        "Detects attempts to create split personalities or competing response modes"
-    )
+    description: str = "Detects attempts to create split personalities or competing response modes"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["jailbreak"]
     version: str = "1.0.0"
@@ -68,9 +66,7 @@ class DualPersonaDetector(BaseDetector):
         ),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, desc in self._patterns:
@@ -101,7 +97,5 @@ class DualPersonaDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

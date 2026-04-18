@@ -137,9 +137,7 @@ class FeedbackStore:
         try:
             conn = self._get_conn()
             try:
-                rows = conn.execute(
-                    "SELECT DISTINCT detector_id FROM feedback;"
-                ).fetchall()
+                rows = conn.execute("SELECT DISTINCT detector_id FROM feedback;").fetchall()
                 detector_ids = [r["detector_id"] for r in rows]
             finally:
                 conn.close()

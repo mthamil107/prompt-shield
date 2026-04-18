@@ -37,9 +37,7 @@ class TestRAGPoisoning:
         assert result.detected is True
 
     def test_benign_document(self, detector):
-        result = detector.detect(
-            "This document describes the weather forecast for today"
-        )
+        result = detector.detect("This document describes the weather forecast for today")
         assert result.detected is False
 
     def test_benign_paragraph(self, detector):

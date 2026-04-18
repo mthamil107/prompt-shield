@@ -42,9 +42,7 @@ class WhitespaceInjectionDetector(BaseDetector):
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         has_suspicious_content = False
 
@@ -66,9 +64,7 @@ class WhitespaceInjectionDetector(BaseDetector):
                 matches.append(
                     MatchDetail(
                         pattern="invisible_chars_with_keywords",
-                        matched_text=(
-                            f"[{invisible_count} invisible character(s) removed]"
-                        ),
+                        matched_text=(f"[{invisible_count} invisible character(s) removed]"),
                         position=(
                             invisible_positions[0],
                             invisible_positions[-1] + 1,
@@ -90,8 +86,7 @@ class WhitespaceInjectionDetector(BaseDetector):
                             invisible_positions[-1] + 1,
                         ),
                         description=(
-                            f"Found {invisible_count} invisible/zero-width "
-                            f"character(s) in input"
+                            f"Found {invisible_count} invisible/zero-width character(s) in input"
                         ),
                     )
                 )
@@ -176,7 +171,5 @@ class WhitespaceInjectionDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} indicator(s) of {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} indicator(s) of {self.name.lower()}"),
         )

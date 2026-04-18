@@ -20,9 +20,7 @@ class URLInjectionDetector(BaseDetector):
 
     detector_id: str = "d016_url_injection"
     name: str = "URL Injection"
-    description: str = (
-        "Detects suspicious URLs injected into prompts for phishing or redirection"
-    )
+    description: str = "Detects suspicious URLs injected into prompts for phishing or redirection"
     severity: Severity = Severity.MEDIUM
     tags: ClassVar[list[str]] = ["indirect_injection"]
     version: str = "1.0.0"
@@ -39,9 +37,7 @@ class URLInjectionDetector(BaseDetector):
     _data_uri_pattern = regex.compile(r"data:\w+/\w+[;,]", regex.IGNORECASE)
     _encoding_pattern = regex.compile(r"%[0-9a-fA-F]{2}")
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
@@ -109,9 +105,7 @@ class URLInjectionDetector(BaseDetector):
                     pattern="url_count > 3",
                     matched_text=f"{len(all_urls)} URLs found in input",
                     position=(0, len(input_text)),
-                    description=(
-                        f"Excessive number of URLs in input ({len(all_urls)})"
-                    ),
+                    description=(f"Excessive number of URLs in input ({len(all_urls)})"),
                 )
             )
             best_confidence = max(best_confidence, 0.65)
@@ -133,7 +127,6 @@ class URLInjectionDetector(BaseDetector):
             severity=self.severity,
             matches=matches,
             explanation=(
-                f"Detected {len(matches)} suspicious URL pattern(s) "
-                f"indicating {self.name.lower()}"
+                f"Detected {len(matches)} suspicious URL pattern(s) indicating {self.name.lower()}"
             ),
         )

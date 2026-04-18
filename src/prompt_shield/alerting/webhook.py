@@ -45,9 +45,7 @@ class WebhookAlerter:
                 )
                 thread.start()
 
-    def _send(
-        self, webhook: dict[str, Any], event: str, scan_report: ScanReport
-    ) -> None:
+    def _send(self, webhook: dict[str, Any], event: str, scan_report: ScanReport) -> None:
         """Perform the actual HTTP POST (called in a background thread)."""
         payload = {
             "event": event,
@@ -61,9 +59,7 @@ class WebhookAlerter:
             data = json.dumps(payload).encode("utf-8")
             headers = {"Content-Type": "application/json"}
             headers.update(webhook.get("headers", {}))
-            req = urllib.request.Request(
-                webhook["url"], data=data, headers=headers, method="POST"
-            )
-            urllib.request.urlopen(req, timeout=5)  # noqa: S310
+            req = urllib.request.Request(webhook["url"], data=data, headers=headers, method="POST")
+            urllib.request.urlopen(req, timeout=5)
         except Exception as exc:
             logger.warning("Webhook POST to %s failed: %s", webhook["url"], exc)

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from prompt_shield.engine import PromptShieldEngine
@@ -15,10 +15,15 @@ logger = logging.getLogger("prompt_shield.crewai")
 # ---------------------------------------------------------------------------
 _HAS_CREWAI_TOOLS = False
 try:
-    from crewai_tools import BaseTool as _CrewAIBaseTool  # type: ignore[import-untyped]
+    # crewai_tools exposes BaseTool at different locations across versions;
+    # we import defensively and fall back to ``object`` on any failure.
+    # mypy sees whichever version is installed in its environment — we
+    # silence every possible error from this try-block with a blanket
+    # # type: ignore rather than tracking per-version error codes.
+    from crewai_tools import BaseTool as _CrewAIBaseTool  # type: ignore
 
     _HAS_CREWAI_TOOLS = True
-except ImportError:
+except (ImportError, AttributeError):
     _CrewAIBaseTool = object  # type: ignore[assignment,misc]
 
 
@@ -147,9 +152,7 @@ class CrewAIGuard:
         pii_redact: bool = False,
     ) -> None:
         if mode not in self.VALID_MODES:
-            raise ValueError(
-                f"Invalid mode '{mode}'. Must be one of {self.VALID_MODES}"
-            )
+            raise ValueError(f"Invalid mode '{mode}'. Must be one of {self.VALID_MODES}")
         self._engine = engine
         self.mode = mode
         self.scan_outputs = scan_outputs

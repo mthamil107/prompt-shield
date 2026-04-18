@@ -78,9 +78,7 @@ class TestCodeInjection:
     # ---- Benign inputs ----
 
     def test_benign_code_passes(self, scanner):
-        result = scanner.scan(
-            "def hello():\n    print('Hello, world!')\n    return 42"
-        )
+        result = scanner.scan("def hello():\n    print('Hello, world!')\n    return 42")
         assert result.flagged is False
 
     def test_benign_sql_select_passes(self, scanner):
@@ -90,11 +88,7 @@ class TestCodeInjection:
     # ---- Multi-category & field checks ----
 
     def test_multiple_categories(self, scanner):
-        text = (
-            "DROP TABLE users; "
-            '<script>alert("xss")</script> '
-            "os.system('whoami')"
-        )
+        text = "DROP TABLE users; <script>alert(\"xss\")</script> os.system('whoami')"
         result = scanner.scan(text)
         assert result.flagged is True
         assert len(result.categories) >= 2

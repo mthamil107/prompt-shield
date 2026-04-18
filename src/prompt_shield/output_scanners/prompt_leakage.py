@@ -105,9 +105,7 @@ class PromptLeakageScanner(BaseOutputScanner):
     # Public API
     # ------------------------------------------------------------------
 
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         matches: list[MatchDetail] = []
         categories_seen: set[str] = set()
 
@@ -139,7 +137,8 @@ class PromptLeakageScanner(BaseOutputScanner):
 
         sorted_categories = sorted(categories_seen)
         confidence = min(
-            1.0, self._base_confidence + self._confidence_per_extra_match * (len(matches) - 1)
+            1.0,
+            self._base_confidence + self._confidence_per_extra_match * (len(matches) - 1),
         )
 
         return OutputScanResult(

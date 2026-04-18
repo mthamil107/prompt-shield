@@ -28,9 +28,7 @@ class AgentGuard:
         self.output_mode = output_mode
         self.sanitize_replacement = sanitize_replacement
 
-    def scan_input(
-        self, user_message: str, context: dict[str, object] | None = None
-    ) -> GateResult:
+    def scan_input(self, user_message: str, context: dict[str, object] | None = None) -> GateResult:
         """Gate 1: Scan user input."""
         ctx = dict(context) if context else {}
         ctx["gate"] = "input"
@@ -62,9 +60,7 @@ class AgentGuard:
             action=report.action if blocked else Action.PASS,
             blocked=blocked,
             scan_report=report,
-            explanation=self._build_explanation(report)
-            if blocked
-            else "Tool call passed",
+            explanation=self._build_explanation(report) if blocked else "Tool call passed",
         )
 
     def scan_tool_result(
@@ -103,9 +99,7 @@ class AgentGuard:
             action=report.action if blocked else Action.FLAG,
             blocked=blocked,
             scan_report=report,
-            explanation=self._build_explanation(report)
-            if blocked
-            else "Tool result flagged",
+            explanation=self._build_explanation(report) if blocked else "Tool result flagged",
             sanitized_text=self._sanitize_text(result, report) if not blocked else None,
         )
 
@@ -117,9 +111,7 @@ class AgentGuard:
         self, llm_response: str, canary_token: str, original_input: str | None = None
     ) -> GateResult:
         """Gate 3b: Check LLM output for canary leakage."""
-        leaked = self.engine.check_canary(
-            llm_response, canary_token, original_input=original_input
-        )
+        leaked = self.engine.check_canary(llm_response, canary_token, original_input=original_input)
         if leaked:
             blocked = self.output_mode == "block"
             return GateResult(
@@ -169,9 +161,7 @@ class AgentGuard:
         if not report.detections:
             return "No detections"
         top = max(report.detections, key=lambda d: d.confidence)
-        return (
-            f"{top.detector_id}: {top.explanation} (confidence: {top.confidence:.2f})"
-        )
+        return f"{top.detector_id}: {top.explanation} (confidence: {top.confidence:.2f})"
 
     def _sanitize_text(self, text: str, report: ScanReport) -> str:
         """Replace matched segments with sanitize_replacement.
@@ -182,9 +172,7 @@ class AgentGuard:
             return text
 
         # Check for PII detections — use entity-type-aware redaction
-        pii_detections = [
-            d for d in report.detections if d.detector_id == "d023_pii_detection"
-        ]
+        pii_detections = [d for d in report.detections if d.detector_id == "d023_pii_detection"]
         if pii_detections:
             from prompt_shield.pii.redactor import PIIRedactor
 
@@ -201,9 +189,7 @@ class AgentGuard:
             text = redactor.redact_with_detections(text, pii_matches)
 
         # Handle non-PII detections with generic replacement
-        non_pii = [
-            d for d in report.detections if d.detector_id != "d023_pii_detection"
-        ]
+        non_pii = [d for d in report.detections if d.detector_id != "d023_pii_detection"]
         if non_pii:
             positions: list[tuple[int, int]] = []
             for det in non_pii:

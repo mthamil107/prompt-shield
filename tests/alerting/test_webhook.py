@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import threading
 import time
 from datetime import datetime, timezone
 from typing import Any
@@ -199,6 +198,4 @@ class TestWebhookAlerter:
             alerter.alert("block", scan_report)
             # Give the thread a moment to start
             time.sleep(0.1)
-            mock_send.assert_called_once_with(
-                config["webhooks"][0], "block", scan_report
-            )
+            mock_send.assert_called_once_with(config["webhooks"][0], "block", scan_report)

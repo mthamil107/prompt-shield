@@ -4,7 +4,9 @@ from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-from prompt_shield.models import MatchDetail
+from prompt_shield.models import (
+    MatchDetail,  # noqa: TC001 - used at runtime by Pydantic model build
+)
 
 
 class OutputScanResult(BaseModel):

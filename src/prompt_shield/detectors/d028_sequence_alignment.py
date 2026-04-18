@@ -148,23 +148,24 @@ class SequenceAlignmentDetector(BaseDetector):
 
     def setup(self, config: dict[str, object]) -> None:
         """Load tunable parameters from the per-detector config section."""
-        self._threshold = float(config.get("threshold", self._threshold))  # type: ignore[arg-type]
-        self._match_bonus = int(config.get("match_bonus", self._match_bonus))  # type: ignore[arg-type]
-        self._synonym_bonus = int(config.get("synonym_bonus", self._synonym_bonus))  # type: ignore[arg-type]
-        self._mismatch_penalty = int(
-            config.get("mismatch_penalty", self._mismatch_penalty)
-        )  # type: ignore[arg-type]
-        self._gap_penalty = int(config.get("gap_penalty", self._gap_penalty))  # type: ignore[arg-type]
-        self._min_input_tokens = int(
-            config.get("min_input_tokens", self._min_input_tokens)
-        )  # type: ignore[arg-type]
-        self._max_input_tokens = int(
-            config.get("max_input_tokens", self._max_input_tokens)
-        )  # type: ignore[arg-type]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+        def _as_float(key: str, default: float) -> float:
+            v = config.get(key, default)
+            return float(v) if isinstance(v, (int, float, str)) else default
+
+        def _as_int(key: str, default: int) -> int:
+            v = config.get(key, default)
+            return int(v) if isinstance(v, (int, float, str)) else default
+
+        self._threshold = _as_float("threshold", self._threshold)
+        self._match_bonus = _as_int("match_bonus", self._match_bonus)
+        self._synonym_bonus = _as_int("synonym_bonus", self._synonym_bonus)
+        self._mismatch_penalty = _as_int("mismatch_penalty", self._mismatch_penalty)
+        self._gap_penalty = _as_int("gap_penalty", self._gap_penalty)
+        self._min_input_tokens = _as_int("min_input_tokens", self._min_input_tokens)
+        self._max_input_tokens = _as_int("max_input_tokens", self._max_input_tokens)
+
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         tokens = _tokenize(input_text)
         if len(tokens) < self._min_input_tokens:
             return DetectionResult(
@@ -239,9 +240,7 @@ class SequenceAlignmentDetector(BaseDetector):
         confidence = min(1.0, 0.6 + 0.4 * (best_normalized - self._threshold) / span)
 
         matched_text = (
-            input_text[best_span[0] : best_span[1]]
-            if best_span[1] > best_span[0]
-            else ""
+            input_text[best_span[0] : best_span[1]] if best_span[1] > best_span[0] else ""
         )
         match = MatchDetail(
             pattern=" ".join(best_needle),

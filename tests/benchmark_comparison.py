@@ -109,6 +109,7 @@ def _all_prompts() -> list[tuple[str, str, bool]]:
 # SCANNER IMPLEMENTATIONS
 # ============================================================
 
+
 def scan_prompt_shield(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
     """Scan with prompt-shield."""
     from prompt_shield.engine import PromptShieldEngine
@@ -133,18 +134,22 @@ def scan_prompt_shield(prompts: list[tuple[str, str, bool]]) -> list[dict[str, A
     for prompt, category, is_attack in prompts:
         report = engine.scan(prompt)
         detected = report.action.value in ("block", "flag") or report.overall_risk_score >= 0.5
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": report.overall_risk_score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": report.overall_risk_score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
 
-def scan_prompt_shield_with_ml(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
+def scan_prompt_shield_with_ml(
+    prompts: list[tuple[str, str, bool]],
+) -> list[dict[str, Any]]:
     """Scan with prompt-shield (ML classifier enabled)."""
     from prompt_shield.engine import PromptShieldEngine
 
@@ -167,18 +172,22 @@ def scan_prompt_shield_with_ml(prompts: list[tuple[str, str, bool]]) -> list[dic
     for prompt, category, is_attack in prompts:
         report = engine.scan(prompt)
         detected = report.action.value in ("block", "flag") or report.overall_risk_score >= 0.5
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": report.overall_risk_score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": report.overall_risk_score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
 
-def scan_protectai_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
+def scan_protectai_deberta(
+    prompts: list[tuple[str, str, bool]],
+) -> list[dict[str, Any]]:
     """Scan with ProtectAI DeBERTa v2 (raw transformers pipeline)."""
     try:
         from transformers import pipeline as hf_pipeline
@@ -203,13 +212,15 @@ def scan_protectai_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[st
         except Exception:
             detected = False
             score = 0.0
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
@@ -241,18 +252,22 @@ def scan_piguard(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
         except Exception:
             detected = False
             score = 0.0
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
 
-def scan_meta_prompt_guard(prompts: list[tuple[str, str, bool]]) -> list[dict[str, Any]]:
+def scan_meta_prompt_guard(
+    prompts: list[tuple[str, str, bool]],
+) -> list[dict[str, Any]]:
     """Scan with Meta Llama Prompt Guard 2 (86M)."""
     try:
         from transformers import pipeline as hf_pipeline
@@ -278,13 +293,15 @@ def scan_meta_prompt_guard(prompts: list[tuple[str, str, bool]]) -> list[dict[st
         except Exception:
             detected = False
             score = 0.0
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
@@ -314,13 +331,15 @@ def scan_deepset_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[str,
         except Exception:
             detected = False
             score = 0.0
-        results.append({
-            "prompt": prompt[:60],
-            "category": category,
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": score,
-        })
+        results.append(
+            {
+                "prompt": prompt[:60],
+                "category": category,
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
@@ -328,6 +347,7 @@ def scan_deepset_deberta(prompts: list[tuple[str, str, bool]]) -> list[dict[str,
 # ============================================================
 # METRICS
 # ============================================================
+
 
 def compute_metrics(results: list[dict]) -> dict:
     """Compute TP, TN, FP, FN, precision, recall, F1, accuracy."""
@@ -359,9 +379,15 @@ def compute_metrics(results: list[dict]) -> dict:
             cat_stats[cat]["detected"] += 1
 
     return {
-        "tp": tp, "tn": tn, "fp": fp, "fn": fn,
-        "precision": precision, "recall": recall,
-        "f1": f1, "accuracy": accuracy, "fpr": fpr,
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "accuracy": accuracy,
+        "fpr": fpr,
         "categories": cat_stats,
     }
 
@@ -369,6 +395,7 @@ def compute_metrics(results: list[dict]) -> dict:
 # ============================================================
 # MAIN
 # ============================================================
+
 
 def main():
     prompts = _all_prompts()
@@ -378,7 +405,9 @@ def main():
     print("=" * 80)
     print("PROMPT-SHIELD vs COMPETITORS — COMPARISON BENCHMARK")
     print("=" * 80)
-    print(f"Dataset: {total_attacks} attacks across {len(ATTACKS)} categories + {total_benign} benign")
+    print(
+        f"Dataset: {total_attacks} attacks across {len(ATTACKS)} categories + {total_benign} benign"
+    )
     print()
 
     scanners = [
@@ -408,7 +437,9 @@ def main():
     # Print comparison table
     print()
     print("-" * 80)
-    header = f"{'Scanner':<30} {'Prec':>6} {'Recall':>7} {'F1':>6} {'Acc':>6} {'FPR':>6} {'Speed':>10}"
+    header = (
+        f"{'Scanner':<30} {'Prec':>6} {'Recall':>7} {'F1':>6} {'Acc':>6} {'FPR':>6} {'Speed':>10}"
+    )
     print(header)
     print("-" * 80)
 
@@ -437,7 +468,7 @@ def main():
 
     for cat in categories:
         row = f"{cat:<25}"
-        for name, m in all_metrics.items():
+        for _name, m in all_metrics.items():
             cs = m["categories"].get(cat, {"total": 0, "detected": 0})
             rate = cs["detected"] / cs["total"] * 100 if cs["total"] > 0 else 0
             row += f" {rate:>14.0f}%"
@@ -445,7 +476,7 @@ def main():
 
     # Benign (FP)
     row = f"{'benign (FP rate)':<25}"
-    for name, m in all_metrics.items():
+    for _name, m in all_metrics.items():
         cs = m["categories"].get("benign", {"total": 0, "detected": 0})
         rate = cs["detected"] / cs["total"] * 100 if cs["total"] > 0 else 0
         row += f" {rate:>14.0f}%"
@@ -460,8 +491,10 @@ def main():
     print("=" * 80)
     for name, m in all_metrics.items():
         print(f"  {name}:")
-        print(f"    Detection: {m['recall']:.1%} | FP: {m['fpr']:.1%} | F1: {m['f1']:.1%} | "
-              f"Speed: {m['scans_per_sec']:.0f}/sec")
+        print(
+            f"    Detection: {m['recall']:.1%} | FP: {m['fpr']:.1%} | F1: {m['f1']:.1%} | "
+            f"Speed: {m['scans_per_sec']:.0f}/sec"
+        )
         print(f"    TP:{m['tp']} TN:{m['tn']} FP:{m['fp']} FN:{m['fn']}")
     print("=" * 80)
 

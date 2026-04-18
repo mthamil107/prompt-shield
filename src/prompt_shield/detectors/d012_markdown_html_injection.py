@@ -20,8 +20,7 @@ class MarkdownHtmlInjectionDetector(BaseDetector):
     detector_id: str = "d012_markdown_html_injection"
     name: str = "Markdown / HTML Injection"
     description: str = (
-        "Detects injection of formatting or markup that could alter "
-        "rendering or behavior"
+        "Detects injection of formatting or markup that could alter rendering or behavior"
     )
     severity: Severity = Severity.MEDIUM
     tags: ClassVar[list[str]] = ["indirect_injection", "obfuscation"]
@@ -45,9 +44,7 @@ class MarkdownHtmlInjectionDetector(BaseDetector):
         (r"!\[.*?\]\(https?://\S+\)", "Markdown image with external URL"),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, description in self._patterns:
@@ -78,7 +75,5 @@ class MarkdownHtmlInjectionDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

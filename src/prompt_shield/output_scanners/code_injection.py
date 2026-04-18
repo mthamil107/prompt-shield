@@ -122,8 +122,7 @@ _COMPILED_PATTERNS: dict[str, list[tuple[regex.Pattern[str], str]]] = {}
 
 for _cat, _pats in _PATTERN_CATEGORIES.items():
     _COMPILED_PATTERNS[_cat] = [
-        (regex.compile(pat, regex.IGNORECASE | regex.DOTALL), desc)
-        for pat, desc in _pats
+        (regex.compile(pat, regex.IGNORECASE | regex.DOTALL), desc) for pat, desc in _pats
     ]
 
 
@@ -141,9 +140,7 @@ class CodeInjectionScanner(BaseOutputScanner):
     _base_confidence: ClassVar[float] = 0.90
     _category_boost: ClassVar[float] = 0.03
 
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         all_matches: list[MatchDetail] = []
         matched_categories: set[str] = set()
 
@@ -176,8 +173,7 @@ class CodeInjectionScanner(BaseOutputScanner):
 
         confidence = min(
             1.0,
-            self._base_confidence
-            + self._category_boost * (len(matched_categories) - 1),
+            self._base_confidence + self._category_boost * (len(matched_categories) - 1),
         )
 
         sorted_categories = sorted(matched_categories)

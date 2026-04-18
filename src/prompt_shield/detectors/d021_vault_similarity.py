@@ -22,9 +22,7 @@ class VaultSimilarityDetector(BaseDetector):
 
     detector_id: str = "d021_vault_similarity"
     name: str = "Vault Similarity"
-    description: str = (
-        "Matches inputs against known attack embeddings using vector similarity"
-    )
+    description: str = "Matches inputs against known attack embeddings using vector similarity"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["self_learning", "vector_similarity"]
     version: str = "1.0.0"
@@ -33,9 +31,7 @@ class VaultSimilarityDetector(BaseDetector):
     def __init__(self) -> None:
         self.vault = None  # Will be injected by the engine
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         if self.vault is None:
             return DetectionResult(
                 detector_id=self.detector_id,
@@ -58,9 +54,7 @@ class VaultSimilarityDetector(BaseDetector):
 
         threshold = getattr(self.vault, "_similarity_threshold", 0.85)
 
-        matches_above_threshold = [
-            vm for vm in vault_matches if vm.similarity_score >= threshold
-        ]
+        matches_above_threshold = [vm for vm in vault_matches if vm.similarity_score >= threshold]
 
         if not matches_above_threshold:
             return DetectionResult(
@@ -68,9 +62,7 @@ class VaultSimilarityDetector(BaseDetector):
                 detected=False,
                 confidence=0.0,
                 severity=self.severity,
-                explanation=(
-                    f"Vault matches found but none above threshold ({threshold})"
-                ),
+                explanation=(f"Vault matches found but none above threshold ({threshold})"),
             )
 
         # Determine severity from top match metadata if available
@@ -86,8 +78,7 @@ class VaultSimilarityDetector(BaseDetector):
             detail_matches.append(
                 MatchDetail(
                     pattern="vault_similarity",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
                         f"Vault entry '{vm.id}' matched with "

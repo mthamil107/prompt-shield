@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import json
 import sys
-from pathlib import Path
 from types import ModuleType
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
+if TYPE_CHECKING:
+    from pathlib import Path
+
 import pytest
-import yaml
 
 from prompt_shield.redteam.report import AttackResult, RedTeamReport
 from prompt_shield.redteam.runner import ATTACK_CATEGORIES, _parse_attack_list
@@ -107,9 +109,7 @@ class TestRedTeamRunner:
         runner = RedTeamRunner(api_key="test-key")
         assert runner._engine is not None
 
-    def test_init_with_provided_engine(
-        self, mock_anthropic: MagicMock, data_dir: str
-    ) -> None:
+    def test_init_with_provided_engine(self, mock_anthropic: MagicMock, data_dir: str) -> None:
         """Runner should use the provided engine."""
         from prompt_shield.redteam.runner import RedTeamRunner
 
@@ -126,13 +126,13 @@ class TestRedTeamRunner:
         if "ANTHROPIC_API_KEY" in __import__("os").environ:
             env_backup["ANTHROPIC_API_KEY"] = __import__("os").environ["ANTHROPIC_API_KEY"]
 
-        with patch.dict("os.environ", {}, clear=True):
-            with pytest.raises(ValueError, match="API key required"):
-                RedTeamRunner(api_key=None)
+        with (
+            patch.dict("os.environ", {}, clear=True),
+            pytest.raises(ValueError, match="API key required"),
+        ):
+            RedTeamRunner(api_key=None)
 
-    def test_test_attack_detects_malicious(
-        self, mock_anthropic: MagicMock, data_dir: str
-    ) -> None:
+    def test_test_attack_detects_malicious(self, mock_anthropic: MagicMock, data_dir: str) -> None:
         """_test_attack should correctly identify a blocked (malicious) input."""
         runner, _ = _make_runner(data_dir=data_dir, mock_anthropic_cls=mock_anthropic)
 
@@ -146,9 +146,7 @@ class TestRedTeamRunner:
         assert result.risk_score > 0.0
         assert len(result.detections) > 0
 
-    def test_test_attack_identifies_bypass(
-        self, mock_anthropic: MagicMock, data_dir: str
-    ) -> None:
+    def test_test_attack_identifies_bypass(self, mock_anthropic: MagicMock, data_dir: str) -> None:
         """_test_attack should correctly identify a bypass (clean input passing through)."""
         runner, _ = _make_runner(data_dir=data_dir, mock_anthropic_cls=mock_anthropic)
 
@@ -257,13 +255,9 @@ class TestRedTeamRunner:
         result = _parse_attack_list(text)
         assert result == []
 
-    def test_run_with_mocked_api(
-        self, mock_anthropic: MagicMock, data_dir: str
-    ) -> None:
+    def test_run_with_mocked_api(self, mock_anthropic: MagicMock, data_dir: str) -> None:
         """run() should generate attacks, test them, and produce a report."""
-        runner, mock_client = _make_runner(
-            data_dir=data_dir, mock_anthropic_cls=mock_anthropic
-        )
+        runner, _mock_client = _make_runner(data_dir=data_dir, mock_anthropic_cls=mock_anthropic)
 
         # Run for a very short duration with one category
         with patch("prompt_shield.redteam.runner.time") as mock_time:
@@ -291,9 +285,7 @@ class TestRedTeamRunner:
         assert report.categories_tested == ["multilingual"]
         assert report.duration_seconds >= 0
 
-    def test_run_invalid_category(
-        self, mock_anthropic: MagicMock, data_dir: str
-    ) -> None:
+    def test_run_invalid_category(self, mock_anthropic: MagicMock, data_dir: str) -> None:
         """run() should raise ValueError for an unknown category."""
         runner, _ = _make_runner(data_dir=data_dir, mock_anthropic_cls=mock_anthropic)
 

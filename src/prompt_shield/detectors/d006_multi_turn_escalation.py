@@ -113,9 +113,7 @@ class MultiTurnEscalationDetector(BaseDetector):
         r"also add",
     ]
 
-    def _count_history_escalation_signals(
-        self, conversation_history: list[object]
-    ) -> int:
+    def _count_history_escalation_signals(self, conversation_history: list[object]) -> int:
         """Count how many messages in the history contain escalation signals."""
         escalation_count = 0
         for message in conversation_history:
@@ -126,9 +124,7 @@ class MultiTurnEscalationDetector(BaseDetector):
                     break  # one signal per message is enough
         return escalation_count
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, description in self._patterns:
@@ -164,10 +160,7 @@ class MultiTurnEscalationDetector(BaseDetector):
         # Confidence calculation:
         # - Base confidence from current-message pattern matches
         # - Boost if conversation history shows escalation
-        if matches:
-            confidence = min(1.0, self._base_confidence + 0.1 * (len(matches) - 1))
-        else:
-            confidence = 0.0
+        confidence = min(1.0, self._base_confidence + 0.1 * (len(matches) - 1)) if matches else 0.0
 
         if history_escalation_count >= 3:
             # Escalation chain detected in history; boost confidence

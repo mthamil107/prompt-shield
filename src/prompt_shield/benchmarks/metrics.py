@@ -51,7 +51,7 @@ def compute_metrics(
         raise ValueError(msg)
 
     tp = tn = fp = fn = 0
-    for pred, label in zip(predictions, labels):
+    for pred, label in zip(predictions, labels, strict=True):
         if pred and label:
             tp += 1
         elif not pred and not label:

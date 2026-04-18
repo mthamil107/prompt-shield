@@ -20,9 +20,7 @@ class DenialOfWalletDetector(BaseDetector):
 
     detector_id: str = "d026_denial_of_wallet"
     name: str = "Denial of Wallet"
-    description: str = (
-        "Detects prompts designed to trigger excessive token consumption"
-    )
+    description: str = "Detects prompts designed to trigger excessive token consumption"
     severity: Severity = Severity.MEDIUM
     tags: ClassVar[list[str]] = ["resource_abuse"]
     version: str = "1.0.0"
@@ -90,9 +88,7 @@ class DenialOfWalletDetector(BaseDetector):
         ),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, description in self._patterns:
@@ -134,7 +130,5 @@ class DenialOfWalletDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

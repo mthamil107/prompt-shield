@@ -45,9 +45,7 @@ class TestDatabaseInit:
             "vault_log",
             "sync_history",
         }
-        assert expected_tables.issubset(tables), (
-            f"Missing tables: {expected_tables - tables}"
-        )
+        assert expected_tables.issubset(tables), f"Missing tables: {expected_tables - tables}"
 
 
 class TestDatabaseConnection:
@@ -93,9 +91,7 @@ class TestDatabaseInsert:
             conn.commit()
 
         with db.connection() as conn:
-            row = conn.execute(
-                "SELECT * FROM scan_history WHERE id = ?", (scan_id,)
-            ).fetchone()
+            row = conn.execute("SELECT * FROM scan_history WHERE id = ?", (scan_id,)).fetchone()
 
         assert row is not None
         assert row["id"] == scan_id
@@ -173,8 +169,6 @@ class TestDatabaseWALMode:
         with db.connection() as conn:
             result = conn.execute("PRAGMA journal_mode;").fetchone()
             journal_mode = (
-                result[0]
-                if isinstance(result, (tuple, list))
-                else result["journal_mode"]
+                result[0] if isinstance(result, (tuple, list)) else result["journal_mode"]
             )
         assert journal_mode.lower() == "wal"

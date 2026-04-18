@@ -143,9 +143,7 @@ class ToxicityScanner(BaseOutputScanner):
     # Public API
     # ------------------------------------------------------------------
 
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         matches: list[MatchDetail] = []
         categories_seen: set[str] = set()
 

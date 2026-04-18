@@ -20,9 +20,7 @@ class HypotheticalFramingDetector(BaseDetector):
 
     detector_id: str = "d017_hypothetical_framing"
     name: str = "Hypothetical Framing"
-    description: str = (
-        "Detects using fictional or hypothetical scenarios to bypass restrictions"
-    )
+    description: str = "Detects using fictional or hypothetical scenarios to bypass restrictions"
     severity: Severity = Severity.MEDIUM
     tags: ClassVar[list[str]] = ["jailbreak"]
     version: str = "1.0.0"
@@ -70,9 +68,7 @@ class HypotheticalFramingDetector(BaseDetector):
         ),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, desc in self._patterns:
@@ -103,7 +99,5 @@ class HypotheticalFramingDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

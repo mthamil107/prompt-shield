@@ -58,7 +58,8 @@ class TestMultilingualInjection:
         assert result.detected is False
 
     def test_benign_chinese_passes(self, detector):
-        result = detector.detect("今天天气怎么样？")
+
+        result = detector.detect("今天天气怎么样？")  # noqa: RUF001
         assert result.detected is False
 
     def test_multiple_languages(self, detector):

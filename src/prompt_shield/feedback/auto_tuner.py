@@ -103,9 +103,7 @@ class AutoTuner:
                         adjustment -= 0.01
 
                     # Clamp to [-max_adjustment, +max_adjustment]
-                    adjustment = max(
-                        -self._max_adjustment, min(self._max_adjustment, adjustment)
-                    )
+                    adjustment = max(-self._max_adjustment, min(self._max_adjustment, adjustment))
                     new_threshold = original_threshold + adjustment
 
                     # Upsert into detector_tuning
@@ -160,8 +158,7 @@ class AutoTuner:
             conn = self._get_conn()
             try:
                 row = conn.execute(
-                    "SELECT adjusted_threshold "
-                    "FROM detector_tuning WHERE detector_id = ?;",
+                    "SELECT adjusted_threshold FROM detector_tuning WHERE detector_id = ?;",
                     (detector_id,),
                 ).fetchone()
             finally:

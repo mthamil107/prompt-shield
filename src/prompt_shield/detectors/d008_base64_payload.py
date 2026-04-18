@@ -52,9 +52,7 @@ class Base64PayloadDetector(BaseDetector):
     version: str = "1.0.0"
     author: str = "prompt-shield"
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for m in _BASE64_PATTERN.finditer(input_text):

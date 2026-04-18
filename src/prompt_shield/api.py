@@ -60,11 +60,9 @@ _state: dict[str, Any] = {}
 
 
 @asynccontextmanager
-async def _lifespan(app: FastAPI):  # noqa: ARG001
+async def _lifespan(app: FastAPI):
     """Create engine and redactor once at startup; clean up on shutdown."""
-    logger.info(
-        "Starting prompt-shield API (mode=%s, threshold=%s)", _MODE, _THRESHOLD
-    )
+    logger.info("Starting prompt-shield API (mode=%s, threshold=%s)", _MODE, _THRESHOLD)
     _state["engine"] = PromptShieldEngine(
         config_dict={
             "prompt_shield": {

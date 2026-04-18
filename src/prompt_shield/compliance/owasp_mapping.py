@@ -357,8 +357,7 @@ def generate_compliance_report(
     """
     # Build a quick lookup: detector_id -> name
     id_to_name: dict[str, str] = {
-        str(m["detector_id"]): str(m.get("name", m["detector_id"]))
-        for m in detector_metadata
+        str(m["detector_id"]): str(m.get("name", m["detector_id"])) for m in detector_metadata
     }
 
     # Build reverse map: category_id -> list of detector_ids that cover it
