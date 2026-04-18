@@ -15,12 +15,15 @@ logger = logging.getLogger("prompt_shield.crewai")
 # ---------------------------------------------------------------------------
 _HAS_CREWAI_TOOLS = False
 try:
-    from crewai_tools import (
-        BaseTool as _CrewAIBaseTool,  # type: ignore[import-untyped,attr-defined]
-    )
+    # crewai_tools exposes BaseTool at different locations across versions;
+    # we import defensively and fall back to ``object`` on any failure.
+    # mypy sees whichever version is installed in its environment — we
+    # silence every possible error from this try-block with a blanket
+    # # type: ignore rather than tracking per-version error codes.
+    from crewai_tools import BaseTool as _CrewAIBaseTool  # type: ignore
 
     _HAS_CREWAI_TOOLS = True
-except ImportError:
+except (ImportError, AttributeError):
     _CrewAIBaseTool = object  # type: ignore[assignment,misc]
 
 

@@ -116,6 +116,13 @@ module = [
 ]
 disable_error_code = ["no-untyped-def", "no-untyped-call"]
 
+# crewai_tools exposes BaseTool differently between versions; our integration
+# already gracefully falls back via try/except ImportError.
+[[tool.mypy.overrides]]
+module = ["crewai_tools", "crewai_tools.*"]
+ignore_missing_imports = true
+ignore_errors = true
+
 [[tool.mypy.overrides]]
 module = [
     "prompt_shield.config.*",
