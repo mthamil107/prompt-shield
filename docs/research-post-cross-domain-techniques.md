@@ -1,8 +1,11 @@
 # Beyond Pattern Matching: 7 Cross-Domain Techniques for Prompt Injection Detection
 
-**Authors:** prompt-shield contributors  
-**Date:** April 2026  
+**Author:** Thamilvendhan Munirathinam
+**Date:** April 2026
+**DOI:** [10.5281/zenodo.19644135](https://doi.org/10.5281/zenodo.19644135) (Zenodo, v1.0.0)
 **Repository:** [github.com/mthamil107/prompt-shield](https://github.com/mthamil107/prompt-shield)
+
+**Cite as:** Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
 
 ---
 

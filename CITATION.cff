@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use prompt-shield in research, please cite the research paper (preferred) or this software repository."
+title: "prompt-shield"
+abstract: "Self-learning prompt injection detection engine for LLM applications. 27 input detectors, 6 output scanners, cross-domain novel techniques (v0.4.0)."
+authors:
+  - family-names: "Munirathinam"
+    given-names: "Thamilvendhan"
+repository-code: "https://github.com/mthamil107/prompt-shield"
+url: "https://github.com/mthamil107/prompt-shield"
+license: Apache-2.0
+keywords:
+  - "llm"
+  - "security"
+  - "prompt-injection"
+  - "ai-safety"
+  - "firewall"
+  - "self-learning"
+preferred-citation:
+  type: generic
+  title: "Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection"
+  authors:
+    - family-names: "Munirathinam"
+      given-names: "Thamilvendhan"
+  year: 2026
+  doi: "10.5281/zenodo.19644135"
+  url: "https://doi.org/10.5281/zenodo.19644135"
+  version: "1.0.0"
+  publisher:
+    name: "Zenodo"

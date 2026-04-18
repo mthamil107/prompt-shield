@@ -19,6 +19,7 @@
   <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
   <img src="https://img.shields.io/badge/tests-800-blue" alt="800 tests" />
+  <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
 </p>
 
 <p align="center">
@@ -574,7 +575,16 @@ prompt-shield benchmark performance -n 100
 
 ## Research: Novel Cross-Domain Techniques (v0.4.0)
 
-> **Status: 1 of 7 shipped (d028 Smith-Waterman alignment landed in v0.4.0 phase 4). 6 in development.** These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg)](https://doi.org/10.5281/zenodo.19644135)
+
+**Paper:** [*Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection*](https://zenodo.org/records/19644135) (Zenodo, v1.0.0) — a peer-reviewable write-up of the seven techniques below, with prior-art analysis, mechanisms, and references.
+
+**Cite as:**
+> Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
+
+A BibTeX entry lives at [`CITATION.cff`](CITATION.cff) (auto-rendered by GitHub's *Cite this repository* button in the sidebar). A local PDF copy is at [`docs/papers/cross-domain-techniques.pdf`](docs/papers/cross-domain-techniques.pdf).
+
+> **Implementation status: 1 of 7 shipped (d028 Smith-Waterman alignment landed in v0.4.0 phase 4). 6 in development.** These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
 
 The core insight behind v0.4.0 is that prompt injection detection has converged on two approaches -- regex patterns and ML classifiers -- both of which break under adaptive adversaries (see [NAACL 2025](https://aclanthology.org/2025.findings-naacl.395/), [ICLR 2025](https://openreview.net/forum?id=7B9mTg7z25)). We looked to other disciplines for fundamentally different detection signals.
 
