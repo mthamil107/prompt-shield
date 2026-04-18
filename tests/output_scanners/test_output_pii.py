@@ -34,10 +34,7 @@ class TestOutputPIIScanner:
         assert "credit_card" in result.categories
 
     def test_multiple_pii_types(self) -> None:
-        text = (
-            "Customer record: email alice@corp.com, SSN 987-65-4321, "
-            "card 4111 1111 1111 1111."
-        )
+        text = "Customer record: email alice@corp.com, SSN 987-65-4321, card 4111 1111 1111 1111."
         result = self.scanner.scan(text)
         assert result.flagged is True
         assert len(result.categories) >= 2

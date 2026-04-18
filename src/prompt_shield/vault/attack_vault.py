@@ -113,9 +113,7 @@ class AttackVault:
             distances = results.get("distances", [[]])[0]
             metadatas = results.get("metadatas", [[]])[0]
 
-            for entry_id, distance, meta in zip(
-                ids, distances, metadatas, strict=False
-            ):
+            for entry_id, distance, meta in zip(ids, distances, metadatas, strict=False):
                 similarity = 1.0 - distance
                 matches.append(
                     VaultMatch(
@@ -244,9 +242,7 @@ class AttackVault:
             embeddings = data.get("embeddings") or []
             metadatas = data.get("metadatas") or []
 
-            for entry_id, embedding, meta in zip(
-                ids, embeddings, metadatas, strict=False
-            ):
+            for entry_id, embedding, meta in zip(ids, embeddings, metadatas, strict=False):
                 if meta is None:
                     continue
 

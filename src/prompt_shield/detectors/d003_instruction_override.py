@@ -91,9 +91,7 @@ class InstructionOverrideDetector(BaseDetector):
         ),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, description in self._patterns:
@@ -124,7 +122,5 @@ class InstructionOverrideDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

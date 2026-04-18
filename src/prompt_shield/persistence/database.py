@@ -45,21 +45,16 @@ class DatabaseManager:
             conn.row_factory = sqlite3.Row
             return conn
         except sqlite3.Error as exc:
-            raise PersistenceError(
-                f"Failed to open database at {self._db_path}: {exc}"
-            ) from exc
+            raise PersistenceError(f"Failed to open database at {self._db_path}: {exc}") from exc
 
     def _current_schema_version(self) -> int:
         """Return the highest applied schema version, or 0 if none."""
         cursor = self._conn.execute(
-            "SELECT name FROM sqlite_master "
-            "WHERE type='table' AND name='schema_version';"
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='schema_version';"
         )
         if cursor.fetchone() is None:
             return 0
-        row = self._conn.execute(
-            "SELECT MAX(version) AS v FROM schema_version;"
-        ).fetchone()
+        row = self._conn.execute("SELECT MAX(version) AS v FROM schema_version;").fetchone()
         return row["v"] if row["v"] is not None else 0
 
     def _apply_migrations(self) -> None:
@@ -69,9 +64,7 @@ class DatabaseManager:
             for version in range(current + 1, CURRENT_VERSION + 1):
                 sql = MIGRATIONS.get(version)
                 if sql is None:
-                    raise PersistenceError(
-                        f"Missing migration for schema version {version}"
-                    )
+                    raise PersistenceError(f"Missing migration for schema version {version}")
                 self._conn.executescript(sql)
                 self._conn.execute(
                     "INSERT INTO schema_version (version) VALUES (?);",
@@ -106,8 +99,7 @@ class DatabaseManager:
         """
         try:
             cursor = self._conn.execute(
-                "DELETE FROM scan_history "
-                "WHERE timestamp < datetime('now', ? || ' days');",
+                "DELETE FROM scan_history WHERE timestamp < datetime('now', ? || ' days');",
                 (f"-{retention_days}",),
             )
             self._conn.commit()

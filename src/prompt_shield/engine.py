@@ -57,9 +57,7 @@ class PromptShieldEngine:
         data_dir: str | None = None,
     ) -> None:
         self._config = load_config(config_path=config_path, config_dict=config_dict)
-        self._ps_config: dict[str, Any] = self._config.get(
-            "prompt_shield", self._config
-        )
+        self._ps_config: dict[str, Any] = self._config.get("prompt_shield", self._config)
 
         # Resolve data directory
         if data_dir:
@@ -102,9 +100,7 @@ class PromptShieldEngine:
         if self._vault is not None:
             from prompt_shield.vault.threat_feed import ThreatFeedManager
 
-            self._threat_feed = ThreatFeedManager(
-                vault=self._vault, data_dir=str(self._data_dir)
-            )
+            self._threat_feed = ThreatFeedManager(vault=self._vault, data_dir=str(self._data_dir))
 
         # Initialize detector registry
         self._registry = DetectorRegistry()
@@ -189,9 +185,7 @@ class PromptShieldEngine:
             try:
                 detector.setup(det_cfg)
             except Exception as exc:
-                logger.warning(
-                    "Failed to setup detector %s: %s", detector.detector_id, exc
-                )
+                logger.warning("Failed to setup detector %s: %s", detector.detector_id, exc)
 
     @staticmethod
     def _compile_patterns(patterns: list[str]) -> list[regex.Pattern[str]]:
@@ -204,9 +198,7 @@ class PromptShieldEngine:
                 logger.warning("Invalid pattern '%s': %s", p, exc)
         return compiled
 
-    def scan(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> ScanReport:
+    def scan(self, input_text: str, context: dict[str, object] | None = None) -> ScanReport:
         """Run all enabled detectors against input. Returns aggregated report."""
         start = time.perf_counter()
         scan_id = str(uuid.uuid4())
@@ -255,13 +247,9 @@ class PromptShieldEngine:
         detections: list[DetectionResult] = []
 
         if self._parallel and total_run > 1:
-            detections = self._run_detectors_parallel(
-                detectors_to_run, input_text, ctx
-            )
+            detections = self._run_detectors_parallel(detectors_to_run, input_text, ctx)
         else:
-            detections = self._run_detectors_sequential(
-                detectors_to_run, input_text, ctx
-            )
+            detections = self._run_detectors_sequential(detectors_to_run, input_text, ctx)
 
         # Aggregate risk score with ensemble bonus
         if detections:
@@ -275,9 +263,7 @@ class PromptShieldEngine:
         action = self._determine_action(detections, risk_score)
 
         # Check vault match
-        vault_matched = any(
-            d.detector_id == "d021_vault_similarity" for d in detections
-        )
+        vault_matched = any(d.detector_id == "d021_vault_similarity" for d in detections)
 
         report = self._build_report(
             scan_id=scan_id,
@@ -365,9 +351,7 @@ class PromptShieldEngine:
                 input_hash = row["input_hash"]
                 try:
                     # Query vault for entries with matching hash
-                    results = self._vault._collection.get(
-                        where={"attack_hash": input_hash}
-                    )
+                    results = self._vault._collection.get(where={"attack_hash": input_hash})
                     if results and results["ids"]:
                         for vid in results["ids"]:
                             self._vault.remove(vid)
@@ -529,15 +513,11 @@ class PromptShieldEngine:
                     if result is not None:
                         detections.append(result)
                 except Exception as exc:
-                    logger.warning(
-                        "Detector %s failed: %s", detector.detector_id, exc
-                    )
+                    logger.warning("Detector %s failed: %s", detector.detector_id, exc)
 
         return detections
 
-    def _determine_action(
-        self, detections: list[DetectionResult], risk_score: float
-    ) -> Action:
+    def _determine_action(self, detections: list[DetectionResult], risk_score: float) -> Action:
         """Determine action based on detections and config."""
         if not detections:
             return Action.PASS

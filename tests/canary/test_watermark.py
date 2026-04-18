@@ -51,15 +51,11 @@ class TestDetect:
         embedded = watermark.embed(original)
         assert watermark.detect(embedded)
 
-    def test_detect_returns_false_on_clean_text(
-        self, watermark: CanaryWatermark
-    ) -> None:
+    def test_detect_returns_false_on_clean_text(self, watermark: CanaryWatermark) -> None:
         clean = "This text has no watermark at all."
         assert not watermark.detect(clean)
 
-    def test_detect_returns_false_on_empty(
-        self, watermark: CanaryWatermark
-    ) -> None:
+    def test_detect_returns_false_on_empty(self, watermark: CanaryWatermark) -> None:
         assert not watermark.detect("")
 
 
@@ -77,9 +73,7 @@ class TestStrip:
         assert not any(ch in stripped for ch in WATERMARK_CHARS)
         assert stripped == original
 
-    def test_strip_idempotent_on_clean(
-        self, watermark: CanaryWatermark
-    ) -> None:
+    def test_strip_idempotent_on_clean(self, watermark: CanaryWatermark) -> None:
         clean = "No watermark here."
         assert watermark.strip(clean) == clean
 
@@ -110,9 +104,7 @@ class TestSecretDifferentiation:
 
 
 class TestRoundtrip:
-    def test_watermark_survives_copy_paste(
-        self, watermark: CanaryWatermark
-    ) -> None:
+    def test_watermark_survives_copy_paste(self, watermark: CanaryWatermark) -> None:
         """Embed, strip, re-embed, and detect again."""
         original = "A system prompt that might be leaked."
         embedded = watermark.embed(original)

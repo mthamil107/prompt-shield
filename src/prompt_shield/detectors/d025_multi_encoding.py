@@ -113,9 +113,7 @@ class MultiEncodingDetector(BaseDetector):
 
     detector_id: str = "d025_multi_encoding"
     name: str = "Multi-Encoding Obfuscation"
-    description: str = (
-        "Decodes multiple encoding schemes and re-scans for injection patterns"
-    )
+    description: str = "Decodes multiple encoding schemes and re-scans for injection patterns"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
@@ -124,23 +122,13 @@ class MultiEncodingDetector(BaseDetector):
     def __init__(self) -> None:
         # Pre-compile regex patterns
         self._hex_continuous_re = re.compile(r"\b([0-9a-fA-F]{12,})\b")
-        self._hex_escape_re = re.compile(
-            r"((?:\\x[0-9a-fA-F]{2}){4,})"
-        )
-        self._url_encoded_re = re.compile(
-            r"((?:[^%\s]*%[0-9a-fA-F]{2}[^%\s]*){2,})"
-        )
-        self._morse_re = re.compile(
-            r"^[\.\-\s/|]+$", re.MULTILINE
-        )
-        self._pig_latin_word_re = re.compile(
-            r"\b([a-zA-Z]+ay)\b"
-        )
+        self._hex_escape_re = re.compile(r"((?:\\x[0-9a-fA-F]{2}){4,})")
+        self._url_encoded_re = re.compile(r"((?:[^%\s]*%[0-9a-fA-F]{2}[^%\s]*){2,})")
+        self._morse_re = re.compile(r"^[\.\-\s/|]+$", re.MULTILINE)
+        self._pig_latin_word_re = re.compile(r"\b([a-zA-Z]+ay)\b")
         self._dangerous_keywords_lower = [kw.lower() for kw in DANGEROUS_KEYWORDS]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         if not input_text or len(input_text) < 3:
             return self._no_detection()
 
@@ -244,9 +232,9 @@ class MultiEncodingDetector(BaseDetector):
             decoded_bytes = bytes.fromhex(hex_str)
             decoded = decoded_bytes.decode("utf-8", errors="strict")
             # Verify it looks like readable text (mostly printable ASCII)
-            printable_ratio = sum(
-                1 for c in decoded if c.isprintable() or c.isspace()
-            ) / max(len(decoded), 1)
+            printable_ratio = sum(1 for c in decoded if c.isprintable() or c.isspace()) / max(
+                len(decoded), 1
+            )
             if printable_ratio < 0.7:
                 return None
             return decoded
@@ -275,7 +263,7 @@ class MultiEncodingDetector(BaseDetector):
             encoded = m.group(1)
             try:
                 decoded = urllib.parse.unquote(encoded)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 continue
             if decoded == encoded:
                 continue
@@ -306,9 +294,7 @@ class MultiEncodingDetector(BaseDetector):
         decoded = self._decode_leet(text)
         original_keywords = _find_dangerous_keywords(text)
         decoded_keywords = _find_dangerous_keywords(decoded)
-        unique_keywords = [
-            kw for kw in decoded_keywords if kw not in original_keywords
-        ]
+        unique_keywords = [kw for kw in decoded_keywords if kw not in original_keywords]
 
         if not unique_keywords:
             return []
@@ -345,9 +331,7 @@ class MultiEncodingDetector(BaseDetector):
         for shift in range(1, 26):
             decoded = self._caesar_decode(text, shift)
             keywords = _find_dangerous_keywords(decoded)
-            unique_keywords = [
-                kw for kw in keywords if kw not in original_keywords
-            ]
+            unique_keywords = [kw for kw in keywords if kw not in original_keywords]
             if unique_keywords and shift not in seen_shifts:
                 seen_shifts.add(shift)
                 results.append(
@@ -432,9 +416,7 @@ class MultiEncodingDetector(BaseDetector):
     # ------------------------------------------------------------------
     def _try_decode_pig_latin(self, text: str) -> list[MatchDetail]:
         words = text.split()
-        pig_latin_count = sum(
-            1 for w in words if self._pig_latin_word_re.fullmatch(w)
-        )
+        pig_latin_count = sum(1 for w in words if self._pig_latin_word_re.fullmatch(w))
         # At least 30% of words should look like pig latin, and at least 2
         if len(words) < 2 or pig_latin_count < 2:
             return []
@@ -446,9 +428,7 @@ class MultiEncodingDetector(BaseDetector):
 
         for decoded in variants:
             keywords = _find_dangerous_keywords(decoded)
-            unique_keywords = [
-                kw for kw in keywords if kw not in original_keywords
-            ]
+            unique_keywords = [kw for kw in keywords if kw not in original_keywords]
             if unique_keywords:
                 return [
                     MatchDetail(
@@ -572,9 +552,7 @@ class MultiEncodingDetector(BaseDetector):
         reversed_text = text[::-1]
         original_keywords = _find_dangerous_keywords(text)
         reversed_keywords = _find_dangerous_keywords(reversed_text)
-        unique_keywords = [
-            kw for kw in reversed_keywords if kw not in original_keywords
-        ]
+        unique_keywords = [kw for kw in reversed_keywords if kw not in original_keywords]
 
         if not unique_keywords:
             return []
@@ -585,8 +563,7 @@ class MultiEncodingDetector(BaseDetector):
                 matched_text=_truncate(text),
                 position=(0, len(text)),
                 description=(
-                    f"Reversed text contains dangerous keywords: "
-                    f"{', '.join(unique_keywords)}"
+                    f"Reversed text contains dangerous keywords: {', '.join(unique_keywords)}"
                 ),
             )
         ]

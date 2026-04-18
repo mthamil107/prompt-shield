@@ -55,9 +55,7 @@ class TestMarkdownHtmlInjection:
         assert result.detected is False
 
     def test_multiple_patterns_boost_confidence(self, detector):
-        result = detector.detect(
-            "<script>alert(1)</script> <iframe src='x'> javascript:void(0)"
-        )
+        result = detector.detect("<script>alert(1)</script> <iframe src='x'> javascript:void(0)")
         assert result.detected is True
         assert result.confidence > 0.85
 

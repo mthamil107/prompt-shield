@@ -60,9 +60,7 @@ class TestCLIVersion:
 class TestCLIScan:
     """Tests for the scan command."""
 
-    def test_cli_scan_clean(
-        self, runner: CliRunner, cli_config_file: str, data_dir: str
-    ) -> None:
+    def test_cli_scan_clean(self, runner: CliRunner, cli_config_file: str, data_dir: str) -> None:
         """Scanning clean text should exit with code 0."""
         result = runner.invoke(
             main,
@@ -94,9 +92,7 @@ class TestCLIScan:
         )
         assert result.exit_code == 1
 
-    def test_cli_scan_json(
-        self, runner: CliRunner, cli_config_file: str, data_dir: str
-    ) -> None:
+    def test_cli_scan_json(self, runner: CliRunner, cli_config_file: str, data_dir: str) -> None:
         """--json-output should produce parseable JSON output."""
         result = runner.invoke(
             main,
@@ -174,8 +170,13 @@ class TestCLICompliance:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "compliance", "report",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "compliance",
+                "report",
             ],
         )
         assert result.exit_code == 0
@@ -202,8 +203,13 @@ class TestCLICompliance:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "compliance", "mapping",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "compliance",
+                "mapping",
             ],
         )
         assert result.exit_code == 0
@@ -217,9 +223,15 @@ class TestCLICompliance:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "compliance", "mapping",
-                "--detector", "d001_system_prompt_extraction",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "compliance",
+                "mapping",
+                "--detector",
+                "d001_system_prompt_extraction",
             ],
         )
         assert result.exit_code == 0
@@ -237,8 +249,14 @@ class TestCLIBenchmark:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "benchmark", "performance", "-n", "1",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "benchmark",
+                "performance",
+                "-n",
+                "1",
             ],
         )
         assert result.exit_code == 0
@@ -251,8 +269,15 @@ class TestCLIBenchmark:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "benchmark", "performance", "-n", "1",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "benchmark",
+                "performance",
+                "-n",
+                "1",
             ],
         )
         assert result.exit_code == 0
@@ -266,8 +291,16 @@ class TestCLIBenchmark:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "benchmark", "accuracy", "--dataset", "sample", "--max-samples", "5",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "benchmark",
+                "accuracy",
+                "--dataset",
+                "sample",
+                "--max-samples",
+                "5",
             ],
         )
         assert result.exit_code == 0
@@ -280,9 +313,17 @@ class TestCLIBenchmark:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "benchmark", "accuracy",
-                "--dataset", "sample", "--max-samples", "5",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "benchmark",
+                "accuracy",
+                "--dataset",
+                "sample",
+                "--max-samples",
+                "5",
             ],
         )
         assert result.exit_code == 0
@@ -308,8 +349,13 @@ class TestCLIBenchmark:
         result = runner.invoke(
             main,
             [
-                "-c", cli_config_file, "--data-dir", data_dir,
-                "--json-output", "benchmark", "datasets",
+                "-c",
+                cli_config_file,
+                "--data-dir",
+                data_dir,
+                "--json-output",
+                "benchmark",
+                "datasets",
             ],
         )
         assert result.exit_code == 0
@@ -324,7 +370,8 @@ class TestCLIPII:
     def test_pii_scan_detects(self, runner: CliRunner) -> None:
         """pii scan should detect PII in text."""
         result = runner.invoke(
-            main, ["pii", "scan", "My email is user@example.com"],
+            main,
+            ["pii", "scan", "My email is user@example.com"],
         )
         assert result.exit_code == 0
         assert "email" in result.output.lower()
@@ -332,7 +379,8 @@ class TestCLIPII:
     def test_pii_scan_clean(self, runner: CliRunner) -> None:
         """pii scan should report no PII for clean text."""
         result = runner.invoke(
-            main, ["pii", "scan", "Hello, how are you?"],
+            main,
+            ["pii", "scan", "Hello, how are you?"],
         )
         assert result.exit_code == 0
         assert "No PII" in result.output
@@ -361,7 +409,8 @@ class TestCLIPII:
     def test_pii_redact(self, runner: CliRunner) -> None:
         """pii redact should replace PII with placeholders."""
         result = runner.invoke(
-            main, ["pii", "redact", "Email: user@example.com"],
+            main,
+            ["pii", "redact", "Email: user@example.com"],
         )
         assert result.exit_code == 0
         assert "[EMAIL_REDACTED]" in result.output
@@ -370,7 +419,8 @@ class TestCLIPII:
     def test_pii_redact_clean(self, runner: CliRunner) -> None:
         """pii redact should pass through clean text."""
         result = runner.invoke(
-            main, ["pii", "redact", "Hello world"],
+            main,
+            ["pii", "redact", "Hello world"],
         )
         assert result.exit_code == 0
         assert "No PII" in result.output

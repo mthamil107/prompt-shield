@@ -24,8 +24,7 @@ class SemanticClassifierDetector(BaseDetector):
     detector_id: str = "d022_semantic_classifier"
     name: str = "Semantic Classifier"
     description: str = (
-        "ML-based semantic prompt injection detection using a "
-        "pre-trained transformer classifier"
+        "ML-based semantic prompt injection detection using a pre-trained transformer classifier"
     )
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["ml", "semantic"]
@@ -50,9 +49,7 @@ class SemanticClassifierDetector(BaseDetector):
         try:
             from transformers import pipeline as hf_pipeline
 
-            device_arg = (
-                -1 if self._device == "cpu" else int(self._device.split(":")[-1])
-            )
+            device_arg = -1 if self._device == "cpu" else int(self._device.split(":")[-1])
             self._pipeline = hf_pipeline(
                 "text-classification",
                 model=self._model_name,
@@ -70,18 +67,14 @@ class SemanticClassifierDetector(BaseDetector):
             self._available = False
         return self._available
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         if not self._ensure_pipeline():
             return DetectionResult(
                 detector_id=self.detector_id,
                 detected=False,
                 confidence=0.0,
                 severity=self.severity,
-                explanation=(
-                    "ML classifier not available (transformers not installed)"
-                ),
+                explanation=("ML classifier not available (transformers not installed)"),
             )
 
         try:
@@ -101,14 +94,11 @@ class SemanticClassifierDetector(BaseDetector):
                             matched_text=input_text[:120]
                             + ("..." if len(input_text) > 120 else ""),
                             position=(0, min(len(input_text), 512)),
-                            description=(
-                                f"Classified as injection with score {score:.4f}"
-                            ),
+                            description=(f"Classified as injection with score {score:.4f}"),
                         )
                     ],
                     explanation=(
-                        f"Semantic classifier detected injection "
-                        f"(confidence: {score:.4f})"
+                        f"Semantic classifier detected injection (confidence: {score:.4f})"
                     ),
                 )
 

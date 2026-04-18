@@ -5,7 +5,7 @@ from __future__ import annotations
 import csv
 import json
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 from prompt_shield.exceptions import BenchmarkError
 
@@ -174,8 +174,8 @@ def load_huggingface_dataset(
     Returns:
         List of BenchmarkSample.
     """
-    import urllib.request
     import urllib.error
+    import urllib.request
 
     url = f"https://datasets-server.huggingface.co/rows?dataset={repo_id}&config=default&split=train&offset=0&length=1000"
 
@@ -191,7 +191,7 @@ def load_huggingface_dataset(
 
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "prompt-shield"})
-        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+        with urllib.request.urlopen(req, timeout=30) as resp:
             data = json.loads(resp.read().decode("utf-8"))
     except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
         raise BenchmarkError(f"Failed to download dataset from HuggingFace: {exc}") from exc
@@ -203,7 +203,7 @@ def load_huggingface_dataset(
     return _parse_hf_rows(data, repo_id)
 
 
-def _parse_hf_rows(data: dict, repo_id: str) -> list[BenchmarkSample]:
+def _parse_hf_rows(data: dict[str, Any], repo_id: str) -> list[BenchmarkSample]:
     """Parse rows from the HuggingFace datasets server API response."""
     rows = data.get("rows", [])
     if not rows:

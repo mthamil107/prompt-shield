@@ -20,9 +20,7 @@ class ToolFunctionAbuseDetector(BaseDetector):
 
     detector_id: str = "d014_tool_function_abuse"
     name: str = "Tool / Function Abuse"
-    description: str = (
-        "Detects attempts to trick the AI into misusing its tools or API access"
-    )
+    description: str = "Detects attempts to trick the AI into misusing its tools or API access"
     severity: Severity = Severity.CRITICAL
     tags: ClassVar[list[str]] = ["indirect_injection"]
     version: str = "1.0.0"
@@ -78,9 +76,7 @@ class ToolFunctionAbuseDetector(BaseDetector):
         ),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, description in self._patterns:
@@ -111,7 +107,5 @@ class ToolFunctionAbuseDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

@@ -20,9 +20,7 @@ class BaseOutputScanner(ABC):
     description: str
 
     @abstractmethod
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         """Scan *output_text* for harmful or policy-violating content.
 
         Args:

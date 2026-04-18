@@ -13,7 +13,7 @@ from prompt_shield.exceptions import BenchmarkError
 
 
 def run_benchmark(
-    engine,  # type: ignore[no-untyped-def]  # PromptShieldEngine
+    engine: object,  # PromptShieldEngine (loose-typed to avoid circular import)
     dataset_name: str | None = None,
     samples: list[BenchmarkSample] | None = None,
     data_dir: str | None = None,
@@ -51,11 +51,11 @@ def run_benchmark(
     labels: list[bool] = []
     errors: list[str] = []
 
-    def _scan_samples(iterable):
-        for sample in iterable:
+    def _scan_samples(iterable: object) -> None:
+        for sample in iterable:  # type: ignore[attr-defined]
             labels.append(sample.is_injection)
             try:
-                report = engine.scan(sample.text)
+                report = engine.scan(sample.text)  # type: ignore[attr-defined]
                 predicted = report.action.value != "pass"
                 predictions.append(predicted)
             except Exception as exc:

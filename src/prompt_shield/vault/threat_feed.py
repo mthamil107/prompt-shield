@@ -140,9 +140,7 @@ class ThreatFeedManager:
         os.makedirs(threats_dir, exist_ok=True)
 
         # Derive a safe local filename from the URL.
-        safe_name = (
-            feed_url.rsplit("/", 1)[-1].replace("?", "_").replace("&", "_")
-        ) or "feed.json"
+        safe_name = (feed_url.rsplit("/", 1)[-1].replace("?", "_").replace("&", "_")) or "feed.json"
         if not safe_name.endswith(".json"):
             safe_name += ".json"
 
@@ -156,9 +154,7 @@ class ThreatFeedManager:
             with open(local_path, "wb") as fh:
                 fh.write(data)
         except Exception as exc:
-            raise ThreatFeedError(
-                f"Failed to download feed from '{feed_url}': {exc}"
-            ) from exc
+            raise ThreatFeedError(f"Failed to download feed from '{feed_url}': {exc}") from exc
 
         result = self.import_feed(local_path)
         result["feed_url"] = feed_url

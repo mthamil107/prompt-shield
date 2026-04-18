@@ -5,19 +5,18 @@ from __future__ import annotations
 import pytest
 
 from prompt_shield.compliance.owasp_mapping import (
+    _VALID_AGENTIC_IDS,
+    _VALID_OWASP_IDS,
     DETECTOR_AGENTIC_MAP,
     DETECTOR_OWASP_MAP,
     EU_AI_ACT_ARTICLES,
     OWASP_AGENTIC_TOP_10,
     OWASP_LLM_TOP_10,
     PROMPT_SHIELD_EU_AI_ACT_COVERAGE,
-    _VALID_AGENTIC_IDS,
-    _VALID_OWASP_IDS,
     generate_agentic_compliance_report,
     generate_compliance_report,
     generate_eu_ai_act_report,
 )
-
 
 # All 25 built-in detector IDs
 ALL_DETECTOR_IDS = [
@@ -74,9 +73,7 @@ class TestOwaspIdValidity:
     def test_all_mapped_ids_are_valid(self) -> None:
         for did, cat_ids in DETECTOR_OWASP_MAP.items():
             for cid in cat_ids:
-                assert cid in _VALID_OWASP_IDS, (
-                    f"Detector {did} references invalid OWASP ID {cid}"
-                )
+                assert cid in _VALID_OWASP_IDS, f"Detector {did} references invalid OWASP ID {cid}"
 
     def test_owasp_top_10_has_ten_entries(self) -> None:
         assert len(OWASP_LLM_TOP_10) == 10
@@ -213,9 +210,7 @@ class TestAgenticComplianceReport:
         assert full_agentic_report.coverage_percentage >= 90.0
 
     def test_agentic_partial_features(self) -> None:
-        report = generate_agentic_compliance_report(
-            feature_ids=["d001_system_prompt_extraction"]
-        )
+        report = generate_agentic_compliance_report(feature_ids=["d001_system_prompt_extraction"])
         assert report.total_features == 1
         covered_ids = [c.category_id for c in report.category_details if c.covered]
         assert "ASI01" in covered_ids

@@ -27,9 +27,7 @@ class TestURLInjection:
         assert result.confidence >= 0.75
 
     def test_excessive_encoding(self, detector):
-        result = detector.detect(
-            "http://evil.com/%48%65%6C%6C%6F%20%57%6F%72%6C%64%21%00"
-        )
+        result = detector.detect("http://evil.com/%48%65%6C%6C%6F%20%57%6F%72%6C%64%21%00")
         assert result.detected is True
         assert result.confidence >= 0.75
 

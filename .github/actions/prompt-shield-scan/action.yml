@@ -31,6 +31,10 @@ inputs:
     description: "Python version to use for scanning"
     required: false
     default: "3.12"
+  ignore-patterns:
+    description: "Comma-separated glob patterns of files to skip. A repo-local .prompt-shield-ignore file is also honoured (one pattern per line)."
+    required: false
+    default: ""
 
 outputs:
   scan-results:
@@ -106,6 +110,7 @@ runs:
         INPUT_MODE: ${{ inputs.mode }}
         INPUT_PII_SCAN: ${{ inputs.pii-scan }}
         INPUT_FAIL_ON_DETECTION: ${{ inputs.fail-on-detection }}
+        INPUT_IGNORE_PATTERNS: ${{ inputs.ignore-patterns }}
         CHANGED_FILES: ${{ steps.changed-files.outputs.files }}
       run: |
         python "${{ github.action_path }}/scan.py" \
@@ -113,6 +118,7 @@ runs:
           --mode "$INPUT_MODE" \
           --pii-scan "$INPUT_PII_SCAN" \
           --fail-on-detection "$INPUT_FAIL_ON_DETECTION" \
+          --ignore-patterns "$INPUT_IGNORE_PATTERNS" \
           --files $CHANGED_FILES
 
     - name: Post PR comment

@@ -8,9 +8,7 @@ try:
     from starlette.middleware.base import BaseHTTPMiddleware
     from starlette.responses import JSONResponse, Response
 except ImportError as err:
-    raise ImportError(
-        "Install fastapi extras: pip install prompt-shield[fastapi]"
-    ) from err
+    raise ImportError("Install fastapi extras: pip install prompt-shield[fastapi]") from err
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
@@ -53,9 +51,7 @@ class PromptShieldMiddleware(BaseHTTPMiddleware):
         for text in texts_to_scan:
             if not text or not isinstance(text, str):
                 continue
-            report = self.engine.scan(
-                text, context={"gate": "http", "source": "fastapi"}
-            )
+            report = self.engine.scan(text, context={"gate": "http", "source": "fastapi"})
             if report.action == Action.BLOCK:
                 if self.on_detection:
                     await self.on_detection(request, report)

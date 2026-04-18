@@ -30,9 +30,7 @@ class OutputPIIScanner(BaseOutputScanner):
     # Public API
     # ------------------------------------------------------------------
 
-    def scan(
-        self, output_text: str, context: dict[str, object] | None = None
-    ) -> OutputScanResult:
+    def scan(self, output_text: str, context: dict[str, object] | None = None) -> OutputScanResult:
         result = self._redactor.redact(output_text)
 
         if result.redaction_count == 0:
@@ -54,7 +52,8 @@ class OutputPIIScanner(BaseOutputScanner):
             confidence=confidence,
             categories=list(result.entity_counts.keys()),
             explanation=(
-                f"Detected {result.redaction_count} PII entit{'y' if result.redaction_count == 1 else 'ies'} "
+                f"Detected {result.redaction_count} PII "
+                f"entit{'y' if result.redaction_count == 1 else 'ies'} "
                 f"across types: {', '.join(result.entity_counts.keys())}"
             ),
             metadata={

@@ -21,8 +21,7 @@ class RAGPoisoningDetector(BaseDetector):
     detector_id: str = "d015_rag_poisoning"
     name: str = "RAG Poisoning"
     description: str = (
-        "Detects malicious content designed to be retrieved and injected "
-        "via RAG pipelines"
+        "Detects malicious content designed to be retrieved and injected via RAG pipelines"
     )
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["indirect_injection"]
@@ -58,9 +57,7 @@ class RAGPoisoningDetector(BaseDetector):
         (r"do\s+not\s+summarize\s+this\s+document,?\s+instead", "Summary deflection"),
     ]
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
 
         for pattern_str, desc in self._patterns:
@@ -91,7 +88,5 @@ class RAGPoisoningDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} pattern(s) indicating {self.name.lower()}"),
         )

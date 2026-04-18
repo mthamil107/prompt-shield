@@ -32,8 +32,7 @@ class DetectorRegistry:
         """Register a detector instance."""
         if not hasattr(detector, "detector_id"):
             raise RegistryError(
-                f"Detector {type(detector).__name__} missing "
-                f"required 'detector_id' attribute"
+                f"Detector {type(detector).__name__} missing required 'detector_id' attribute"
             )
         detector_id = detector.detector_id
         if detector_id in self._detectors:

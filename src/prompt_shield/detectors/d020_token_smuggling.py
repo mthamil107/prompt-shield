@@ -21,9 +21,7 @@ class TokenSmugglingDetector(BaseDetector):
 
     detector_id: str = "d020_token_smuggling"
     name: str = "Token Smuggling"
-    description: str = (
-        "Detects splitting malicious instructions across tokens or messages"
-    )
+    description: str = "Detects splitting malicious instructions across tokens or messages"
     severity: Severity = Severity.HIGH
     tags: ClassVar[list[str]] = ["obfuscation"]
     version: str = "1.0.0"
@@ -77,9 +75,7 @@ class TokenSmugglingDetector(BaseDetector):
                 found.append(word)
         return found
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
@@ -120,12 +116,10 @@ class TokenSmugglingDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="alternating_char_extraction",
-                    matched_text=input_text[:120]
-                    + ("..." if len(input_text) > 120 else ""),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
-                        f"Keywords found in alternating characters: "
-                        f"{', '.join(alternating_found)}"
+                        f"Keywords found in alternating characters: {', '.join(alternating_found)}"
                     ),
                 )
             )
@@ -143,9 +137,7 @@ class TokenSmugglingDetector(BaseDetector):
                         matched_text=input_text[idx : idx + len(reversed_word)],
                         position=(idx, idx + len(reversed_word)),
                         description=(
-                            f"Reversed keyword detected: "
-                            f"'{word}' (found as "
-                            f"'{reversed_word}')"
+                            f"Reversed keyword detected: '{word}' (found as '{reversed_word}')"
                         ),
                     )
                 )
@@ -167,7 +159,5 @@ class TokenSmugglingDetector(BaseDetector):
             confidence=confidence,
             severity=self.severity,
             matches=matches,
-            explanation=(
-                f"Detected {len(matches)} indicator(s) of {self.name.lower()}"
-            ),
+            explanation=(f"Detected {len(matches)} indicator(s) of {self.name.lower()}"),
         )

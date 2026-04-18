@@ -315,9 +315,45 @@ def main() -> None:
         default=[],
         help="Files to scan",
     )
+    parser.add_argument(
+        "--ignore-patterns",
+        default="",
+        help=(
+            "Comma-separated glob patterns of files to skip (e.g. "
+            "'tests/fixtures/**,docs/attack-research/**'). Repo-local "
+            "'.prompt-shield-ignore' file is also read if present — one "
+            "pattern per line, '#' comments supported."
+        ),
+    )
     args = parser.parse_args()
 
     pii_enabled = args.pii_scan.lower() == "true"
+
+    # Build ignore pattern list: CLI flag first, then .prompt-shield-ignore lines.
+    ignore_patterns: list[str] = []
+    if args.ignore_patterns:
+        ignore_patterns.extend(
+            p.strip() for p in args.ignore_patterns.split(",") if p.strip()
+        )
+    ignore_file = Path(".prompt-shield-ignore")
+    if ignore_file.is_file():
+        for raw in ignore_file.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if line and not line.startswith("#"):
+                ignore_patterns.append(line)
+
+    if ignore_patterns:
+        import fnmatch
+
+        filtered = [
+            f
+            for f in args.files
+            if not any(fnmatch.fnmatch(f, pat) for pat in ignore_patterns)
+        ]
+        skipped = len(args.files) - len(filtered)
+        if skipped:
+            print(f"Skipping {skipped} file(s) via ignore patterns.")
+        args.files = filtered
 
     if not args.files:
         print("No files to scan.")

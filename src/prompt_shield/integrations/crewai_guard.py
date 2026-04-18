@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from prompt_shield.engine import PromptShieldEngine
@@ -147,9 +147,7 @@ class CrewAIGuard:
         pii_redact: bool = False,
     ) -> None:
         if mode not in self.VALID_MODES:
-            raise ValueError(
-                f"Invalid mode '{mode}'. Must be one of {self.VALID_MODES}"
-            )
+            raise ValueError(f"Invalid mode '{mode}'. Must be one of {self.VALID_MODES}")
         self._engine = engine
         self.mode = mode
         self.scan_outputs = scan_outputs

@@ -22,6 +22,7 @@ def client():
 
 # ── Health ──────────────────────────────────────────────────────────────────
 
+
 class TestHealth:
     def test_health_ok(self, client: TestClient) -> None:
         resp = client.get("/health")
@@ -37,6 +38,7 @@ class TestHealth:
 
 # ── Version ─────────────────────────────────────────────────────────────────
 
+
 class TestVersion:
     def test_version_endpoint(self, client: TestClient) -> None:
         resp = client.get("/version")
@@ -49,6 +51,7 @@ class TestVersion:
 
 
 # ── Scan ────────────────────────────────────────────────────────────────────
+
 
 class TestScan:
     def test_scan_clean_text(self, client: TestClient) -> None:
@@ -89,11 +92,14 @@ class TestScan:
         assert resp.status_code == 422
 
     def test_scan_invalid_body(self, client: TestClient) -> None:
-        resp = client.post("/scan", content="not json", headers={"content-type": "application/json"})
+        resp = client.post(
+            "/scan", content="not json", headers={"content-type": "application/json"}
+        )
         assert resp.status_code == 422
 
 
 # ── PII Scan ────────────────────────────────────────────────────────────────
+
 
 class TestPIIScan:
     def test_pii_scan_finds_email(self, client: TestClient) -> None:
@@ -120,6 +126,7 @@ class TestPIIScan:
 
 
 # ── PII Redact ──────────────────────────────────────────────────────────────
+
 
 class TestPIIRedact:
     def test_pii_redact_email(self, client: TestClient) -> None:
@@ -152,6 +159,7 @@ class TestPIIRedact:
 
 # ── Detectors ───────────────────────────────────────────────────────────────
 
+
 class TestDetectors:
     def test_list_detectors(self, client: TestClient) -> None:
         resp = client.get("/detectors")
@@ -166,6 +174,7 @@ class TestDetectors:
 
 
 # ── OpenAPI docs ────────────────────────────────────────────────────────────
+
 
 class TestDocs:
     def test_openapi_schema_available(self, client: TestClient) -> None:

@@ -1,0 +1,44 @@
+# Files that legitimately contain attack vocabulary and must be excluded
+# from the CI self-scan to prevent expected-positive detections from
+# failing the build. One glob per line. `#` comments and blank lines
+# are skipped. Honoured by .github/actions/prompt-shield-scan/scan.py
+# in addition to any --ignore-patterns passed on the command line.
+#
+# KEEP NARROW. Anything added here bypasses prompt-injection detection
+# in CI — only paths that are definitionally attack-data belong here.
+
+# d028 attack-sequence database (curated attack corpus)
+src/prompt_shield/detectors/_d028_attack_sequences.py
+src/prompt_shield/detectors/_d028_substitution_matrix.py
+src/prompt_shield/detectors/d028_sequence_alignment.py
+
+# Detector files that embed attack regex patterns in source
+src/prompt_shield/detectors/d0*.py
+
+# Test fixtures: every injection-fixture file contains attack strings
+tests/fixtures/injections/*.json
+tests/fixtures/benign/*.json
+tests/fixtures/threat_feed/*.json
+tests/fixtures/*.json
+
+# Detector + benchmark + red-team tests necessarily include attacks
+tests/detectors/*.py
+tests/benchmark_*.py
+tests/benchmarks/**
+tests/redteam/**
+tests/test_engine.py
+tests/baseline_v0.3.3.txt
+tests/regression_check.py
+
+# Documentation describing attack techniques
+docs/research-post-cross-domain-techniques.md
+docs/**/*attack*.md
+docs/**/*injection*.md
+docs/**/*jailbreak*.md
+
+# README discusses attack examples by design
+README.md
+CHANGELOG.md
+
+# Example / demo code that shows attacks
+examples/**

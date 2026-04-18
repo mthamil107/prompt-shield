@@ -38,9 +38,7 @@ CATEGORY_TOLERANCE_PCT = 1.0
 OVERALL_TOLERANCE_PCT = 1.0
 
 # Matches "category.basic_injection:              100" in the baseline.
-_BASELINE_CATEGORY_RE = re.compile(
-    r"^category\.(?P<name>[a-zA-Z0-9_]+):\s+(?P<rate>\d+(?:\.\d+)?)"
-)
+_BASELINE_CATEGORY_RE = re.compile(r"^category\.(?P<name>[a-zA-Z0-9_]+):\s+(?P<rate>\d+(?:\.\d+)?)")
 # Matches "key: value" in the baseline (numeric only).
 _BASELINE_KV_RE = re.compile(r"^(?P<key>[a-zA-Z0-9_.]+):\s+(?P<value>\d+(?:\.\d+)?)")
 
@@ -90,9 +88,7 @@ def _run_realistic_benchmark() -> dict[str, Any]:
     return _parse_realistic_output(buf.getvalue())
 
 
-_REALISTIC_CATEGORY_RE = re.compile(
-    r"^[+X~]\s+(?P<name>\w+)\s+\d+\s+\d+\s+\d+\s+(?P<rate>\d+)%"
-)
+_REALISTIC_CATEGORY_RE = re.compile(r"^[+X~]\s+(?P<name>\w+)\s+\d+\s+\d+\s+\d+\s+(?P<rate>\d+)%")
 _REALISTIC_TOTAL_RE = re.compile(
     r"^\s+TOTAL\s+ATTACKS\s+(?P<total>\d+)\s+(?P<blocked>\d+)\s+\d+\s+(?P<rate>\d+(?:\.\d+)?)%"
 )
@@ -120,8 +116,7 @@ def _parse_realistic_output(text: str) -> dict[str, Any]:
             fp_count = int(ben.group("fp"))
     if total_rate is None or fp_count is None:
         raise RuntimeError(
-            "could not parse TOTAL ATTACKS or BENIGN line from "
-            "benchmark_realistic output"
+            "could not parse TOTAL ATTACKS or BENIGN line from benchmark_realistic output"
         )
     return {
         "categories": per_category,
@@ -143,15 +138,11 @@ def _run_pytest() -> int:
     if "failed" in result.stdout or result.returncode != 0:
         sys.stderr.write(result.stdout[-2000:])
         sys.stderr.write(result.stderr[-2000:])
-        raise SystemExit(
-            f"pytest failed — {passed} passed but suite is red. See output above."
-        )
+        raise SystemExit(f"pytest failed — {passed} passed but suite is red. See output above.")
     return passed
 
 
-def _compare(
-    baseline: dict[str, float], current: dict[str, Any], *, verbose: bool
-) -> list[str]:
+def _compare(baseline: dict[str, float], current: dict[str, Any], *, verbose: bool) -> list[str]:
     """Return a list of failure messages. Empty list means all gates pass."""
     failures: list[str] = []
 
@@ -169,18 +160,14 @@ def _compare(
     base_fp = int(baseline.get("benign_false_positive_count", 0))
     cur_fp = int(current["benign_false_positive_count"])
     if cur_fp > base_fp:
-        failures.append(
-            f"False-positive count increased: baseline {base_fp} -> current {cur_fp}"
-        )
+        failures.append(f"False-positive count increased: baseline {base_fp} -> current {cur_fp}")
 
     # Per-category rates
     for name, cur_rate in current["categories"].items():
         base_rate = baseline.get(f"category.{name}")
         if base_rate is None:
             if verbose:
-                print(
-                    f"  [new category] {name}: {cur_rate:.0f}% (no baseline, not gated)"
-                )
+                print(f"  [new category] {name}: {cur_rate:.0f}% (no baseline, not gated)")
             continue
         delta = cur_rate - base_rate
         if verbose:

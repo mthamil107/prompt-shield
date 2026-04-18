@@ -13,15 +13,11 @@ from prompt_shield import __version__
 
 @click.group()
 @click.version_option(version=__version__, prog_name="prompt-shield")
-@click.option(
-    "--config", "-c", "config_path", default=None, help="Path to YAML config file"
-)
+@click.option("--config", "-c", "config_path", default=None, help="Path to YAML config file")
 @click.option("--data-dir", default=None, help="Path to data directory")
 @click.option("--json-output", "use_json", is_flag=True, help="Output as JSON")
 @click.pass_context
-def main(
-    ctx: click.Context, config_path: str | None, data_dir: str | None, use_json: bool
-) -> None:
+def main(ctx: click.Context, config_path: str | None, data_dir: str | None, use_json: bool) -> None:
     """prompt-shield: Self-learning prompt injection detection engine."""
     ctx.ensure_object(dict)
     ctx.obj["config_path"] = config_path
@@ -347,9 +343,7 @@ def vault_clear(ctx: click.Context, source: str | None) -> None:
 )
 @click.option("--notes", default="", help="Optional notes")
 @click.pass_context
-def feedback_cmd(
-    ctx: click.Context, scan_id: str, is_correct: bool, notes: str
-) -> None:
+def feedback_cmd(ctx: click.Context, scan_id: str, is_correct: bool, notes: str) -> None:
     """Provide feedback on a scan result."""
     engine = _get_engine(ctx)
     engine.feedback(scan_id, is_correct=is_correct, notes=notes)
@@ -532,9 +526,7 @@ def pii_scan(ctx: click.Context, input_text: str, file_path: str | None) -> None
             click.secho("  No PII detected.", fg="green")
         else:
             click.echo()
-            click.secho(
-                f"  Found {result.redaction_count} PII instance(s):", bold=True
-            )
+            click.secho(f"  Found {result.redaction_count} PII instance(s):", bold=True)
             for entity_type, count in sorted(result.entity_counts.items()):
                 click.echo(f"    {entity_type}: {count}")
             click.echo()
@@ -571,9 +563,7 @@ def pii_redact(ctx: click.Context, input_text: str, file_path: str | None) -> No
             click.echo(f"  {text}")
         else:
             click.echo()
-            click.secho(
-                f"  Redacted {result.redaction_count} PII instance(s):", bold=True
-            )
+            click.secho(f"  Redacted {result.redaction_count} PII instance(s):", bold=True)
             for entity_type, count in sorted(result.entity_counts.items()):
                 click.echo(f"    {entity_type}: {count}")
             click.echo()
@@ -612,9 +602,7 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
     dets = engine.list_detectors()
     det_ids = [d["detector_id"] for d in dets]
 
-    frameworks = (
-        ["owasp-llm", "owasp-agentic", "eu-ai-act"] if framework == "all" else [framework]
-    )
+    frameworks = ["owasp-llm", "owasp-agentic", "eu-ai-act"] if framework == "all" else [framework]
 
     for fw in frameworks:
         if fw == "owasp-llm":
@@ -642,7 +630,9 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
                     )
                     click.echo(f"  {cat.category_id:6s} {cat.name:42s} [{status}]")
                     if cat.covered:
-                        for det_id, det_name in zip(cat.detector_ids, cat.detector_names):
+                        for det_id, det_name in zip(
+                            cat.detector_ids, cat.detector_names, strict=True
+                        ):
                             click.echo(f"           - {det_id} ({det_name})")
                 click.echo()
 
@@ -693,9 +683,7 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
                         if art.covered
                         else click.style("GAP", fg="red")
                     )
-                    click.echo(
-                        f"  {art.article_id:8s} {art.name:42s} [{status}]"
-                    )
+                    click.echo(f"  {art.article_id:8s} {art.name:42s} [{status}]")
                     if art.covered:
                         for item in art.coverage_items:
                             click.echo(f"           - {item}")
@@ -707,7 +695,10 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
 @click.pass_context
 def compliance_mapping(ctx: click.Context, detector: str | None) -> None:
     """Show detector-to-OWASP category mapping."""
-    from prompt_shield.compliance.owasp_mapping import DETECTOR_OWASP_MAP, OWASP_LLM_TOP_10
+    from prompt_shield.compliance.owasp_mapping import (
+        DETECTOR_OWASP_MAP,
+        OWASP_LLM_TOP_10,
+    )
 
     use_json = ctx.obj.get("json", False)
 
@@ -790,7 +781,10 @@ def benchmark_performance(ctx: click.Context, iterations: int) -> None:
 
 @benchmark.command("accuracy")
 @click.option(
-    "--dataset", "dataset_name", default="sample", help="Dataset name to benchmark against"
+    "--dataset",
+    "dataset_name",
+    default="sample",
+    help="Dataset name to benchmark against",
 )
 @click.option("--max-samples", default=None, type=int, help="Limit number of samples")
 @click.option("--save", "save_path", default=None, help="Save results to JSON file")
@@ -809,7 +803,10 @@ def benchmark_accuracy(
     data_dir = ctx.obj.get("data_dir")
 
     result = run_benchmark(
-        engine, dataset_name=dataset_name, data_dir=data_dir, max_samples=max_samples,
+        engine,
+        dataset_name=dataset_name,
+        data_dir=data_dir,
+        max_samples=max_samples,
         quiet=use_json,
     )
 
@@ -835,8 +832,10 @@ def benchmark_accuracy(
         click.echo(f"    TPR:        {m.true_positive_rate:.4f}")
         click.echo(f"    FPR:        {m.false_positive_rate:.4f}")
         click.echo()
-        click.echo(f"    TP: {m.true_positives}  TN: {m.true_negatives}  "
-                    f"FP: {m.false_positives}  FN: {m.false_negatives}")
+        click.echo(
+            f"    TP: {m.true_positives}  TN: {m.true_negatives}  "
+            f"FP: {m.false_positives}  FN: {m.false_negatives}"
+        )
         if result.error_count > 0:
             click.secho(f"    Errors: {result.error_count}", fg="yellow")
         click.echo()
@@ -874,23 +873,35 @@ def redteam() -> None:
 @click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
 @click.option("--category", "-cat", default=None, help="Specific category to test")
 @click.option(
-    "--provider", "-p", default="anthropic",
+    "--provider",
+    "-p",
+    default="anthropic",
     type=click.Choice(["anthropic", "openai"]),
     help="LLM provider (anthropic or openai)",
 )
 @click.option(
-    "--api-key", default=None, help="API key (or set ANTHROPIC_API_KEY / OPENAI_API_KEY)"
+    "--api-key",
+    default=None,
+    help="API key (or set ANTHROPIC_API_KEY / OPENAI_API_KEY)",
 )
 @click.option(
-    "--model", "-m", default=None,
+    "--model",
+    "-m",
+    default=None,
     help="Model name (default: claude-sonnet-4-20250514 for anthropic, gpt-4o for openai)",
 )
 @click.option(
-    "--max-tokens", "max_tokens_budget", default=50000, type=int,
+    "--max-tokens",
+    "max_tokens_budget",
+    default=50000,
+    type=int,
     help="Maximum token budget for API calls",
 )
 @click.option(
-    "--json-output", "json_output", is_flag=True, default=False,
+    "--json-output",
+    "json_output",
+    is_flag=True,
+    default=False,
     help="Output report as JSON",
 )
 @click.pass_context
@@ -938,7 +949,9 @@ def redteam_run(
         click.echo()
         click.secho("  Starting adversarial self-testing (red team)...", bold=True)
         click.echo(f"  Duration: {duration} minutes")
-        model_display = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
+        model_display = model or (
+            "claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o"
+        )
         click.echo(f"  Provider: {provider} | Model: {model_display}")
         click.echo(f"  Token budget: {max_tokens_budget}")
         if categories:
@@ -975,7 +988,9 @@ def redteam_run(
 @main.command("attackme")
 @click.option("--duration", "-d", default=10, type=int, help="Duration in minutes")
 @click.option(
-    "--provider", "-p", default="anthropic",
+    "--provider",
+    "-p",
+    default="anthropic",
     type=click.Choice(["anthropic", "openai"]),
     help="LLM provider",
 )
@@ -983,7 +998,11 @@ def redteam_run(
 @click.option("--model", "-m", default=None, help="Model name")
 @click.pass_context
 def attackme(
-    ctx: click.Context, duration: int, provider: str, api_key: str | None, model: str | None
+    ctx: click.Context,
+    duration: int,
+    provider: str,
+    api_key: str | None,
+    model: str | None,
 ) -> None:
     """Quick shortcut: run red team self-testing against all attack categories."""
     use_json = ctx.obj.get("json", False)
@@ -1010,7 +1029,10 @@ def attackme(
         click.echo()
         click.secho("  ATTACK ME — Red team self-test", bold=True)
         model_name = model or ("claude-sonnet-4-20250514" if provider == "anthropic" else "gpt-4o")
-        click.echo(f"  Duration: {duration} minutes | Provider: {provider}/{model_name} | All 12 categories")
+        click.echo(
+            f"  Duration: {duration} minutes | "
+            f"Provider: {provider}/{model_name} | All 12 categories"
+        )
         click.echo()
 
     report = runner.run(duration_minutes=duration, verbose=not use_json)

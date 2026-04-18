@@ -41,9 +41,7 @@ def _read_file_text(filepath: Path) -> str | None:
 
 
 def _build_injection_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(
-        description="Scan files for prompt injection patterns."
-    )
+    parser = argparse.ArgumentParser(description="Scan files for prompt injection patterns.")
     parser.add_argument(
         "filenames",
         nargs="*",
@@ -84,10 +82,7 @@ def _build_pii_parser() -> argparse.ArgumentParser:
 
 def _should_exclude(filepath: Path, exclude_patterns: list[str]) -> bool:
     """Check if a file matches any exclusion pattern."""
-    for pattern in exclude_patterns:
-        if filepath.match(pattern):
-            return True
-    return False
+    return any(filepath.match(pattern) for pattern in exclude_patterns)
 
 
 def _find_line_number(text: str, position: int) -> int:
@@ -160,7 +155,9 @@ def prompt_shield_hook() -> int:
                 f"risk score {report.overall_risk_score:.2f}"
             )
             for detection in report.detections:
-                severity_color = _RED if detection.severity.value in ("high", "critical") else _YELLOW
+                severity_color = (
+                    _RED if detection.severity.value in ("high", "critical") else _YELLOW
+                )
                 print(
                     f"  {severity_color}[{detection.severity.value.upper()}]{_RESET} "
                     f"{detection.detector_id} "
@@ -223,8 +220,7 @@ def prompt_shield_pii_hook() -> int:
         if result.redaction_count > 0:
             found_issues = True
             print(
-                f"{_RED}{_BOLD}FAIL{_RESET} {filepath} "
-                f"— {result.redaction_count} PII detection(s)"
+                f"{_RED}{_BOLD}FAIL{_RESET} {filepath} — {result.redaction_count} PII detection(s)"
             )
             for entity in result.redacted_entities:
                 entity_type = entity.get("entity_type", "unknown")
@@ -235,10 +231,7 @@ def prompt_shield_pii_hook() -> int:
                     line_no = _find_line_number(content, pos)
                     # Mask the value for display
                     masked = original[:2] + "***" + original[-2:] if len(original) > 4 else "***"
-                    print(
-                        f"  {_RED}[{entity_type.upper()}]{_RESET} "
-                        f"Line {line_no}: {masked}"
-                    )
+                    print(f"  {_RED}[{entity_type.upper()}]{_RESET} Line {line_no}: {masked}")
                 else:
                     print(f"  {_RED}[{entity_type.upper()}]{_RESET} detected")
         else:

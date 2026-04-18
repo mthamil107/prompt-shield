@@ -11,7 +11,6 @@ from __future__ import annotations
 
 import sys
 import time
-from typing import Any
 
 
 def load_deepset() -> list[tuple[str, bool]]:
@@ -66,17 +65,21 @@ def scan_prompt_shield(samples: list[tuple[str, bool]]) -> tuple[list[dict], flo
     for text, is_attack in samples:
         report = engine.scan(text)
         detected = report.action.value in ("block", "flag") or report.overall_risk_score >= 0.5
-        results.append({
-            "text": text[:80],
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": report.overall_risk_score,
-        })
+        results.append(
+            {
+                "text": text[:80],
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": report.overall_risk_score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
 
-def scan_with_model(samples: list[tuple[str, bool]], model_name: str, label_map: dict) -> tuple[list[dict], float]:
+def scan_with_model(
+    samples: list[tuple[str, bool]], model_name: str, label_map: dict
+) -> tuple[list[dict], float]:
     """Scan with a HuggingFace model."""
     try:
         from transformers import pipeline as hf_pipeline
@@ -99,12 +102,14 @@ def scan_with_model(samples: list[tuple[str, bool]], model_name: str, label_map:
         except Exception:
             detected = False
             score = 0.0
-        results.append({
-            "text": text[:80],
-            "is_attack": is_attack,
-            "detected": detected,
-            "score": score,
-        })
+        results.append(
+            {
+                "text": text[:80],
+                "is_attack": is_attack,
+                "detected": detected,
+                "score": score,
+            }
+        )
     elapsed = time.perf_counter() - start
     return results, elapsed
 
@@ -129,9 +134,15 @@ def compute_metrics(results: list[dict]) -> dict:
     fpr = fp / (fp + tn) if (fp + tn) > 0 else 0.0
 
     return {
-        "tp": tp, "tn": tn, "fp": fp, "fn": fn,
-        "precision": precision, "recall": recall,
-        "f1": f1, "accuracy": accuracy, "fpr": fpr,
+        "tp": tp,
+        "tn": tn,
+        "fp": fp,
+        "fn": fn,
+        "precision": precision,
+        "recall": recall,
+        "f1": f1,
+        "accuracy": accuracy,
+        "fpr": fpr,
     }
 
 
@@ -157,7 +168,9 @@ def main():
         deepset_samples = load_deepset()
         n_attack = sum(1 for _, a in deepset_samples if a)
         n_benign = sum(1 for _, a in deepset_samples if not a)
-        print(f"  Loaded: {len(deepset_samples)} samples ({n_attack} injection + {n_benign} benign)")
+        print(
+            f"  Loaded: {len(deepset_samples)} samples ({n_attack} injection + {n_benign} benign)"
+        )
     except Exception as e:
         print(f"  FAILED to load: {e}")
         deepset_samples = []
@@ -173,10 +186,38 @@ def main():
 
     scanners = [
         ("prompt-shield", lambda s: scan_prompt_shield(s)),
-        ("ProtectAI DeBERTa v2", lambda s: scan_with_model(s, "protectai/deberta-v3-base-prompt-injection-v2", {"positive": ["INJECTION"]})),
-        ("PIGuard (ACL 2025)", lambda s: scan_with_model(s, "leolee99/PIGuard", {"positive": ["INJECTION", "MALICIOUS", "LABEL_1"]})),
-        ("Meta Prompt Guard 2", lambda s: scan_with_model(s, "meta-llama/Llama-Prompt-Guard-2-86M", {"positive": ["INJECTION", "JAILBREAK", "LABEL_1", "LABEL_2"]})),
-        ("Deepset DeBERTa v3", lambda s: scan_with_model(s, "deepset/deberta-v3-base-injection", {"positive": ["INJECTION", "LABEL_1"]})),
+        (
+            "ProtectAI DeBERTa v2",
+            lambda s: scan_with_model(
+                s,
+                "protectai/deberta-v3-base-prompt-injection-v2",
+                {"positive": ["INJECTION"]},
+            ),
+        ),
+        (
+            "PIGuard (ACL 2025)",
+            lambda s: scan_with_model(
+                s,
+                "leolee99/PIGuard",
+                {"positive": ["INJECTION", "MALICIOUS", "LABEL_1"]},
+            ),
+        ),
+        (
+            "Meta Prompt Guard 2",
+            lambda s: scan_with_model(
+                s,
+                "meta-llama/Llama-Prompt-Guard-2-86M",
+                {"positive": ["INJECTION", "JAILBREAK", "LABEL_1", "LABEL_2"]},
+            ),
+        ),
+        (
+            "Deepset DeBERTa v3",
+            lambda s: scan_with_model(
+                s,
+                "deepset/deberta-v3-base-injection",
+                {"positive": ["INJECTION", "LABEL_1"]},
+            ),
+        ),
     ]
 
     # --- Benchmark on deepset/prompt-injections ---
@@ -206,7 +247,9 @@ def main():
     if notinject_samples:
         print()
         print("=" * 100)
-        print(f"DATASET: leolee99/NotInject — {len(notinject_samples)} benign samples (false positive test)")
+        print(
+            f"DATASET: leolee99/NotInject — {len(notinject_samples)} benign samples (false positive test)"
+        )
         print("=" * 100)
         print()
         print(f"  {'Scanner':<30} {'FP Count':>9} {'FP Rate':>8} {'Total':>6}")
