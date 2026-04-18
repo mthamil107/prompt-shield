@@ -146,6 +146,16 @@ prompt_shield:
     d026_denial_of_wallet:
       enabled: true
       severity: medium
+    d028_sequence_alignment:
+      enabled: true
+      severity: high
+      threshold: 0.6
+      match_bonus: 3
+      synonym_bonus: 2
+      mismatch_penalty: -1
+      gap_penalty: -1
+      min_input_tokens: 4
+      max_input_tokens: 2000
 
   allowlist:
     patterns: []
