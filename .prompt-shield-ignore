@@ -44,3 +44,9 @@ pyproject.toml
 dist/**
 build/**
 htmlcov/**
+
+# The scan action itself (the scanner code) contains detector names and
+# attack-string handling — scanning it is circular.
+.github/**
+.github/actions/**
+.github/workflows/**
