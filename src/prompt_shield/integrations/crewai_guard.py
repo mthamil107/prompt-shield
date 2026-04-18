@@ -15,7 +15,7 @@ logger = logging.getLogger("prompt_shield.crewai")
 # ---------------------------------------------------------------------------
 _HAS_CREWAI_TOOLS = False
 try:
-    from crewai_tools import BaseTool as _CrewAIBaseTool  # type: ignore[import-untyped]
+    from crewai_tools import BaseTool as _CrewAIBaseTool  # type: ignore[import-untyped,attr-defined]
 
     _HAS_CREWAI_TOOLS = True
 except ImportError:
