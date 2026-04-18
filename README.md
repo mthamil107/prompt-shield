@@ -577,12 +577,15 @@ prompt-shield benchmark performance -n 100
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg)](https://doi.org/10.5281/zenodo.19644135)
 
-**Paper:** [*Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection*](https://zenodo.org/records/19644135) (Zenodo, v1.0.0) — a peer-reviewable write-up of the seven techniques below, with prior-art analysis, mechanisms, and references.
+**Paper:** *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (Zenodo, v1.0.0) — a peer-reviewable write-up of the seven techniques below, with prior-art analysis, mechanisms, and references.
+
+- :page_facing_up: **[Read the PDF](docs/papers/cross-domain-techniques.pdf)** (in-repo, recommended)
+- :globe_with_meridians: [Zenodo record](https://zenodo.org/records/19644135) (canonical, citable)
+- :memo: [Markdown source](docs/research-post-cross-domain-techniques.md) (browse on GitHub)
+- :books: [`CITATION.cff`](CITATION.cff) (auto-rendered by GitHub's *Cite this repository* sidebar)
 
 **Cite as:**
 > Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
-
-A BibTeX entry lives at [`CITATION.cff`](CITATION.cff) (auto-rendered by GitHub's *Cite this repository* button in the sidebar). A local PDF copy is at [`docs/papers/cross-domain-techniques.pdf`](docs/papers/cross-domain-techniques.pdf).
 
 > **Implementation status: 1 of 7 shipped (d028 Smith-Waterman alignment landed in v0.4.0 phase 4). 6 in development.** These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
 
