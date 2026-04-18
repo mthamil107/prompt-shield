@@ -24,88 +24,254 @@ from typing import Final
 # positives on benign text are the cost.
 SYNONYM_GROUPS: Final[tuple[frozenset[str], ...]] = (
     # ignore / negate family
-    frozenset({
-        "ignore", "disregard", "forget", "skip", "bypass", "overlook",
-        "overrule", "nullify", "abandon", "omit", "discard",
-    }),
+    frozenset(
+        {
+            "ignore",
+            "disregard",
+            "forget",
+            "skip",
+            "bypass",
+            "overlook",
+            "overrule",
+            "nullify",
+            "abandon",
+            "omit",
+            "discard",
+        }
+    ),
     # instructions / rules family
-    frozenset({
-        "instructions", "instruction", "directives", "directive", "rules",
-        "rule", "guidelines", "guideline", "commands", "command",
-        "orders", "order", "constraints", "restrictions", "policies",
-        "policy", "protocol", "protocols",
-    }),
+    frozenset(
+        {
+            "instructions",
+            "instruction",
+            "directives",
+            "directive",
+            "rules",
+            "rule",
+            "guidelines",
+            "guideline",
+            "commands",
+            "command",
+            "orders",
+            "order",
+            "constraints",
+            "restrictions",
+            "policies",
+            "policy",
+            "protocol",
+            "protocols",
+        }
+    ),
     # reveal / expose family
-    frozenset({
-        "show", "reveal", "display", "output", "print", "expose",
-        "disclose", "share", "tell", "echo", "repeat", "emit",
-        "dump", "leak", "extract", "report", "read",
-    }),
+    frozenset(
+        {
+            "show",
+            "reveal",
+            "display",
+            "output",
+            "print",
+            "expose",
+            "disclose",
+            "share",
+            "tell",
+            "echo",
+            "repeat",
+            "emit",
+            "dump",
+            "leak",
+            "extract",
+            "report",
+            "read",
+        }
+    ),
     # system / internal family
-    frozenset({
-        "system", "initial", "original", "hidden", "internal", "secret",
-        "base", "core", "foundational", "prior", "underlying", "private",
-    }),
+    frozenset(
+        {
+            "system",
+            "initial",
+            "original",
+            "hidden",
+            "internal",
+            "secret",
+            "base",
+            "core",
+            "foundational",
+            "prior",
+            "underlying",
+            "private",
+        }
+    ),
     # prompt / configuration family (tokens that name the thing an
     # attacker wants to extract — prompt, config, etc. "instruction"
     # singular lives here because "what is your instruction" targets
     # the same noun class as "what is your prompt".)
-    frozenset({
-        "prompt", "prompts", "message", "messages", "content", "contents",
-        "configuration", "config", "setup", "settings", "context",
-        "instruction",
-    }),
+    frozenset(
+        {
+            "prompt",
+            "prompts",
+            "message",
+            "messages",
+            "content",
+            "contents",
+            "configuration",
+            "config",
+            "setup",
+            "settings",
+            "context",
+            "instruction",
+        }
+    ),
     # previous / above family (positional references)
-    frozenset({
-        "previous", "prior", "earlier", "above", "preceding", "before",
-        "former", "past", "prior", "foregoing", "aforementioned",
-    }),
+    frozenset(
+        {
+            "previous",
+            "prior",
+            "earlier",
+            "above",
+            "preceding",
+            "before",
+            "former",
+            "past",
+            "foregoing",
+            "aforementioned",
+        }
+    ),
     # pretend / roleplay family
-    frozenset({
-        "pretend", "act", "behave", "imagine", "assume", "suppose",
-        "simulate", "roleplay", "play", "perform", "impersonate",
-    }),
+    frozenset(
+        {
+            "pretend",
+            "act",
+            "behave",
+            "imagine",
+            "assume",
+            "suppose",
+            "simulate",
+            "roleplay",
+            "play",
+            "perform",
+            "impersonate",
+        }
+    ),
     # mode / persona family
-    frozenset({
-        "mode", "state", "profile", "persona", "character", "role",
-        "identity", "form", "version",
-    }),
+    frozenset(
+        {
+            "mode",
+            "state",
+            "profile",
+            "persona",
+            "character",
+            "role",
+            "identity",
+            "form",
+            "version",
+        }
+    ),
     # unrestricted / jailbreak family
-    frozenset({
-        "unrestricted", "unlimited", "uncensored", "jailbroken", "free",
-        "unbound", "liberated", "unfiltered", "unconstrained", "dan",
-        "unrestrained", "raw",
-    }),
+    frozenset(
+        {
+            "unrestricted",
+            "unlimited",
+            "uncensored",
+            "jailbroken",
+            "free",
+            "unbound",
+            "liberated",
+            "unfiltered",
+            "unconstrained",
+            "dan",
+            "unrestrained",
+            "raw",
+        }
+    ),
     # execute / run family
-    frozenset({
-        "execute", "run", "perform", "invoke", "activate", "trigger",
-        "call", "launch", "start", "do", "carry",
-    }),
+    frozenset(
+        {
+            "execute",
+            "run",
+            "perform",
+            "invoke",
+            "activate",
+            "trigger",
+            "call",
+            "launch",
+            "start",
+            "do",
+            "carry",
+        }
+    ),
     # decode / decrypt family
-    frozenset({
-        "decode", "translate", "convert", "interpret", "parse", "decipher",
-        "decrypt", "unescape", "unobfuscate",
-    }),
+    frozenset(
+        {
+            "decode",
+            "translate",
+            "convert",
+            "interpret",
+            "parse",
+            "decipher",
+            "decrypt",
+            "unescape",
+            "unobfuscate",
+        }
+    ),
     # override / replace family
-    frozenset({
-        "override", "replace", "supersede", "overrule", "cancel",
-        "terminate", "revoke", "rescind", "countermand", "suspend",
-    }),
+    frozenset(
+        {
+            "override",
+            "replace",
+            "supersede",
+            "overrule",
+            "cancel",
+            "terminate",
+            "revoke",
+            "rescind",
+            "countermand",
+            "suspend",
+        }
+    ),
     # admin / root family
-    frozenset({
-        "admin", "administrator", "root", "developer", "god", "superuser",
-        "master", "sudo", "owner", "operator",
-    }),
+    frozenset(
+        {
+            "admin",
+            "administrator",
+            "root",
+            "developer",
+            "god",
+            "superuser",
+            "master",
+            "sudo",
+            "owner",
+            "operator",
+        }
+    ),
     # new / reset family
-    frozenset({
-        "new", "fresh", "reset", "restart", "reboot", "reinitialize",
-        "reinitialise", "reload", "updated", "revised",
-    }),
+    frozenset(
+        {
+            "new",
+            "fresh",
+            "reset",
+            "restart",
+            "reboot",
+            "reinitialize",
+            "reinitialise",
+            "reload",
+            "updated",
+            "revised",
+        }
+    ),
     # all / every family (quantifiers often used with ignore-family)
-    frozenset({
-        "all", "every", "each", "any", "entire", "complete", "full",
-        "whole", "total",
-    }),
+    frozenset(
+        {
+            "all",
+            "every",
+            "each",
+            "any",
+            "entire",
+            "complete",
+            "full",
+            "whole",
+            "total",
+        }
+    ),
 )
 
 # Reverse index: word -> set of group indices it belongs to.

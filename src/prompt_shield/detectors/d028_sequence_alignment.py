@@ -69,9 +69,11 @@ def _align(
     if m == 0 or n == 0:
         return 0, 0, 0
 
-    # H[i][j] = best local-alignment score ending at haystack[i-1], needle[j-1]
-    # start[i][j] = haystack index (1-based) where this alignment began
-    H: list[list[int]] = [[0] * (n + 1) for _ in range(m + 1)]
+    # H[i][j] = best local-alignment score ending at haystack[i-1], needle[j-1].
+    # start[i][j] = haystack index (1-based) where this alignment began.
+    # Capital H matches the Smith-Waterman recurrence notation in the
+    # original 1981 paper; clarity here outweighs PEP 8.
+    H: list[list[int]] = [[0] * (n + 1) for _ in range(m + 1)]  # noqa: N806
     start: list[list[int]] = [[0] * (n + 1) for _ in range(m + 1)]
 
     max_score = 0
@@ -149,10 +151,16 @@ class SequenceAlignmentDetector(BaseDetector):
         self._threshold = float(config.get("threshold", self._threshold))  # type: ignore[arg-type]
         self._match_bonus = int(config.get("match_bonus", self._match_bonus))  # type: ignore[arg-type]
         self._synonym_bonus = int(config.get("synonym_bonus", self._synonym_bonus))  # type: ignore[arg-type]
-        self._mismatch_penalty = int(config.get("mismatch_penalty", self._mismatch_penalty))  # type: ignore[arg-type]
+        self._mismatch_penalty = int(
+            config.get("mismatch_penalty", self._mismatch_penalty)
+        )  # type: ignore[arg-type]
         self._gap_penalty = int(config.get("gap_penalty", self._gap_penalty))  # type: ignore[arg-type]
-        self._min_input_tokens = int(config.get("min_input_tokens", self._min_input_tokens))  # type: ignore[arg-type]
-        self._max_input_tokens = int(config.get("max_input_tokens", self._max_input_tokens))  # type: ignore[arg-type]
+        self._min_input_tokens = int(
+            config.get("min_input_tokens", self._min_input_tokens)
+        )  # type: ignore[arg-type]
+        self._max_input_tokens = int(
+            config.get("max_input_tokens", self._max_input_tokens)
+        )  # type: ignore[arg-type]
 
     def detect(
         self, input_text: str, context: dict[str, object] | None = None
@@ -230,7 +238,11 @@ class SequenceAlignmentDetector(BaseDetector):
         span = max(0.001, 1.0 - self._threshold)
         confidence = min(1.0, 0.6 + 0.4 * (best_normalized - self._threshold) / span)
 
-        matched_text = input_text[best_span[0] : best_span[1]] if best_span[1] > best_span[0] else ""
+        matched_text = (
+            input_text[best_span[0] : best_span[1]]
+            if best_span[1] > best_span[0]
+            else ""
+        )
         match = MatchDetail(
             pattern=" ".join(best_needle),
             matched_text=matched_text,

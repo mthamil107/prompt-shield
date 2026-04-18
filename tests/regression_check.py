@@ -38,7 +38,9 @@ CATEGORY_TOLERANCE_PCT = 1.0
 OVERALL_TOLERANCE_PCT = 1.0
 
 # Matches "category.basic_injection:              100" in the baseline.
-_BASELINE_CATEGORY_RE = re.compile(r"^category\.(?P<name>[a-zA-Z0-9_]+):\s+(?P<rate>\d+(?:\.\d+)?)")
+_BASELINE_CATEGORY_RE = re.compile(
+    r"^category\.(?P<name>[a-zA-Z0-9_]+):\s+(?P<rate>\d+(?:\.\d+)?)"
+)
 # Matches "key: value" in the baseline (numeric only).
 _BASELINE_KV_RE = re.compile(r"^(?P<key>[a-zA-Z0-9_.]+):\s+(?P<value>\d+(?:\.\d+)?)")
 
@@ -118,7 +120,8 @@ def _parse_realistic_output(text: str) -> dict[str, Any]:
             fp_count = int(ben.group("fp"))
     if total_rate is None or fp_count is None:
         raise RuntimeError(
-            "could not parse TOTAL ATTACKS or BENIGN line from benchmark_realistic output"
+            "could not parse TOTAL ATTACKS or BENIGN line from "
+            "benchmark_realistic output"
         )
     return {
         "categories": per_category,
@@ -140,11 +143,15 @@ def _run_pytest() -> int:
     if "failed" in result.stdout or result.returncode != 0:
         sys.stderr.write(result.stdout[-2000:])
         sys.stderr.write(result.stderr[-2000:])
-        raise SystemExit(f"pytest failed — {passed} passed but suite is red. See output above.")
+        raise SystemExit(
+            f"pytest failed — {passed} passed but suite is red. See output above."
+        )
     return passed
 
 
-def _compare(baseline: dict[str, float], current: dict[str, Any], *, verbose: bool) -> list[str]:
+def _compare(
+    baseline: dict[str, float], current: dict[str, Any], *, verbose: bool
+) -> list[str]:
     """Return a list of failure messages. Empty list means all gates pass."""
     failures: list[str] = []
 
@@ -153,7 +160,8 @@ def _compare(baseline: dict[str, float], current: dict[str, Any], *, verbose: bo
     cur_overall = current["overall_detection_rate_pct"]
     if cur_overall + OVERALL_TOLERANCE_PCT < base_overall:
         failures.append(
-            f"Overall detection rate dropped: baseline {base_overall:.1f}% -> current {cur_overall:.1f}% "
+            f"Overall detection rate dropped: baseline {base_overall:.1f}% "
+            f"-> current {cur_overall:.1f}% "
             f"(tolerance {OVERALL_TOLERANCE_PCT}% abs)"
         )
 
@@ -161,19 +169,28 @@ def _compare(baseline: dict[str, float], current: dict[str, Any], *, verbose: bo
     base_fp = int(baseline.get("benign_false_positive_count", 0))
     cur_fp = int(current["benign_false_positive_count"])
     if cur_fp > base_fp:
-        failures.append(f"False-positive count increased: baseline {base_fp} -> current {cur_fp}")
+        failures.append(
+            f"False-positive count increased: baseline {base_fp} -> current {cur_fp}"
+        )
 
     # Per-category rates
     for name, cur_rate in current["categories"].items():
         base_rate = baseline.get(f"category.{name}")
         if base_rate is None:
             if verbose:
-                print(f"  [new category] {name}: {cur_rate:.0f}% (no baseline, not gated)")
+                print(
+                    f"  [new category] {name}: {cur_rate:.0f}% (no baseline, not gated)"
+                )
             continue
         delta = cur_rate - base_rate
         if verbose:
             marker = "+" if delta > 0 else "-" if delta < 0 else " "
-            print(f"  [{marker}] {name:<30} baseline {base_rate:>5.0f}%  current {cur_rate:>5.0f}%  delta {delta:+.0f}%")
+            print(
+                f"  [{marker}] {name:<30} "
+                f"baseline {base_rate:>5.0f}%  "
+                f"current {cur_rate:>5.0f}%  "
+                f"delta {delta:+.0f}%"
+            )
         if cur_rate + CATEGORY_TOLERANCE_PCT < base_rate:
             failures.append(
                 f"Category '{name}' detection rate dropped: "
@@ -186,8 +203,14 @@ def _compare(baseline: dict[str, float], current: dict[str, Any], *, verbose: bo
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="prompt-shield regression gate")
-    parser.add_argument("--skip-pytest", action="store_true", help="skip pytest (only run benchmark gate)")
-    parser.add_argument("--verbose", action="store_true", help="print per-category comparison table")
+    parser.add_argument(
+        "--skip-pytest",
+        action="store_true",
+        help="skip pytest (only run benchmark gate)",
+    )
+    parser.add_argument(
+        "--verbose", action="store_true", help="print per-category comparison table"
+    )
     args = parser.parse_args()
 
     if not BASELINE_PATH.exists():
@@ -203,7 +226,10 @@ def main() -> int:
         base_passed = int(baseline.get("total_passed", 0))
         print(f"  pytest: {passed} passed (baseline {base_passed})")
         if passed < base_passed:
-            print(f"FAIL: pytest pass count dropped: {base_passed} -> {passed}", file=sys.stderr)
+            print(
+                f"FAIL: pytest pass count dropped: {base_passed} -> {passed}",
+                file=sys.stderr,
+            )
             return 1
 
     # Gate 2: realistic benchmark
@@ -222,8 +248,12 @@ def main() -> int:
 
     print("")
     print("All regression gates passed.")
-    print(f"  overall detection: {current['overall_detection_rate_pct']:.1f}% (baseline {baseline.get('overall_detection_rate_pct', 0):.1f}%)")
-    print(f"  false positives:   {current['benign_false_positive_count']} (baseline {int(baseline.get('benign_false_positive_count', 0))})")
+    base_overall = baseline.get("overall_detection_rate_pct", 0)
+    base_fp = int(baseline.get("benign_false_positive_count", 0))
+    cur_overall = current["overall_detection_rate_pct"]
+    cur_fp = current["benign_false_positive_count"]
+    print(f"  overall detection: {cur_overall:.1f}% (baseline {base_overall:.1f}%)")
+    print(f"  false positives:   {cur_fp} (baseline {base_fp})")
     return 0
 
 
