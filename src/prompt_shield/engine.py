@@ -36,6 +36,7 @@ from prompt_shield.utils import sha256_hash
 
 if TYPE_CHECKING:
     from prompt_shield.detectors.base import BaseDetector
+    from prompt_shield.fatigue.tracker import FatigueTracker
     from prompt_shield.feedback.auto_tuner import AutoTuner
     from prompt_shield.feedback.feedback_store import FeedbackStore
     from prompt_shield.vault.attack_vault import AttackVault
@@ -117,6 +118,17 @@ class PromptShieldEngine:
             from prompt_shield.alerting.webhook import WebhookAlerter
 
             self._alerter = WebhookAlerter(alerting_cfg)
+
+        # Initialize adversarial fatigue tracker (opt-in, default-off).
+        # When disabled, observe() and get_effective_threshold() are no-ops
+        # so the hot scan path incurs two cheap `is None` checks at most.
+        self._fatigue: FatigueTracker | None = None
+        fatigue_cfg = self._ps_config.get("fatigue", {})
+        if fatigue_cfg.get("enabled", False):
+            from prompt_shield.fatigue import FatigueTracker as _FatigueTracker
+            from prompt_shield.fatigue.tracker import FatigueConfig as _FatigueConfig
+
+            self._fatigue = _FatigueTracker(_FatigueConfig.from_dict(fatigue_cfg))
 
         # Compile allowlist/blocklist patterns
         self._allowlist_patterns = self._compile_patterns(
@@ -229,27 +241,46 @@ class PromptShieldEngine:
                     risk_score=1.0,
                 )
 
-        # Build list of detectors to run with their configs/thresholds
-        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]] = []
+        # Resolve fatigue source identifier once per scan (when enabled).
+        fatigue_source = (
+            str(ctx.get(self._fatigue.source_key, "_global_"))
+            if self._fatigue is not None
+            else None
+        )
+
+        # Build list of detectors to run with their configs/thresholds.
+        # The tuple now carries the *base* threshold too, so the runner can
+        # record that base value to the fatigue tracker (which classifies
+        # near-misses against the un-hardened threshold).
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float, float]] = []
         for detector in self._registry.list_all():
             det_cfg = get_detector_config(self._config, detector.detector_id)
             if not det_cfg.get("enabled", True):
                 continue
 
-            threshold = det_cfg.get("threshold", self._ps_config.get("threshold", 0.7))
+            base_threshold = det_cfg.get("threshold", self._ps_config.get("threshold", 0.7))
+            threshold = base_threshold
             if self._auto_tuner:
                 threshold = self._auto_tuner.get_effective_threshold(
                     detector.detector_id, threshold
                 )
-            detectors_to_run.append((detector, det_cfg, threshold))
+            if self._fatigue is not None and fatigue_source is not None:
+                threshold = self._fatigue.get_effective_threshold(
+                    fatigue_source, detector.detector_id, threshold
+                )
+            detectors_to_run.append((detector, det_cfg, threshold, base_threshold))
 
         total_run = len(detectors_to_run)
         detections: list[DetectionResult] = []
 
         if self._parallel and total_run > 1:
-            detections = self._run_detectors_parallel(detectors_to_run, input_text, ctx)
+            detections = self._run_detectors_parallel(
+                detectors_to_run, input_text, ctx, fatigue_source=fatigue_source
+            )
         else:
-            detections = self._run_detectors_sequential(detectors_to_run, input_text, ctx)
+            detections = self._run_detectors_sequential(
+                detectors_to_run, input_text, ctx, fatigue_source=fatigue_source
+            )
 
         # Aggregate risk score with ensemble bonus
         if detections:
@@ -457,13 +488,15 @@ class PromptShieldEngine:
 
     def _run_detectors_sequential(
         self,
-        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]],
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float, float]],
         input_text: str,
         ctx: dict[str, object],
+        *,
+        fatigue_source: str | None = None,
     ) -> list[DetectionResult]:
         """Run detectors sequentially and collect results."""
         detections: list[DetectionResult] = []
-        for detector, det_cfg, threshold in detectors_to_run:
+        for detector, det_cfg, threshold, base_threshold in detectors_to_run:
             try:
                 result = detector.detect(input_text, context=ctx)
 
@@ -471,6 +504,14 @@ class PromptShieldEngine:
                 if cfg_severity:
                     with contextlib.suppress(ValueError):
                         result.severity = Severity(cfg_severity)
+
+                if self._fatigue is not None and fatigue_source is not None:
+                    self._fatigue.observe(
+                        fatigue_source,
+                        detector.detector_id,
+                        result.confidence,
+                        base_threshold,
+                    )
 
                 if result.detected and result.confidence >= threshold:
                     detections.append(result)
@@ -480,15 +521,20 @@ class PromptShieldEngine:
 
     def _run_detectors_parallel(
         self,
-        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float]],
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float, float]],
         input_text: str,
         ctx: dict[str, object],
+        *,
+        fatigue_source: str | None = None,
     ) -> list[DetectionResult]:
         """Run detectors in parallel using ThreadPoolExecutor."""
         detections: list[DetectionResult] = []
 
         def _run_one(
-            detector: BaseDetector, det_cfg: dict[str, Any], threshold: float
+            detector: BaseDetector,
+            det_cfg: dict[str, Any],
+            threshold: float,
+            base_threshold: float,
         ) -> DetectionResult | None:
             result = detector.detect(input_text, context=ctx)
 
@@ -497,14 +543,22 @@ class PromptShieldEngine:
                 with contextlib.suppress(ValueError):
                     result.severity = Severity(cfg_severity)
 
+            if self._fatigue is not None and fatigue_source is not None:
+                self._fatigue.observe(
+                    fatigue_source,
+                    detector.detector_id,
+                    result.confidence,
+                    base_threshold,
+                )
+
             if result.detected and result.confidence >= threshold:
                 return result
             return None
 
         with ThreadPoolExecutor(max_workers=self._max_workers) as executor:
             futures = {
-                executor.submit(_run_one, detector, det_cfg, threshold): detector
-                for detector, det_cfg, threshold in detectors_to_run
+                executor.submit(_run_one, detector, det_cfg, threshold, base_threshold): detector
+                for detector, det_cfg, threshold, base_threshold in detectors_to_run
             }
             for future in as_completed(futures):
                 detector = futures[future]
