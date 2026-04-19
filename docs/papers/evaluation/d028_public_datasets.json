@@ -1,0 +1,219 @@
+{
+  "environment": {
+    "note": "Both configurations disable d022 semantic classifier for speed; the delta isolates d028 (Smith-Waterman alignment) against the 26-detector regex baseline.",
+    "threshold": 0.7,
+    "block_cutoff_risk_score": 0.5
+  },
+  "datasets": {
+    "deepset/prompt-injections": {
+      "sample_count": 116,
+      "attack_count": 60,
+      "benign_count": 56,
+      "control_26_detectors": {
+        "n": 116,
+        "tp": 1,
+        "tn": 56,
+        "fp": 0,
+        "fn": 59,
+        "precision": 1.0,
+        "recall": 0.0167,
+        "f1": 0.0328,
+        "accuracy": 0.4914,
+        "fpr": 0.0,
+        "elapsed_s": 1.66,
+        "throughput_per_s": 69.8
+      },
+      "treatment_27_detectors_with_d028": {
+        "n": 116,
+        "tp": 14,
+        "tn": 56,
+        "fp": 0,
+        "fn": 46,
+        "precision": 1.0,
+        "recall": 0.2333,
+        "f1": 0.3784,
+        "accuracy": 0.6034,
+        "fpr": 0.0,
+        "elapsed_s": 3.7,
+        "throughput_per_s": 31.4
+      },
+      "delta_treatment_minus_control": {
+        "recall_pp": 21.67,
+        "f1_pp": 34.56,
+        "accuracy_pp": 11.21,
+        "fpr_pp": 0.0,
+        "tp_delta": 13,
+        "fp_delta": 0,
+        "fn_delta": -13
+      }
+    },
+    "leolee99/NotInject": {
+      "sample_count": 339,
+      "attack_count": 0,
+      "benign_count": 339,
+      "control_26_detectors": {
+        "n": 339,
+        "tp": 0,
+        "tn": 336,
+        "fp": 3,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.9912,
+        "fpr": 0.0088,
+        "elapsed_s": 3.78,
+        "throughput_per_s": 89.7
+      },
+      "treatment_27_detectors_with_d028": {
+        "n": 339,
+        "tp": 0,
+        "tn": 326,
+        "fp": 13,
+        "fn": 0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "accuracy": 0.9617,
+        "fpr": 0.0383,
+        "elapsed_s": 8.97,
+        "throughput_per_s": 37.8
+      },
+      "delta_treatment_minus_control": {
+        "recall_pp": 0.0,
+        "f1_pp": 0.0,
+        "accuracy_pp": -2.95,
+        "fpr_pp": 2.95,
+        "tp_delta": 0,
+        "fp_delta": 10,
+        "fn_delta": 0
+      }
+    },
+    "microsoft/llmail-inject-challenge (Phase1, 1000 subset)": {
+      "sample_count": 1000,
+      "attack_count": 1000,
+      "benign_count": 0,
+      "control_26_detectors": {
+        "n": 1000,
+        "tp": 978,
+        "tn": 0,
+        "fp": 0,
+        "fn": 22,
+        "precision": 1.0,
+        "recall": 0.978,
+        "f1": 0.9889,
+        "accuracy": 0.978,
+        "fpr": 0.0,
+        "elapsed_s": 29.47,
+        "throughput_per_s": 33.9
+      },
+      "treatment_27_detectors_with_d028": {
+        "n": 1000,
+        "tp": 980,
+        "tn": 0,
+        "fp": 0,
+        "fn": 20,
+        "precision": 1.0,
+        "recall": 0.98,
+        "f1": 0.9899,
+        "accuracy": 0.98,
+        "fpr": 0.0,
+        "elapsed_s": 265.76,
+        "throughput_per_s": 3.8
+      },
+      "delta_treatment_minus_control": {
+        "recall_pp": 0.2,
+        "f1_pp": 0.1,
+        "accuracy_pp": 0.2,
+        "fpr_pp": 0.0,
+        "tp_delta": 2,
+        "fp_delta": 0,
+        "fn_delta": -2
+      }
+    },
+    "ai-safety-institute/AgentHarm": {
+      "sample_count": 352,
+      "attack_count": 176,
+      "benign_count": 176,
+      "control_26_detectors": {
+        "n": 352,
+        "tp": 44,
+        "tn": 120,
+        "fp": 56,
+        "fn": 132,
+        "precision": 0.44,
+        "recall": 0.25,
+        "f1": 0.3188,
+        "accuracy": 0.4659,
+        "fpr": 0.3182,
+        "elapsed_s": 4.78,
+        "throughput_per_s": 73.7
+      },
+      "treatment_27_detectors_with_d028": {
+        "n": 352,
+        "tp": 44,
+        "tn": 120,
+        "fp": 56,
+        "fn": 132,
+        "precision": 0.44,
+        "recall": 0.25,
+        "f1": 0.3188,
+        "accuracy": 0.4659,
+        "fpr": 0.3182,
+        "elapsed_s": 20.53,
+        "throughput_per_s": 17.1
+      },
+      "delta_treatment_minus_control": {
+        "recall_pp": 0.0,
+        "f1_pp": 0.0,
+        "accuracy_pp": 0.0,
+        "fpr_pp": 0.0,
+        "tp_delta": 0,
+        "fp_delta": 0,
+        "fn_delta": 0
+      }
+    },
+    "ethz-spylab/agentdojo (v1.2.1)": {
+      "sample_count": 132,
+      "attack_count": 35,
+      "benign_count": 97,
+      "control_26_detectors": {
+        "n": 132,
+        "tp": 17,
+        "tn": 86,
+        "fp": 11,
+        "fn": 18,
+        "precision": 0.6071,
+        "recall": 0.4857,
+        "f1": 0.5397,
+        "accuracy": 0.7803,
+        "fpr": 0.1134,
+        "elapsed_s": 1.63,
+        "throughput_per_s": 81.0
+      },
+      "treatment_27_detectors_with_d028": {
+        "n": 132,
+        "tp": 18,
+        "tn": 83,
+        "fp": 14,
+        "fn": 17,
+        "precision": 0.5625,
+        "recall": 0.5143,
+        "f1": 0.5373,
+        "accuracy": 0.7652,
+        "fpr": 0.1443,
+        "elapsed_s": 6.66,
+        "throughput_per_s": 19.8
+      },
+      "delta_treatment_minus_control": {
+        "recall_pp": 2.86,
+        "f1_pp": -0.24,
+        "accuracy_pp": -1.52,
+        "fpr_pp": 3.09,
+        "tp_delta": 1,
+        "fp_delta": 3,
+        "fn_delta": -1
+      }
+    }
+  }
+}
