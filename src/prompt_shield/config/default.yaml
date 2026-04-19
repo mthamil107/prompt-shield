@@ -26,6 +26,20 @@ prompt_shield:
   scoring:
     ensemble_bonus: 0.05
 
+  # Adversarial fatigue tracking — detect probing campaigns across scans.
+  # Opt-in: when disabled (the default) there is zero runtime cost.
+  # See docs/research-post-cross-domain-techniques.md Section 2 and
+  # src/prompt_shield/fatigue/tracker.py for the mechanism.
+  fatigue:
+    enabled: false
+    near_miss_delta: 0.15          # range below threshold that counts as near-miss
+    ewma_alpha: 0.3                # smoothing factor (higher = more reactive)
+    trigger_ratio: 0.4             # EWMA level at which hardening activates
+    harden_delta: 0.10             # threshold lowering while hardened
+    cooldown_seconds: 60           # quiet interval before restoring base threshold
+    min_samples_before_trigger: 8  # prevents trigger on tiny sample sizes
+    source_key: "source"           # which context key identifies the caller
+
   data_dir: null
 
   vault:
