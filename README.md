@@ -18,7 +18,7 @@
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
-  <img src="https://img.shields.io/badge/tests-800-blue" alt="800 tests" />
+  <img src="https://img.shields.io/badge/tests-829-blue" alt="829 tests" />
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
 </p>
 
@@ -279,6 +279,28 @@ python tests/benchmark_comparison.py       # vs competitors
 python tests/benchmark_public_datasets.py  # on public HuggingFace datasets
 python tests/benchmark_realistic.py        # per-category breakdown
 ```
+
+### Benchmark 4: v0.4.0 Technique Ablation (5 public datasets)
+
+Empirical validation of each shipped v0.4.0 novel technique in isolation, regex-only baseline (d022 ML off). Full data: [`docs/papers/evaluation/ANALYSIS.md`](docs/papers/evaluation/ANALYSIS.md) and [`docs/papers/evaluation/fatigue_probing_campaign.md`](docs/papers/evaluation/fatigue_probing_campaign.md). Reproduce with `python docs/papers/evaluation/run_public_datasets.py`.
+
+#### d028 Smith-Waterman alignment — on vs off (26-detector control, 27-detector treatment)
+
+| Dataset | Samples | F1 off | F1 on | ΔF1 | ΔRecall | ΔFPR | Verdict |
+|---|---:|---:|---:|---:|---:|---:|---|
+| **deepset/prompt-injections** | 116 | 0.033 | **0.378** | **+34.5 pp** | +21.7 pp | **0.0 pp** | Strong win |
+| leolee99/NotInject | 339 (benign) | — | — | — | — | **+2.95 pp** | Regression (tune) |
+| microsoft/llmail-inject (Phase1, 1k) | 1 000 | 0.989 | 0.990 | +0.001 | +0.2 pp | 0.0 pp | Saturated |
+| ai-safety-institute/AgentHarm | 352 | 0.319 | 0.319 | 0.0 | 0.0 | 0.0 | Orthogonal |
+| ethz-spylab/agentdojo v1.2.1 | 132 | 0.540 | 0.537 | −0.003 | +2.9 pp | +3.1 pp | Neutral |
+
+**Headline:** +34.5 pp F1 on deepset with zero FP cost. Honest regression on NotInject (+10 FPs, planned fix: tune threshold 0.60 → 0.63).
+
+#### Adversarial fatigue tracker — probing-campaign test
+
+Fatigue is a temporal signal, orthogonal to static public benchmarks (every sample in the 5 datasets above is independent; fatigue fires on **sequences** from the same source). Validated end-to-end via [`tests/fatigue/test_engine_integration.py::test_hardening_catches_next_near_miss`](tests/fatigue/test_engine_integration.py):
+
+> 10 priming scans from `source="attacker"` at confidence 0.65 (below threshold 0.7) → 11th scan from the same source at confidence **0.63** is **blocked**, because the EWMA near-miss rate exceeded `trigger_ratio` and the effective threshold hardened from 0.70 to 0.60. A different `source` scanning at 0.63 concurrently still passes — hardening is per-source.
 
 ## Output Scanning
 
@@ -587,7 +609,9 @@ prompt-shield benchmark performance -n 100
 **Cite as:**
 > Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
 
-> **Implementation status: 1 of 7 shipped (d028 Smith-Waterman alignment landed in v0.4.0 phase 4). 6 in development.** These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
+> **Implementation status: 2 of 7 shipped** — d028 Smith-Waterman alignment (v0.4.0 phase 4) and adversarial fatigue tracker (v0.4.0 phase 2). Both empirically validated — see [`docs/papers/evaluation/`](docs/papers/evaluation/). 5 in development.
+>
+> These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
 
 The core insight behind v0.4.0 is that prompt injection detection has converged on two approaches -- regex patterns and ML classifiers -- both of which break under adaptive adversaries (see [NAACL 2025](https://aclanthology.org/2025.findings-naacl.395/), [ICLR 2025](https://openreview.net/forum?id=7B9mTg7z25)). We looked to other disciplines for fundamentally different detection signals.
 
@@ -609,7 +633,7 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 
 ---
 
-### 2. Adversarial Fatigue Tracking (Materials Science)
+### 2. Adversarial Fatigue Tracking (Materials Science) — **SHIPPED as `prompt_shield.fatigue`**
 
 **The problem:** Sophisticated attackers don't send one attack -- they iteratively probe the system with inputs just below the detection threshold, reverse-engineering the exact evasion boundary.
 
@@ -624,7 +648,9 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 
 **Why it's novel:** Nobody has modeled adversarial probing as cumulative material fatigue. This transforms a passive detector into an **active defense** that responds to probing campaigns.
 
-**Properties:** Pure statistical tracking. <1ms overhead. Turns passive detection into active defense.
+**Properties:** Pure statistical tracking. <1ms overhead. Turns passive detection into active defense. Opt-in via `fatigue.enabled: true` — zero cost when disabled.
+
+**Validation:** 29 unit + integration tests in [`tests/fatigue/`](tests/fatigue/). End-to-end probing-campaign test confirmed: 10 priming scans at confidence 0.65 → the 11th scan at conf 0.63 is blocked. Per-source isolation verified — a concurrent benign user at the same confidence still passes. Full analysis: [`docs/papers/evaluation/fatigue_probing_campaign.md`](docs/papers/evaluation/fatigue_probing_campaign.md).
 
 ---
 
@@ -740,7 +766,10 @@ Open an issue or PR. We're especially interested in adversarial evaluations.
 - **v0.1.x**: 22 detectors, DeBERTa ML classifier, ensemble scoring, self-learning vault
 - **v0.2.0**: OWASP LLM Top 10 compliance, standardized benchmarking
 - **v0.3.x** (current): 26 input detectors + 6 output scanners, 10 languages, 7 encoding schemes, PII redaction, red team, GitHub Action, pre-commit, Docker API, webhook alerting, parallel execution, 3 compliance frameworks, invisible watermarks, Dify/n8n/CrewAI
-- **v0.4.0** (in progress): 7 novel cross-domain techniques -- **d028 Smith-Waterman alignment shipped (phase 4)**; stylometric discontinuity, adversarial fatigue, honeypot tools, prediction market ensemble, perplexity spectral analysis, and runtime taint tracking remain in development
+- **v0.4.0** (in progress, **2 of 7 techniques shipped**): 7 novel cross-domain techniques --
+  - ✅ **d028 Smith-Waterman alignment** (phase 4) — regex-alignment with semantic substitution matrix. +34.5 pp F1 on deepset with 0 FP cost.
+  - ✅ **Adversarial fatigue tracker** (phase 2) — EWMA near-miss detection + per-source threshold hardening. Opt-in.
+  - ⬜ Stylometric discontinuity, honeypot tools, prediction market ensemble, perplexity spectral analysis, runtime taint tracking — remain in development.
 - **v0.5.0** (planned): MCP protocol-level security scanner, multimodal OCR/audio scanning, many-shot structural analysis, multi-turn topic drift ML, hallucination/grounding detection, OpenTelemetry, Prometheus /metrics, Helm charts
 
 See [ROADMAP.md](ROADMAP.md) for details.
