@@ -160,6 +160,16 @@ prompt_shield:
     d026_denial_of_wallet:
       enabled: true
       severity: medium
+    d027_stylometric_discontinuity:
+      enabled: true
+      severity: medium
+      threshold: 0.06           # JSD above which a window-boundary is flagged
+      window_size: 50
+      stride: 25
+      min_input_tokens: 100     # silent on short inputs by design
+      max_input_tokens: 4000
+      confidence_floor: 0.6
+      confidence_slope: 4.0
     d028_sequence_alignment:
       enabled: true
       severity: high
