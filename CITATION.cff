@@ -8,6 +8,13 @@ authors:
 repository-code: "https://github.com/mthamil107/prompt-shield"
 url: "https://github.com/mthamil107/prompt-shield"
 license: Apache-2.0
+identifiers:
+  - type: doi
+    value: "10.5281/zenodo.19644135"
+    description: "Zenodo v1.0 record for the research paper"
+  - type: other
+    value: "arXiv:2604.18248"
+    description: "arXiv preprint (cs.CR, cs.CL)"
 keywords:
   - "llm"
   - "security"
@@ -23,7 +30,14 @@ preferred-citation:
       given-names: "Thamilvendhan"
   year: 2026
   doi: "10.5281/zenodo.19644135"
-  url: "https://doi.org/10.5281/zenodo.19644135"
+  url: "https://arxiv.org/abs/2604.18248"
   version: "1.0.0"
   publisher:
-    name: "Zenodo"
+    name: "arXiv"
+  identifiers:
+    - type: other
+      value: "arXiv:2604.18248"
+      description: "arXiv preprint identifier"
+    - type: doi
+      value: "10.5281/zenodo.19644135"
+      description: "Zenodo DOI anchor"

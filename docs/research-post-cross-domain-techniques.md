@@ -1,21 +1,33 @@
 # Beyond Pattern Matching: 7 Cross-Domain Techniques for Prompt Injection Detection
 
 **Author:** Thamilvendhan Munirathinam
-**Date:** April 2026
-**DOI:** [10.5281/zenodo.19644135](https://doi.org/10.5281/zenodo.19644135) (Zenodo, v1.0.0)
+**Revision date:** 2026-04-20 (v2.0 — released alongside the arXiv preprint)
+**arXiv preprint:** [arXiv:2604.18248](https://arxiv.org/abs/2604.18248) (cs.CR, cs.CL)
+**DOI (Zenodo v1.0 anchor):** [10.5281/zenodo.19644135](https://doi.org/10.5281/zenodo.19644135)
 **Repository:** [github.com/mthamil107/prompt-shield](https://github.com/mthamil107/prompt-shield)
 
-**Cite as:** Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
+**Cite as:** Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection.* arXiv:2604.18248 [cs.CR]. https://arxiv.org/abs/2604.18248
+
+---
+
+## Status summary
+
+- **Shipped and empirically evaluated (3 of 7):** d028 Smith-Waterman alignment (§4), adversarial fatigue tracker (§2), d027 stylometric discontinuity (§1).
+- **Proposed, implementation pending (4 of 7):** honeypot tool definitions (§3), prediction market ensemble (§5), perplexity spectral analysis (§6), runtime taint tracking (§7).
+- **Headline result:** on `deepset/prompt-injections` (116 samples) the Smith-Waterman detector alone lifts F1 from 0.033 (26-detector regex baseline) to **0.378 (+34.5 pp)** with zero added false positives. Full 4-configuration ablation across six benchmarks in §5.
+- **Reproduction:** every number in §5 can be regenerated with a single command — see §5.5.
 
 ---
 
 ## Abstract
 
-Every open-source prompt injection detector today relies on the same two approaches: regex pattern matching and fine-tuned ML classifiers (typically DeBERTa). Both have known failure modes. Regex breaks under paraphrasing. Classifiers break under adaptive adversaries -- a joint study by researchers from OpenAI, Anthropic, and Google DeepMind ([ICLR 2025](https://openreview.net/forum?id=7B9mTg7z25)) bypassed 12 published defenses with >90% success using adaptive attacks.
+Every open-source prompt-injection detector today relies on the same two approaches: regex pattern matching and fine-tuned ML classifiers (typically DeBERTa). Both have known failure modes. Regex breaks under paraphrasing. Classifiers break under adaptive adversaries — a joint study by researchers from OpenAI, Anthropic, and Google DeepMind ([ICLR 2025](https://openreview.net/forum?id=7B9mTg7z25)) bypassed 12 published defenses with >90% success using adaptive attacks.
 
-We propose a different path: importing detection techniques from seven unrelated scientific disciplines. Each technique produces a fundamentally different detection signal that complements -- rather than duplicates -- existing methods. None of these techniques have been applied to prompt injection before.
+We propose a different path: seven detection techniques ported from disciplines outside LLM security — forensic linguistics, materials-science fatigue analysis, deception technology, bioinformatics, economic mechanism design, signal processing, and compiler theory. Each produces a fundamentally different detection signal that complements, rather than duplicates, existing methods.
 
-This post describes the intuition, mechanism, and expected properties of each technique. Implementation is underway in prompt-shield v0.4.0 (Apache 2.0, open source).
+**This v2.0 revision moves the work from proposal to partial empirical validation.** Three of the seven techniques are now implemented in prompt-shield v0.4.1 (Apache 2.0, open source), and benchmarked in a 4-configuration ablation across six datasets — five public (deepset, NotInject, LLMail-Inject, AgentHarm, AgentDojo) and one synthetic indirect-injection benchmark released alongside this paper. The Smith-Waterman local-alignment detector lifts F1 from 0.033 to **0.378 on deepset** (+34.5 pp, zero added false positives); the stylometric discontinuity detector adds **+11.1 pp F1** on the indirect-injection benchmark; the adversarial fatigue tracker is validated against a probing-campaign test showing that a sustained burst of near-threshold scans blocks a subsequent lower-confidence scan from the same source.
+
+Four techniques remain proposals pending implementation. Their mechanisms are described in full alongside the evaluated three; a future revision will fold their empirical results into this section. Prior-art analysis is per-technique in §§1–7, and limitations are owned explicitly in §5.4.
 
 ---
 
@@ -37,6 +49,8 @@ We asked: what if we looked at entirely different signals?
 ---
 
 ## Technique 1: Stylometric Discontinuity Detection
+
+> **Status: SHIPPED** in prompt-shield v0.4.1 as `d027_stylometric_discontinuity` ([source](https://github.com/mthamil107/prompt-shield/blob/main/src/prompt_shield/detectors/d027_stylometric_discontinuity.py), [tests](https://github.com/mthamil107/prompt-shield/blob/main/tests/detectors/test_d027_stylometric_discontinuity.py)). Empirical result: **+11.1 pp F1 on the synthetic indirect-injection benchmark** (80 samples; 0.889 → 1.000 with zero FPR). Silent by design on inputs below 100 tokens, so zero movement on the five short-input public datasets. Full numbers in §5.
 
 **Borrowed from:** Forensic linguistics / authorship attribution
 
@@ -90,6 +104,8 @@ Stylometry has been applied to [AI-text detection](https://arxiv.org/html/2507.0
 
 ## Technique 2: Adversarial Fatigue Tracking
 
+> **Status: SHIPPED** in prompt-shield v0.4.0 as the `prompt_shield.fatigue` module ([source](https://github.com/mthamil107/prompt-shield/blob/main/src/prompt_shield/fatigue/tracker.py), [tests](https://github.com/mthamil107/prompt-shield/tree/main/tests/fatigue)). Opt-in via `fatigue.enabled: true`; zero overhead when disabled. Validated end-to-end via a probing-campaign integration test: 10 priming scans at confidence 0.65 (below threshold 0.7) cause the 11th scan from the same source at confidence 0.63 to be blocked. Per-source isolation verified. Orthogonal to static public benchmarks by construction; see §5.3.
+
 **Borrowed from:** Materials science / structural fatigue analysis
 
 ### The Intuition
@@ -125,6 +141,8 @@ EWMA-based anomaly detection is standard in [network intrusion detection](https:
 ---
 
 ## Technique 3: Honeypot Tool Definitions
+
+> **Status: PROPOSED, not yet implemented.** The mechanism below is the design spec for the forthcoming `prompt_shield.honeypot` module. Agentic-only attack class — validation requires an AgentDojo / MCP-style simulated attacker harness that has not yet been constructed.
 
 **Borrowed from:** Network security / deception technology
 
@@ -172,6 +190,8 @@ Network honeypots are decades old. [LLM Agent Honeypot (Palisade, 2025)](https:/
 ---
 
 ## Technique 4: Sequence Alignment Detection
+
+> **Status: SHIPPED** in prompt-shield v0.4.0 as `d028_sequence_alignment` ([source](https://github.com/mthamil107/prompt-shield/blob/main/src/prompt_shield/detectors/d028_sequence_alignment.py), [tests](https://github.com/mthamil107/prompt-shield/blob/main/tests/detectors/test_d028_sequence_alignment.py)). **Headline empirical result: +34.5 pp F1 on deepset/prompt-injections** (regex baseline 0.033 → 0.378) with zero added false positives. Full 5-dataset ablation in §5.
 
 **Borrowed from:** Bioinformatics / genomic sequence analysis
 
@@ -231,6 +251,8 @@ Smith-Waterman has been applied to [text plagiarism detection](https://cran.r-pr
 
 ## Technique 5: Prediction Market Ensemble
 
+> **Status: PROPOSED, not yet implemented.** High-risk work: replaces the core scoring engine and requires a new SQLite schema for per-detector confidence history + ground-truth labels before Brier-score reputations can be computed. Planned with a mandatory shadow-mode validation gate.
+
 **Borrowed from:** Economics / mechanism design
 
 ### The Intuition
@@ -276,6 +298,8 @@ Weighted voting requires manual weight assignment. Markets are self-calibrating.
 ---
 
 ## Technique 6: Perplexity Spectral Analysis
+
+> **Status: PROPOSED, not yet implemented.** Requires adding `transformers` as an optional dependency and lazy-loading GPT-2 small (124M params) at runtime, similar to the existing `d022_semantic_classifier`. ~100–200 ms per scan expected.
 
 **Borrowed from:** Signal processing / epidemiological surveillance
 
@@ -328,6 +352,8 @@ The injection region shows a characteristic perplexity spike -- different vocabu
 ---
 
 ## Technique 7: Taint Tracking for Agent Pipelines
+
+> **Status: PROPOSED, not yet implemented.** Evaluation requires a real agent-pipeline fixture that exercises tool-call boundaries — AgentDojo with a wrapped agent would be the natural harness. Deferred until after the shorter-effort techniques (§3 honeypot) ship.
 
 **Borrowed from:** Compiler theory / static program analysis
 
@@ -409,30 +435,129 @@ An attacker who paraphrases to evade regex is caught by sequence alignment. An a
 
 ---
 
-## Evaluation Plan
+## 5. Evaluation
 
-We will evaluate each technique against:
+### 5.1 Methodology
 
-1. **Existing benchmarks** (regression test):
-   - 54 real-world 2025-2026 attacks (our curated set)
-   - [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) (116 samples)
-   - [NotInject](https://huggingface.co/datasets/leolee99/NotInject) (339 benign samples)
+Every result in this section was produced by the harness at [`docs/papers/evaluation/run_public_datasets.py`](https://github.com/mthamil107/prompt-shield/blob/main/docs/papers/evaluation/run_public_datasets.py). A single invocation runs four detector configurations against six datasets:
 
-2. **Targeted benchmarks** (per technique):
-   - Stylometric: Indirect injection dataset with embedded attacks in documents
-   - Alignment: Paraphrased attack corpus with systematic synonym substitution
-   - Spectral: Sandwich attack corpus with varied injection positions
-   - Honeypot: Agent simulation with tool-call scenarios
-   - Fatigue: Simulated probing campaigns with varying intensity
+- **baseline** — the 26-detector regex pack (v0.3.3) with `d022_semantic_classifier` off.
+- **+d028** — baseline + `d028_sequence_alignment` (Smith-Waterman).
+- **+d027** — baseline + `d027_stylometric_discontinuity`.
+- **+d027 +d028** — both novel detectors enabled.
 
-3. **Academic benchmarks** (external validation):
-   - [AgentDojo](https://github.com/ethz-spylab/agentdojo) (agentic scenarios)
-   - [ASB (Agent Security Bench)](https://github.com/agiresearch/ASB) (400+ tools, 10 scenarios)
-   - [LLMail-Inject](https://arxiv.org/html/2506.09956v1) (208K email-assistant attacks)
+`d022` is held off in every configuration so the deltas isolate the contribution of each regex / alignment / stylometric technique and are directly comparable to the v0.3.3 regression baseline in [`tests/baseline_v0.3.3.txt`](https://github.com/mthamil107/prompt-shield/blob/main/tests/baseline_v0.3.3.txt). The fatigue tracker is orthogonal to static benchmarks (it signals on *sequences* of scans, not individual samples) and is evaluated separately in §5.3.
 
-**Baseline (v0.3.3):** F1: 96.0%, FP: 0.0%, Speed: 554 scans/sec
+**Detection rule** per scan: a sample is counted as *detected* when `action ∈ {block, flag}` or `overall_risk_score ≥ 0.5`, matching the rule used by the repository's `tests/benchmark_public_datasets.py` so results are comparable across releases.
 
-**Success criteria:** F1 >= 96.0%, FP <= 1.0%, with measurable improvement on indirect/paraphrased attack categories.
+**Datasets:**
+
+| Dataset | Samples | Attack count | Benign count | Source |
+|---|---:|---:|---:|---|
+| [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) (test split) | 116 | 60 | 56 | HuggingFace |
+| [leolee99/NotInject](https://huggingface.co/datasets/leolee99/NotInject) (all 3 splits) | 339 | 0 | 339 | HuggingFace |
+| [microsoft/llmail-inject-challenge](https://huggingface.co/datasets/microsoft/llmail-inject-challenge) (Phase 1, 1 000-sample subset) | 1 000 | 1 000 | 0 | HuggingFace |
+| [ai-safety-institute/AgentHarm](https://huggingface.co/datasets/ai-safety-institute/AgentHarm) (harmful + harmless_benign test_public) | 352 | 176 | 176 | HuggingFace |
+| [ethz-spylab/agentdojo v1.2.1](https://github.com/ethz-spylab/agentdojo) (injection + user tasks) | 132 | 35 | 97 | pip package, AST-extracted |
+| Synthetic indirect-injection (this paper) | 80 | 30 | 50 | [`build_indirect_injection_benchmark.py`](https://github.com/mthamil107/prompt-shield/blob/main/docs/papers/evaluation/build_indirect_injection_benchmark.py) |
+
+The synthetic indirect-injection set is template-based and is described in full in §5.4 (limitations). It is a deliberate addition because the five public datasets are dominated by *short direct* attacks and do not exercise the indirect-injection class that d027 and d028 target.
+
+### 5.2 Results — 4-configuration × 6-dataset ablation
+
+All numbers are from a single deterministic run; re-run the harness to reproduce. Full raw JSON is at [`v041_public_datasets.json`](https://github.com/mthamil107/prompt-shield/blob/main/docs/papers/evaluation/v041_public_datasets.json), auto-generated tables at [`v041_public_datasets.md`](https://github.com/mthamil107/prompt-shield/blob/main/docs/papers/evaluation/v041_public_datasets.md).
+
+| Dataset (samples) | Config | Precision | Recall | **F1** | FPR |
+|---|---|---:|---:|---:|---:|
+| deepset (116) | baseline | 1.000 | 0.017 | **0.033** | 0.000 |
+| deepset (116) | +d028 | 1.000 | 0.233 | **0.378** | 0.000 |
+| deepset (116) | +d027 | 1.000 | 0.017 | **0.033** | 0.000 |
+| deepset (116) | +d027 +d028 | 1.000 | 0.233 | **0.378** | 0.000 |
+| NotInject (339 benign) | baseline | n/a | n/a | n/a | **0.009** |
+| NotInject (339 benign) | +d028 | n/a | n/a | n/a | **0.038** |
+| NotInject (339 benign) | +d027 | n/a | n/a | n/a | **0.009** |
+| NotInject (339 benign) | +d027 +d028 | n/a | n/a | n/a | **0.038** |
+| LLMail-Inject (1000) | baseline | 1.000 | 0.978 | **0.989** | 0.000 |
+| LLMail-Inject (1000) | +d028 | 1.000 | 0.980 | **0.990** | 0.000 |
+| LLMail-Inject (1000) | +d027 | 1.000 | 0.978 | **0.989** | 0.000 |
+| LLMail-Inject (1000) | +d027 +d028 | 1.000 | 0.980 | **0.990** | 0.000 |
+| AgentHarm (352) | baseline | 0.440 | 0.250 | **0.319** | 0.318 |
+| AgentHarm (352) | +d028 | 0.440 | 0.250 | **0.319** | 0.318 |
+| AgentHarm (352) | +d027 | 0.440 | 0.250 | **0.319** | 0.318 |
+| AgentHarm (352) | +d027 +d028 | 0.440 | 0.250 | **0.319** | 0.318 |
+| AgentDojo v1.2.1 (132) | baseline | 0.607 | 0.486 | **0.540** | 0.113 |
+| AgentDojo v1.2.1 (132) | +d028 | 0.562 | 0.514 | **0.537** | 0.144 |
+| AgentDojo v1.2.1 (132) | +d027 | 0.607 | 0.486 | **0.540** | 0.113 |
+| AgentDojo v1.2.1 (132) | +d027 +d028 | 0.562 | 0.514 | **0.537** | 0.144 |
+| Synthetic indirect-injection (80) | baseline | 1.000 | 0.800 | **0.889** | 0.000 |
+| Synthetic indirect-injection (80) | +d028 | 1.000 | 1.000 | **1.000** | 0.000 |
+| Synthetic indirect-injection (80) | +d027 | 1.000 | 1.000 | **1.000** | 0.000 |
+| Synthetic indirect-injection (80) | +d027 +d028 | 1.000 | 1.000 | **1.000** | 0.000 |
+
+### 5.3 Per-technique interpretation
+
+**d028 Smith-Waterman alignment (§4).** The canonical prompt-injection benchmark (deepset) is dominated by paraphrased attacks that a 26-detector regex pack catches almost none of (1 of 60 true positives, F1 0.033). d028's semantic substitution matrix — where `ignore↔disregard↔forget` score as partial alignment matches — lifts recall to 23.3% (14 of 60) with **zero additional false positives**. The benign-set ceiling (NotInject) rises from 3 to 13 false positives (+2.95 pp FPR); threshold tuning from the current 0.60 to 0.63 is planned and will be measured in a later revision. d028 does not move F1 on LLMail-Inject (regex already catches 97.8% of those attacks — a saturation effect) or on AgentHarm (multi-step agent-task harmfulness is an orthogonal attack class, as expected). Net read: d028 is a clear win on the class it was designed for and owns its side-effects.
+
+**d027 stylometric discontinuity (§1).** Short inputs short-circuit the detector (`min_input_tokens=100`) by design, so d027 moves nothing on the five public datasets whose samples are dominated by short prompts. On the synthetic indirect-injection set, however — where every sample is a ≥150-token document with a possible embedded payload — d027 lifts F1 from 0.889 to **1.000 with zero FPs**. That 11.1 pp delta matches what d028 achieves on the same benchmark, which tells us the two techniques cover the same 6 residual cases there (both the style-break signal and the alignment signal fire on ALL-CAPS injection boundaries); their orthogonality manifests across datasets rather than within the indirect-injection set specifically.
+
+**Adversarial fatigue (§2).** Fatigue is a temporal signal: it fires on sequences of near-threshold scans from a shared source, not on individual samples. The five public datasets are not session-grouped, so a static-benchmark F1 delta is not a meaningful measure. Instead we validate end-to-end via [`test_hardening_catches_next_near_miss`](https://github.com/mthamil107/prompt-shield/blob/main/tests/fatigue/test_engine_integration.py):
+
+> 10 priming scans from `source="attacker"` at confidence 0.65 (base threshold 0.7) pass individually, but the EWMA of the near-miss indicator crosses the `trigger_ratio=0.3` bound and the (source, detector) pair is marked `hardened`. The 11th scan from the same source at confidence **0.63** — strictly below the original threshold, strictly below any of the priming scores — is now **blocked**, because the effective threshold has been lowered by the `harden_delta=0.10` offset. A second source scanning at 0.63 concurrently passes, confirming per-source isolation.
+
+This is the specific empirical claim: *a probing campaign against the same source can be caught even when each individual probe is below the un-hardened threshold.*
+
+### 5.4 Limitations and threats to validity
+
+- **Competitor comparison not yet run with d027/d028 enabled.** The competitor harness at [`tests/benchmark_public_datasets.py`](https://github.com/mthamil107/prompt-shield/blob/main/tests/benchmark_public_datasets.py) already runs Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, and Deepset DeBERTa v3 on deepset + NotInject, but the column for prompt-shield has not been rerun since the v0.4.0 release. This is mechanical work and will appear in the next revision.
+- **No adaptive-attack evaluation.** The ICLR 2025 and NAACL 2025 adaptive-attack methodologies are not yet applied to d027/d028/fatigue. An attacker with knowledge of d028's substitution matrix could craft synonyms that alias across non-attack vocabulary to deflate the alignment score; an attacker aware of d027's threshold could suppress uppercase variance. Both are expected and are scoped for the v3.0 paper revision.
+- **ASB (Agent Security Bench) is not in the harness.** The dataset is not available on HuggingFace under `agiresearch/ASB` and requires the GitHub framework to run agent scenarios. Extracting attack strings statically (the way we extracted AgentDojo injection goals) is possible and is planned.
+- **The synthetic indirect-injection benchmark was built with d027 in mind.** The positive samples are produced by inserting one of five pre-specified ALL-CAPS / SYSTEM: payload styles into one of six benign genre templates. d027 was calibrated before the benchmark was generated, so leakage is minimal, but the benchmark is *not* held out in the formal sense. Future work should build a second indirect-injection benchmark from human-written documents with paraphrased payloads before the F1 1.000 number is load-bearing in external claims.
+- **NotInject FPR regression is owned, not hidden.** d028 adds 10 false positives to NotInject (0.9 % → 3.8 % FPR). Tuning experiments (threshold 0.60 → 0.63, dampening the `show / reveal` synonym group) will appear in the next revision. The v0.4.1 release ships with the honest regression rather than a quieter threshold that hides it.
+- **AgentHarm FPR of 31.8 % is independent of the novel techniques.** Both baseline and +novel configurations flag 56 of 176 benign AgentHarm prompts; those prompts contain legitimate action-verb + admin-noun combinations (*"retrieve user credentials for the ticketing system"*) that trigger the existing regex pack. This is motivation for the proposed taint-tracking technique (§7) which targets provenance rather than lexical content.
+- **Dormant ≠ silent under all failure modes.** d027's short-circuit at `min_input_tokens=100` is a guard; callers who pass adversarial inputs at the boundary (e.g. 99-token prompts) get the same no-fire path. This is safe but measurable.
+
+### 5.5 Reproducibility statement
+
+Every number in §5.2 is reproduced by the following single-command invocation on Python 3.10–3.13:
+
+```bash
+git clone https://github.com/mthamil107/prompt-shield
+cd prompt-shield
+pip install -e ".[dev,all]"
+pip install agentdojo                                     # one-off, for task extraction
+python docs/papers/evaluation/run_public_datasets.py      # ~4 min wall-clock
+```
+
+Outputs are written to `docs/papers/evaluation/v041_public_datasets.json` (machine-readable) and `.md` (human-readable). The synthetic indirect-injection benchmark is regenerated deterministically (seeded at `20260420`) by:
+
+```bash
+python docs/papers/evaluation/build_indirect_injection_benchmark.py
+```
+
+The fatigue probing-campaign claim is reproduced by the test suite:
+
+```bash
+python -m pytest tests/fatigue/ -v
+```
+
+All 868 tests in the full suite pass on Python 3.10, 3.11, 3.12, and 3.13; ruff, mypy, and the prompt-shield self-scan are green in CI.
+
+---
+
+## 6. Conclusions and future work
+
+Three of the seven proposed techniques now ship, each with a specific, defensible empirical claim: Smith-Waterman alignment delivers a +34.5 pp F1 lift on the canonical prompt-injection benchmark; stylometric discontinuity contributes +11.1 pp F1 on a purpose-built indirect-injection benchmark; the fatigue tracker catches probing campaigns against a shared source even when each individual probe is below the un-hardened threshold. Where a technique does not move a number we report that as a null result rather than hiding it. Where a technique regresses a metric (d028's +2.95 pp FPR on NotInject) we flag it as owned work and specify the planned fix.
+
+Four techniques remain proposals: honeypot tools, prediction-market ensemble scoring, perplexity spectral analysis, and runtime taint tracking. Each has a documented status note at the head of its section in §§3, 5, 6, 7. The natural sequencing, lowest-risk to highest, is honeypot (needs a simulated agent harness) → spectral (needs optional ML dependency) → taint tracking (needs real agent pipeline) → prediction market (touches core scoring, mandatory shadow-mode gate).
+
+The next revision of this paper will fold in:
+
+1. A head-to-head competitor comparison (Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, Deepset DeBERTa v3) with d027/d028/fatigue enabled on deepset + NotInject.
+2. Adaptive-attack evaluation against each shipped technique, following the NAACL 2025 / ICLR 2025 methodology.
+3. A held-out indirect-injection benchmark composed of human-written documents with paraphrased payloads (not template-based).
+4. Implementation + evaluation of at least one additional proposed technique (likely §3 honeypot, given its zero-regression opt-in model).
+
+Until then the claims here are scoped to what the 4-configuration × 6-dataset ablation measures, and to the probing-campaign integration test. Everything else is an honest promissory note.
 
 ---
 

@@ -20,6 +20,7 @@
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
   <img src="https://img.shields.io/badge/tests-829-blue" alt="829 tests" />
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
+  <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
 </p>
 
 <p align="center">
@@ -597,17 +598,19 @@ prompt-shield benchmark performance -n 100
 
 ## Research: Novel Cross-Domain Techniques (v0.4.0)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg)](https://doi.org/10.5281/zenodo.19644135)
+[![arXiv](https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg)](https://arxiv.org/abs/2604.18248) [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg)](https://doi.org/10.5281/zenodo.19644135)
 
-**Paper:** *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (Zenodo, v1.0.0) — a peer-reviewable write-up of the seven techniques below, with prior-art analysis, mechanisms, and references.
+**Paper:** *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* — preprint on arXiv (cs.CR + cs.CL) with an empirical evaluation section added in v2.0. Prior-art analysis, mechanisms, and published reproduction harness.
 
-- :page_facing_up: **[Read the PDF](docs/papers/cross-domain-techniques.pdf)** (in-repo, recommended)
-- :globe_with_meridians: [Zenodo record](https://zenodo.org/records/19644135) (canonical, citable)
+- :page_facing_up: **[arXiv preprint](https://arxiv.org/abs/2604.18248)** (canonical, latest, peer-citable)
+- :globe_with_meridians: [Zenodo record](https://zenodo.org/records/19644135) (DOI-anchored, v1.0)
+- :page_facing_up: [Read the v1.0 PDF](docs/papers/cross-domain-techniques.pdf) (in-repo snapshot)
+- :page_facing_up: [v2.0 DOCX](docs/papers/cross-domain-techniques-v2.docx) (in-repo, matches the arXiv version)
 - :memo: [Markdown source](docs/research-post-cross-domain-techniques.md) (browse on GitHub)
 - :books: [`CITATION.cff`](CITATION.cff) (auto-rendered by GitHub's *Cite this repository* sidebar)
 
 **Cite as:**
-> Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection* (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.19644135
+> Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection.* arXiv:2604.18248 [cs.CR]. https://arxiv.org/abs/2604.18248
 
 > **Implementation status: 2 of 7 shipped** — d028 Smith-Waterman alignment (v0.4.0 phase 4) and adversarial fatigue tracker (v0.4.0 phase 2). Both empirically validated — see [`docs/papers/evaluation/`](docs/papers/evaluation/). 5 in development.
 >

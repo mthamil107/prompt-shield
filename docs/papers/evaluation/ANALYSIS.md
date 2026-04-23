@@ -68,8 +68,40 @@
 ## Follow-up benchmarks not yet covered
 
 - **ASB (Agent Security Bench)** — not available on HuggingFace under `agiresearch/ASB`; network access to the main fileset failed. Likely needs the full framework installed from GitHub. Deferred.
-- **Adaptive attacks** (NAACL 2025 / ICLR 2025 methodology) — not yet constructed. Planned for the Evaluation v2 report once d027 and d029 land.
+- **Adaptive attacks** (NAACL 2025 / ICLR 2025 methodology) — not yet constructed. Planned for the Evaluation v2 report once d029 lands.
 - **Multi-detector combinations** (d022 ML on, d028 on) — the current run isolates d028 on purpose; a later matrix should quantify diminishing returns when detectors stack.
+
+---
+
+## Addendum: d027 stylometric discontinuity (v0.4.1)
+
+After the initial d028 evaluation above, **d027 stylometric discontinuity** shipped in v0.4.1 as the third novel technique. The same harness (`run_public_datasets.py`) was extended to a 4-config ablation: `baseline`, `+d028`, `+d027`, `+d027 +d028`. A sixth dataset was added — a **synthetic indirect-injection benchmark** (80 samples: 30 embedded injections, 50 benign long-form documents) specifically because the five public datasets above are dominated by *short direct* attacks that do not exercise d027's target attack class.
+
+### Full 4-config results (v0.4.1 run, regex-only; d022 off)
+
+| Dataset | Samples | baseline F1 | +d028 F1 | **+d027 F1** | +d027+d028 F1 |
+|---|---|---:|---:|---:|---:|
+| deepset/prompt-injections | 116 | 0.033 | 0.378 | **0.033** | 0.378 |
+| leolee99/NotInject | 339 benign | FPR 0.9% | FPR 3.8% | **FPR 0.9%** | FPR 3.8% |
+| microsoft/llmail-inject | 1000 | 0.989 | 0.990 | **0.989** | 0.990 |
+| ai-safety-institute/AgentHarm | 352 | 0.319 | 0.319 | **0.319** | 0.319 |
+| ethz-spylab/agentdojo v1.2.1 | 132 | 0.540 | 0.537 | **0.540** | 0.537 |
+| **synthetic/indirect-injection** | **80** | **0.889** | **1.000** | **1.000** | **1.000** |
+
+Full tables in [`v041_public_datasets.md`](v041_public_datasets.md), raw numbers in [`v041_public_datasets.json`](v041_public_datasets.json).
+
+### Per-dataset interpretation
+
+- **Five public datasets (deepset / NotInject / LLMail-Inject / AgentHarm / AgentDojo)**: d027 causes **zero movement** on every metric. This is the designed behaviour — `min_input_tokens=100` makes d027 short-circuit on almost every sample in these benchmarks (they are overwhelmingly < 100 tokens and d027 needs two windows of at least 50 tokens each to compute a divergence). d027 introduces **zero FPR regression** on NotInject precisely because of this short-circuit.
+- **Synthetic indirect-injection (d027's target class)**: regex baseline catches 24/30 embedded injections (F1 0.889) because the payloads use ALL-CAPS language that triggers d001/d003/d004 already. **d027 alone lifts this to 30/30 (F1 1.000, +11.1 pp)** with zero FPs, matching d028's performance on this benchmark.
+- **d027 + d028 together on indirect-injection**: same 30/30 score. The two techniques catch the same 6 residual cases on this benchmark. Their orthogonality shows *across* benchmarks (d028 contributes on deepset where d027 is silent; d027 would contribute on very long RAG documents where d028's attack-sequence database is less useful). For the samples in the indirect-injection set they are redundant — both the style break and the sequence alignment fire on the same ALL-CAPS payloads.
+
+### Takeaways for the paper
+
+- d027 is a **high-precision, low-recall niche detector**. Honest framing: "activates only on inputs ≥ 100 tokens and on egregious style breaks; deliberately silent on short direct attacks which are covered by d001/d028/d022."
+- The +11.1 pp F1 gain on the synthetic indirect-injection benchmark is the headline d027 result. Pair it with the observation that d027 adds zero FPR on the four static benchmarks where it could have regressed.
+- **Limitation to own explicitly**: d027 does not discriminate subtle injections (without ALL-CAPS or strong imperative spikes). The `test_subtle_injection_is_expected_miss` test in `tests/detectors/test_d027_stylometric_discontinuity.py` documents this as a known-and-intentional miss. This is a clean argument for technique portfolios rather than single-technique silver bullets.
+- **Synthetic benchmark caveat**: the indirect-injection set is template-based (six benign genres × five payload styles). It is NOT adaptive and was constructed knowing what d027 looks at. Future work should build a held-out indirect-injection set with human-written documents and paraphrased payloads before the F1 1.000 number is load-bearing in external claims.
 
 ## How to re-run
 

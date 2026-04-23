@@ -49,3 +49,10 @@ nul
 plugins/n8n/node_modules/
 plugins/n8n/dist/
 plugins/n8n/package-lock.json
+
+# Outreach drafts (not for public repo)
+docs/drafts/
+
+# Dify packaging artifacts
+dify.exe
+*.difypkg

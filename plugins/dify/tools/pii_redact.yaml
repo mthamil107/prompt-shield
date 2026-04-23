@@ -26,5 +26,8 @@ parameters:
       en_US: The text from which to redact PII entities.
     llm_description: The text content from which to detect and redact personally identifiable information.
     form: llm
+extra:
+  python:
+    source: tools/pii_redact.py
 output:
   type: object

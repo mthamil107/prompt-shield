@@ -25,5 +25,8 @@ parameters:
       en_US: The text to scan for PII entities.
     llm_description: The text content to scan for personally identifiable information.
     form: llm
+extra:
+  python:
+    source: tools/pii_scan.py
 output:
   type: object

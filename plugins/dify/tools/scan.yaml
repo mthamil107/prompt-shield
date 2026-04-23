@@ -26,5 +26,8 @@ parameters:
       en_US: The text to scan for prompt injection attacks.
     llm_description: The text content to scan for prompt injection attacks.
     form: llm
+extra:
+  python:
+    source: tools/scan.py
 output:
   type: object

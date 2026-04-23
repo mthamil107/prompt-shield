@@ -166,6 +166,7 @@ DETECTOR_OWASP_MAP: dict[str, list[str]] = {
     "d024_multilingual_injection": ["LLM01"],
     "d025_multi_encoding": ["LLM01"],
     "d026_denial_of_wallet": ["LLM10"],
+    "d027_stylometric_discontinuity": ["LLM01", "LLM07"],
     "d028_sequence_alignment": ["LLM01"],
 }
 
@@ -253,6 +254,7 @@ DETECTOR_AGENTIC_MAP: dict[str, list[str]] = {
     "d023_pii_detection": ["ASI04"],
     "d024_multilingual_injection": ["ASI01", "ASI08"],
     "d025_multi_encoding": ["ASI01"],
+    "d027_stylometric_discontinuity": ["ASI01", "ASI05"],
     "d028_sequence_alignment": ["ASI01", "ASI08"],
     # AgentGuard features (not detector-based)
     "agent_guard_input_gate": ["ASI01", "ASI10"],
