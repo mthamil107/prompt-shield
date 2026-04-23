@@ -25,6 +25,7 @@ resource:
       enabled: false
     storage:
       enabled: false
+      size: 1048576
 plugins:
   tools:
     - "provider/prompt_shield.yaml"
