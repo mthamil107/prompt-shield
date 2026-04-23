@@ -9,7 +9,7 @@ identity:
       Scans text for injection attacks, detects harmful LLM output, identifies
       PII entities, and redacts sensitive data. All processing is performed
       locally.
-  icon: ../_assets/icon.svg
+  icon: icon.svg
   tags:
     - utilities
 credentials_for_provider:
