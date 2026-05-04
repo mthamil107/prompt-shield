@@ -82,6 +82,16 @@ The most comprehensive open-source prompt injection firewall for LLM application
   <sub>Reproduce it: <code>pip install prompt-shield-ai && python tests/benchmark_comparison.py</code></sub>
 </p>
 
+### See it in action — 12 attack types, all blocked, zero false positives:
+
+<p align="center">
+  <img src="docs/images/demo.svg" alt="prompt-shield demo: 12 attacks blocked, 0 false positives" width="750" />
+</p>
+
+<p align="center">
+  <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo.py</code></sub>
+</p>
+
 ---
 
 ## Table of Contents
