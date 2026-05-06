@@ -180,6 +180,13 @@ prompt_shield:
       gap_penalty: -1
       min_input_tokens: 4
       max_input_tokens: 2000
+    d029_many_shot_structural:
+      enabled: true
+      severity: high
+      min_shots: 8              # Minimum paired markers to fire
+      min_density: 0.15         # Min markers-per-line ratio (gates FAQs)
+      max_input_chars: 200000   # Truncate inputs longer than this
+      pivot_boost: 0.10         # Confidence bump if final question is harmful
 
   allowlist:
     patterns: []

@@ -13,7 +13,7 @@
   <a href="https://pypi.org/project/prompt-shield-ai/"><img src="https://img.shields.io/pypi/pyversions/prompt-shield-ai.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.npmjs.com/package/n8n-nodes-prompt-shield"><img src="https://img.shields.io/npm/v/n8n-nodes-prompt-shield.svg?label=n8n" alt="npm" /></a>
-  <img src="https://img.shields.io/badge/detectors-27-brightgreen" alt="27 detectors" />
+  <img src="https://img.shields.io/badge/detectors-29-brightgreen" alt="29 detectors" />
   <img src="https://img.shields.io/badge/output_scanners-6-blue" alt="6 output scanners" />
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
@@ -29,7 +29,7 @@
 
 ---
 
-The most comprehensive open-source prompt injection firewall for LLM applications. Combines **27 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks), **6 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection), a semantic ML classifier (DeBERTa), parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
+The most comprehensive open-source prompt injection firewall for LLM applications. Combines **29 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection), **6 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection), a semantic ML classifier (DeBERTa), parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
 ### Benchmarked against 5 open-source competitors on 54 real-world 2025-2026 attacks:
 
@@ -231,7 +231,9 @@ print(report.overall_risk_score)  # 0.95
 | d024 | Multilingual Injection | Multilingual | High |
 | d025 | Multi-Encoding Decoder | Obfuscation | High |
 | d026 | Denial-of-Wallet | Resource Abuse | Medium |
+| d027 | Stylometric Discontinuity | Author-change / Cross-Domain | Medium |
 | d028 | Sequence Alignment (Smith-Waterman) | Paraphrase / Cross-Domain | High |
+| d029 | Many-Shot Structural | Many-shot Jailbreak | High |
 
 ### Output Scanners (6)
 

@@ -48,6 +48,7 @@ ALL_DETECTOR_IDS = [
     "d026_denial_of_wallet",
     "d027_stylometric_discontinuity",
     "d028_sequence_alignment",
+    "d029_many_shot_structural",
 ]
 
 # Fake metadata matching the IDs
@@ -92,7 +93,7 @@ class TestComplianceReportFull:
         return generate_compliance_report(ALL_DETECTOR_IDS, ALL_DETECTOR_METADATA)
 
     def test_total_detectors(self, full_report) -> None:
-        assert full_report.total_detectors == 28
+        assert full_report.total_detectors == 29
 
     def test_owasp_version(self, full_report) -> None:
         assert full_report.owasp_version == "2025"
