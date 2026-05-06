@@ -1,0 +1,114 @@
+# Default values for prompt-shield Helm chart.
+
+replicaCount: 2
+
+image:
+  repository: ghcr.io/mthamil107/prompt-shield
+  pullPolicy: IfNotPresent
+  # Override appVersion from Chart.yaml when needed.
+  tag: ""
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+# --- Application configuration ---------------------------------------------
+config:
+  # block | flag | log
+  mode: block
+  threshold: 0.7
+  # Mounted as PROMPT_SHIELD_DATA_DIR. Use a PVC for persistence.
+  dataDir: /home/shield/data
+  # Extra env vars passed verbatim to the container.
+  extraEnv: []
+  # - name: SOMETHING
+  #   value: "value"
+
+# --- Service account --------------------------------------------------------
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# --- Pod security -----------------------------------------------------------
+podAnnotations: {}
+podSecurityContext:
+  fsGroup: 1000
+  runAsNonRoot: true
+  runAsUser: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+# --- Service ----------------------------------------------------------------
+service:
+  type: ClusterIP
+  port: 8000
+  annotations: {}
+
+# --- Ingress ----------------------------------------------------------------
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: prompt-shield.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# --- Resources --------------------------------------------------------------
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi
+
+# --- Autoscaling ------------------------------------------------------------
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+# --- Persistence (for vault, history, feedback databases) -------------------
+persistence:
+  enabled: false
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  storageClass: ""
+  annotations: {}
+
+# --- Probes -----------------------------------------------------------------
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 15
+  periodSeconds: 30
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+# --- Scheduling -------------------------------------------------------------
+nodeSelector: {}
+tolerations: []
+affinity: {}

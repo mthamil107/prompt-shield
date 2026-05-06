@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "prompt-shield.fullname" . }}-config
+  labels:
+    {{- include "prompt-shield.labels" . | nindent 4 }}
+data:
+  PROMPT_SHIELD_MODE: {{ .Values.config.mode | quote }}
+  PROMPT_SHIELD_THRESHOLD: {{ .Values.config.threshold | quote }}
+  PROMPT_SHIELD_DATA_DIR: {{ .Values.config.dataDir | quote }}

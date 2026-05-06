@@ -1,0 +1,21 @@
+apiVersion: v2
+name: prompt-shield
+description: Self-learning prompt injection detection engine for LLM applications
+type: application
+version: 0.1.0
+appVersion: "0.4.1"
+home: https://github.com/mthamil107/prompt-shield
+sources:
+  - https://github.com/mthamil107/prompt-shield
+maintainers:
+  - name: prompt-shield contributors
+icon: https://raw.githubusercontent.com/mthamil107/prompt-shield/main/prompt-shield-logo.png
+keywords:
+  - llm
+  - security
+  - prompt-injection
+  - ai-safety
+  - firewall
+annotations:
+  category: Security
+  licenses: Apache-2.0

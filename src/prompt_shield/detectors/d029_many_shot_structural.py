@@ -61,10 +61,16 @@ _PATTERNS: list[tuple[str, str, str, str]] = [
 ]
 
 _HARMFUL_PIVOT_RE = regex.compile(
-    r"\b(?:hack|bomb|malware|weapon|kill|exploit|bypass|credential|"
-    r"password|synthes(?:e|i|y)|payload|ddos|phish|backdoor|ransom|"
-    r"cyanide|meth(?:amphetamine)?|fentanyl|smuggle|stalk|deepfake|"
-    r"poison|chloroform|nerve\W*agent|sarin|napalm|grenade|explosive)\b",
+    # Trailing s? + \b lets each lemma also match its plural / -s form
+    # (e.g. "explosives", "weapons", "credentials"). The leading \b stays
+    # strict so we don't match these as substrings of unrelated words.
+    r"\b(?:hack(?:ing|er|s)?|bomb(?:ing|s)?|malware|weapons?|kill(?:ing|s)?|"
+    r"exploits?|bypass(?:es|ing)?|credentials?|passwords?|"
+    r"synthesi[sz]e[sd]?|synthesizing|synthesis|payloads?|ddos|phish(?:ing)?|"
+    r"backdoors?|ransom(?:ware)?|cyanide|meth(?:amphetamine)?|"
+    r"fentanyl|smuggl(?:e|ing)|stalk(?:ing)?|deepfakes?|"
+    r"poison(?:ing|s)?|chloroform|nerve[\W_]*agents?|sarin|napalm|"
+    r"grenades?|explosives?)\b",
     regex.IGNORECASE,
 )
 
