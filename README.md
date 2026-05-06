@@ -82,14 +82,40 @@ The most comprehensive open-source prompt injection firewall for LLM application
   <sub>Reproduce it: <code>pip install prompt-shield-ai && python tests/benchmark_comparison.py</code></sub>
 </p>
 
-### See it in action — 12 attack types, all blocked, zero false positives:
+### See it in action
+
+#### Classic detectors — pattern, encoding, PII, multilingual
 
 <p align="center">
-  <img src="docs/images/demo.gif" alt="prompt-shield demo: 12 attacks blocked, 0 false positives" width="800" />
+  <img src="docs/images/demo_classic.gif" alt="Classic detectors: regex, encoding, PII, multilingual" width="820" />
+</p>
+
+#### d027 Stylometric Discontinuity — forensic-linguistics technique
+
+Detects indirect injection in benign documents by measuring writing-style breaks.
+
+<p align="center">
+  <img src="docs/images/demo_d027.gif" alt="d027 stylometric discontinuity demo" width="820" />
+</p>
+
+#### d028 Smith-Waterman Sequence Alignment — bioinformatics technique
+
+Catches paraphrased attacks that regex misses by aligning input against known attack sequences with a synonym-aware substitution matrix.
+
+<p align="center">
+  <img src="docs/images/demo_d028.gif" alt="d028 Smith-Waterman alignment demo" width="820" />
+</p>
+
+#### d029 Many-Shot Structural Analysis — Anthropic 2024 attack class
+
+Detects many-shot jailbreaks by structural density (paired-marker counts and density), not by payload content.
+
+<p align="center">
+  <img src="docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
 </p>
 
 <p align="center">
-  <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo.py</code></sub>
+  <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo_gif.py --mode all</code></sub>
 </p>
 
 ---
