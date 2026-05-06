@@ -61,6 +61,8 @@ class ScanReport(BaseModel):
     scan_duration_ms: float
     vault_matched: bool = False
     config_snapshot: dict[str, object] = {}
+    token_count: int = 0
+    char_count: int = 0
 
 
 class ThreatEntry(BaseModel):

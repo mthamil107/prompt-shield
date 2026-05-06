@@ -60,6 +60,21 @@ class TestScan:
         assert isinstance(report.scan_duration_ms, float)
         assert isinstance(report.vault_matched, bool)
         assert isinstance(report.config_snapshot, dict)
+        assert isinstance(report.token_count, int)
+        assert isinstance(report.char_count, int)
+
+    def test_scan_report_token_and_char_counts(self, engine) -> None:
+        """ScanReport.token_count and char_count should reflect the input."""
+        text = "hello world this is a test"
+        report = engine.scan(text)
+        assert report.token_count == 6
+        assert report.char_count == len(text)
+
+    def test_scan_report_empty_input_counts(self, engine) -> None:
+        """Empty input should produce zero counts without errors."""
+        report = engine.scan("")
+        assert report.token_count == 0
+        assert report.char_count == 0
 
 
 class TestAllowlistBlocklist:

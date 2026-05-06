@@ -623,6 +623,8 @@ class PromptShieldEngine:
             scan_duration_ms=round(elapsed, 2),
             vault_matched=vault_matched,
             config_snapshot={"mode": self._ps_config.get("mode", "block")},
+            token_count=len(input_text.split()) if input_text else 0,
+            char_count=len(input_text) if input_text else 0,
         )
 
     def _log_scan(self, report: ScanReport) -> None:
