@@ -85,7 +85,7 @@ The most comprehensive open-source prompt injection firewall for LLM application
 ### See it in action — 12 attack types, all blocked, zero false positives:
 
 <p align="center">
-  <img src="docs/images/demo.svg" alt="prompt-shield demo: 12 attacks blocked, 0 false positives" width="750" />
+  <img src="docs/images/demo.gif" alt="prompt-shield demo: 12 attacks blocked, 0 false positives" width="800" />
 </p>
 
 <p align="center">
