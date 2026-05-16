@@ -341,6 +341,23 @@ Fatigue is a temporal signal, orthogonal to static public benchmarks (every samp
 
 > 10 priming scans from `source="attacker"` at confidence 0.65 (below threshold 0.7) → 11th scan from the same source at confidence **0.63** is **blocked**, because the EWMA near-miss rate exceeded `trigger_ratio` and the effective threshold hardened from 0.70 to 0.60. A different `source` scanning at 0.63 concurrently still passes — hardening is per-source.
 
+### Benchmark 5: Liu et al. (USENIX Security 2024) attack strategies
+
+Independent evaluation against the five attack templates defined by [Liu et al., USENIX Security 2024](https://github.com/liu00222/Open-Prompt-Injection). 200 attacks (5 strategies × 8 benign clean prompts × 5 injection payloads). Full methodology and per-example results: [`docs/papers/evaluation/liu_attackers.md`](docs/papers/evaluation/liu_attackers.md). Reproduce with `python tests/benchmark_liu_attackers.py`.
+
+| Attack strategy | Description | Detection rate |
+|---|---|---:|
+| **Ignore** | Explicit "Ignore previous instructions" override | **100% (40/40)** |
+| **Combine** | Fake completion + Ignore + injected task | **100% (40/40)** |
+| Naive | Append injected task with no override keyword | 40% (16/40) |
+| EscapeChar | Same as Naive but newline-separated | 40% (16/40) |
+| FakeComp | Pretend the user's task is complete, then inject | 40% (16/40) |
+| **OVERALL** | | **64% (128/200)** |
+
+Benign baseline (8 clean prompts, no attack): **0% false positives.**
+
+**Honest takeaway:** prompt-shield catches 100% of attacks containing explicit override language but only 40% of subtle task-hijacking attacks where the injected instruction *looks like a legitimate task request*. The ML classifier (`d022`) does not close this gap — both regex-only and full configurations score identically. **This is the niche addressed by Liu et al.'s [DataSentinel](https://arxiv.org/abs/2504.11358) (IEEE S&P 2025)**, a fine-tuned model specifically trained on this attack class. We publish self-critical numbers because that's what advances the field.
+
 ## Output Scanning
 
 ```bash
