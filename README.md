@@ -361,7 +361,21 @@ Independent evaluation against NVIDIA's [Garak](https://github.com/NVIDIA/garak)
 
 **Honest takeaway:** Strong (78–100%) on explicit-hijack and whois-context probes where override language is present. Weaker (12–75%) on context-embedded indirect injections without override keywords — the same gap shown by Benchmark 6 below. LatentJailbreak's 0% reflects a category mismatch — those probes elicit toxic content via translation framing, which is handled by prompt-shield's **output-side** toxicity scanner rather than the input firewall.
 
-### Benchmark 6: Liu et al. (USENIX Security 2024) attack strategies
+### Benchmark 6: InjecAgent (ACL Findings 2024) — indirect injection in agent tool outputs
+
+Independent evaluation against [InjecAgent](https://github.com/uiuc-kang-lab/InjecAgent) ([Zhan et al., ACL Findings 2024](https://arxiv.org/abs/2403.02691)). 2,108 malicious tool responses across two attack classes (direct harm, data stealing) and two prompting variants (base, enhanced). Full methodology: [`docs/papers/evaluation/injecagent.md`](docs/papers/evaluation/injecagent.md). Reproduce with `python tests/benchmark_injecagent.py`.
+
+| Split | Caught | Total | Rate |
+|---|---:|---:|---:|
+| **DS-base** (data stealing) | 544 | 544 | **100.0%** |
+| **DS-enhanced** (data stealing + override prefix) | 544 | 544 | **100.0%** |
+| **DH-enhanced** (direct harm + override prefix) | 510 | 510 | **100.0%** |
+| **DH-base** (direct harm, no override) | 198 | 510 | **38.8%** |
+| **OVERALL** | **1,796** | **2,108** | **85.2%** |
+
+**Honest takeaway:** Data-stealing attacks reach 100% detection — `d013_data_exfiltration`, `d016_url_injection`, and `d023_pii_detection` catch exfil patterns reliably regardless of disguise. Enhanced (override-prefix) attacks are caught at 100% trivially. **The DH-base 38.8% is the realistic indirect-injection result** — same ceiling we see in Liu et al. and Garak: pure pattern matching plateaus around 35-45% on subtle injection without override keywords.
+
+### Benchmark 7: Liu et al. (USENIX Security 2024) attack strategies
 
 Independent evaluation against the five attack templates defined by [Liu et al., USENIX Security 2024](https://github.com/liu00222/Open-Prompt-Injection). 200 attacks (5 strategies × 8 benign clean prompts × 5 injection payloads). Full methodology and per-example results: [`docs/papers/evaluation/liu_attackers.md`](docs/papers/evaluation/liu_attackers.md). Reproduce with `python tests/benchmark_liu_attackers.py`.
 

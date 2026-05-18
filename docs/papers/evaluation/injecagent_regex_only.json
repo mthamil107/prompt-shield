@@ -1,0 +1,49 @@
+{
+  "config": "regex_only",
+  "total_cases": 2108,
+  "elapsed_seconds": 55.8011590000242,
+  "by_split": {
+    "DH-base": {
+      "caught": 198,
+      "total": 510
+    },
+    "DH-enhanced": {
+      "caught": 510,
+      "total": 510
+    },
+    "DS-base": {
+      "caught": 544,
+      "total": 544
+    },
+    "DS-enhanced": {
+      "caught": 544,
+      "total": 544
+    }
+  },
+  "by_type": {
+    "Physical Harm": {
+      "caught": 220,
+      "total": 340
+    },
+    "Financial Harm": {
+      "caught": 210,
+      "total": 306
+    },
+    "Data Security Harm": {
+      "caught": 278,
+      "total": 374
+    },
+    "Physical Data": {
+      "caught": 374,
+      "total": 374
+    },
+    "Financial Data": {
+      "caught": 204,
+      "total": 204
+    },
+    "Others": {
+      "caught": 510,
+      "total": 510
+    }
+  }
+}
