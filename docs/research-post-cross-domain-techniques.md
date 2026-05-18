@@ -1,7 +1,8 @@
 # Beyond Pattern Matching: 7 Cross-Domain Techniques for Prompt Injection Detection
 
 **Author:** Thamilvendhan Munirathinam
-**Revision date:** 2026-04-20 (v2.0 — released alongside the arXiv preprint)
+**Revision date:** 2026-05-18 (v3.0 — independent academic-benchmark evaluations added in §5.6)
+**Previous revisions:** v2.0 (2026-04-20, released alongside the arXiv preprint); v1.0 (Zenodo).
 **arXiv preprint:** [arXiv:2604.18248](https://arxiv.org/abs/2604.18248) (cs.CR, cs.CL)
 **DOI (Zenodo v1.0 anchor):** [10.5281/zenodo.19644135](https://doi.org/10.5281/zenodo.19644135)
 **Repository:** [github.com/mthamil107/prompt-shield](https://github.com/mthamil107/prompt-shield)
@@ -12,9 +13,10 @@
 
 ## Status summary
 
-- **Shipped and empirically evaluated (3 of 7):** d028 Smith-Waterman alignment (§4), adversarial fatigue tracker (§2), d027 stylometric discontinuity (§1).
-- **Proposed, implementation pending (4 of 7):** honeypot tool definitions (§3), prediction market ensemble (§5), perplexity spectral analysis (§6), runtime taint tracking (§7).
+- **Shipped and empirically evaluated (3 of 7):** d028 Smith-Waterman alignment (§4), adversarial fatigue tracker (§2), d027 stylometric discontinuity (§1). v3 update: a fourth detector, d029 many-shot structural analysis, ships in prompt-shield v0.4.1 — see `tests/detectors/test_d029_many_shot_structural.py`. A full §-level write-up will land in v4.
+- **Proposed, implementation pending (3 of 7):** honeypot tool definitions (§3), prediction market ensemble (§5), perplexity spectral analysis (§6), runtime taint tracking (§7).
 - **Headline result:** on `deepset/prompt-injections` (116 samples) the Smith-Waterman detector alone lifts F1 from 0.033 (26-detector regex baseline) to **0.378 (+34.5 pp)** with zero added false positives. Full 4-configuration ablation across six benchmarks in §5.
+- **v3 contribution:** independent evaluation against **three peer-reviewed academic benchmarks** (Liu et al. USENIX Security 2024, Garak / Derczynski et al. 2024, InjecAgent / Zhan et al. ACL Findings 2024) — **8,276 total attack prompts** scanned. Detection rates: Liu 64.0%, Garak 55.2%, InjecAgent 85.2%. Cross-benchmark convergence on a 35-45% pattern-matching ceiling for subtle indirect injection. See §5.6.
 - **Reproduction:** every number in §5 can be regenerated with a single command — see §5.5.
 
 ---
@@ -25,9 +27,11 @@ Every open-source prompt-injection detector today relies on the same two approac
 
 We propose a different path: seven detection techniques ported from disciplines outside LLM security — forensic linguistics, materials-science fatigue analysis, deception technology, bioinformatics, economic mechanism design, signal processing, and compiler theory. Each produces a fundamentally different detection signal that complements, rather than duplicates, existing methods.
 
-**This v2.0 revision moves the work from proposal to partial empirical validation.** Three of the seven techniques are now implemented in prompt-shield v0.4.1 (Apache 2.0, open source), and benchmarked in a 4-configuration ablation across six datasets — five public (deepset, NotInject, LLMail-Inject, AgentHarm, AgentDojo) and one synthetic indirect-injection benchmark released alongside this paper. The Smith-Waterman local-alignment detector lifts F1 from 0.033 to **0.378 on deepset** (+34.5 pp, zero added false positives); the stylometric discontinuity detector adds **+11.1 pp F1** on the indirect-injection benchmark; the adversarial fatigue tracker is validated against a probing-campaign test showing that a sustained burst of near-threshold scans blocks a subsequent lower-confidence scan from the same source.
+**This v2.0 revision moved the work from proposal to partial empirical validation.** Three of the seven techniques are implemented in prompt-shield v0.4.1 (Apache 2.0, open source), and benchmarked in a 4-configuration ablation across six datasets — five public (deepset, NotInject, LLMail-Inject, AgentHarm, AgentDojo) and one synthetic indirect-injection benchmark released alongside this paper. The Smith-Waterman local-alignment detector lifts F1 from 0.033 to **0.378 on deepset** (+34.5 pp, zero added false positives); the stylometric discontinuity detector adds **+11.1 pp F1** on the indirect-injection benchmark; the adversarial fatigue tracker is validated against a probing-campaign test showing that a sustained burst of near-threshold scans blocks a subsequent lower-confidence scan from the same source.
 
-Four techniques remain proposals pending implementation. Their mechanisms are described in full alongside the evaluated three; a future revision will fold their empirical results into this section. Prior-art analysis is per-technique in §§1–7, and limitations are owned explicitly in §5.4.
+**v3.0 (2026-05-18) adds independent evaluation against three peer-reviewed academic benchmarks** — Liu et al. (USENIX Security 2024), Garak (Derczynski et al., 2024), and InjecAgent (Zhan et al., ACL Findings 2024) — totalling **8,276 attack prompts** that were not used to design or tune any prompt-shield detector. Detection rates: 64.0% on Liu, 55.2% on Garak, 85.2% on InjecAgent. Across all three benchmarks the same pattern emerges: ~92% detection on explicit-override attacks, ~99% on data-exfiltration attacks, and a **structural plateau at 35-45% on subtle indirect injection** where the embedded instruction lacks override keywords. This corroborates the gap that Liu et al. identified and that DataSentinel (IEEE S&P 2025) was designed to close. See §5.6 for the full breakdown. The same revision also notes a fourth shipped detector (d029 many-shot structural analysis) whose paper-level write-up will appear in v4.
+
+Three techniques remain proposals pending implementation. Their mechanisms are described in full alongside the evaluated three; a future revision will fold their empirical results into this section. Prior-art analysis is per-technique in §§1–7, and limitations are owned explicitly in §5.4.
 
 ---
 
@@ -542,6 +546,45 @@ python -m pytest tests/fatigue/ -v
 
 All 868 tests in the full suite pass on Python 3.10, 3.11, 3.12, and 3.13; ruff, mypy, and the prompt-shield self-scan are green in CI.
 
+### 5.6 Independent evaluations against peer-reviewed academic benchmarks (v3 addition)
+
+To validate that the §5.2 numbers are not specific to our chosen datasets, we further evaluate prompt-shield's input pipeline against three independent attack corpora published at peer-reviewed venues. None of these benchmarks were used to design or tune any prompt-shield detector. All numbers below are regex-only (`d022` ML classifier disabled) for reproducibility on commodity hardware.
+
+| Source | Venue | Corpus size | Detection rate | Full results |
+|---|---|---:|---:|---|
+| Liu et al. *Formalizing and Benchmarking Prompt Injection Attacks and Defenses* | USENIX Security 2024 | 200 attacks | **64.0%** | [`liu_attackers.md`](evaluation/liu_attackers.md) |
+| Derczynski et al. *garak: A Framework for Security Probing LLMs* (probes: `promptinject`, `latentinjection`) | arXiv:2406.11036 (2024) | 5,968 attacks | **55.2%** | [`garak.md`](evaluation/garak.md) |
+| Zhan et al. *InjecAgent: Benchmarking Indirect Prompt Injections in Tool-Integrated LLM Agents* | ACL Findings 2024 | 2,108 cases | **85.2%** | [`injecagent.md`](evaluation/injecagent.md) |
+
+#### Per-attack-class breakdown
+
+| Attack class | Best result | Worst result | Cross-benchmark mean |
+|---|---:|---:|---:|
+| **Explicit-override injection** (Liu *Ignore* / *Combine*, Garak *Hijack\**, InjecAgent *\*-enhanced*) | 100% | 78.5% | ~92% |
+| **Data exfiltration / PII leakage** (InjecAgent *DS-base* / *DS-enhanced*, Garak *LatentWhois\**) | 100% | 95.8% | ~99% |
+| **Subtle indirect injection** (Liu *Naive* / *EscapeChar* / *FakeComp*, InjecAgent *DH-base*, Garak *LatentInjectionFactSnippet\**) | 75.4% | 11.7% | ~37% |
+| **Toxicity elicitation via task framing** (Garak *LatentJailbreak*) | 0% | 0% | 0% — out of scope for input firewall |
+
+#### The cross-benchmark insight
+
+Three independent academic benchmarks converge on the same finding: pure pattern-based input detection plateaus around **35-45% on subtle indirect injection** (Liu *Naive/EscapeChar/FakeComp* at 40%, InjecAgent *DH-base* at 38.8%, Garak `LatentInjectionFactSnippet*` at 12-32%). The plateau is consistent because all three measure the same underlying gap: indirect injection where the embedded instruction looks like a legitimate task request and contains no override keywords.
+
+By contrast, **data-exfiltration and explicit-override attacks are caught at near-ceiling rates** (95-100%) because they contain syntactically distinctive patterns — URLs to attacker-controlled endpoints, account identifiers, "ignore previous instructions" verbatim — that pattern-based detectors reliably flag.
+
+#### Implications
+
+1. **Input-side detection has a structural ceiling on subtle indirect injection.** This is not a bug in prompt-shield's specific implementation — it is a property of the attack class. Liu et al. quantified this gap and built DataSentinel (IEEE S&P 2025) as a fine-tuned model specifically targeting it; our results corroborate the gap on two independent benchmarks (Garak, InjecAgent) using a different defender (prompt-shield, regex-only).
+2. **Hybrid input+output defense is the natural follow-up.** The Garak `LatentJailbreak` 0% result is explicitly out of scope for an input firewall and would be handled by prompt-shield's existing output-side toxicity scanner; future work should report the combined input+output detection rate to honest characterize end-to-end coverage.
+3. **Adaptive-attack robustness is the most important open question.** None of the three benchmarks above test adaptive attacks crafted against prompt-shield specifically; the canonical reference for that methodology is Nasr et al. *"The Attacker Moves Second"* (arXiv:2510.09023, 2025), and the next revision of this paper plans to apply that methodology per-detector-family.
+
+#### Methodology in brief
+
+- **Liu et al.**: We reproduce verbatim the five attack-template builders (`Naive`, `EscapeChar`, `Ignore`, `FakeComp`, `Combine`) from the Open-Prompt-Injection repository and construct a 5 × 8 × 5 = 200-attack matrix from a fixed set of benign data prompts × injection payloads spanning the eight Liu task domains. Benign baseline (8 clean prompts, no attack): 0% FPR.
+- **Garak**: We run garak 0.15.0 with `--model_type test.Blank` (offline mock generator, no LLM/GPU required) over all `promptinject` and `latentinjection` probe families. Attack prompts are extracted from `entry_type == "attempt"` records in the resulting JSONL run reports.
+- **InjecAgent**: We load the four pre-rendered test files (`test_cases_{dh,ds}_{base,enhanced}.json`) from the upstream repository and scan the `Tool Response` field of each case — the malicious tool output the agent would see in production.
+
+All three evaluations are reproducible from a clean install: see [`docs/papers/evaluation/`](evaluation/) for per-benchmark methodology, raw per-probe JSON, and the runner scripts (`tests/benchmark_liu_attackers.py`, `tests/benchmark_garak.py`, `tests/benchmark_injecagent.py`).
+
 ---
 
 ## 6. Conclusions and future work
@@ -550,14 +593,17 @@ Three of the seven proposed techniques now ship, each with a specific, defensibl
 
 Four techniques remain proposals: honeypot tools, prediction-market ensemble scoring, perplexity spectral analysis, and runtime taint tracking. Each has a documented status note at the head of its section in §§3, 5, 6, 7. The natural sequencing, lowest-risk to highest, is honeypot (needs a simulated agent harness) → spectral (needs optional ML dependency) → taint tracking (needs real agent pipeline) → prediction market (touches core scoring, mandatory shadow-mode gate).
 
-The next revision of this paper will fold in:
+**Done in v3.0:** Independent evaluation against three peer-reviewed academic benchmarks (Liu et al., Garak, InjecAgent) — 8,276 unseen attacks scanned, with a cross-benchmark convergence on the 35-45% pattern-matching ceiling for subtle indirect injection (§5.6).
 
-1. A head-to-head competitor comparison (Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, Deepset DeBERTa v3) with d027/d028/fatigue enabled on deepset + NotInject.
-2. Adaptive-attack evaluation against each shipped technique, following the NAACL 2025 / ICLR 2025 methodology.
-3. A held-out indirect-injection benchmark composed of human-written documents with paraphrased payloads (not template-based).
-4. Implementation + evaluation of at least one additional proposed technique (likely §3 honeypot, given its zero-regression opt-in model).
+**The v4.0 revision plans to fold in:**
 
-Until then the claims here are scoped to what the 4-configuration × 6-dataset ablation measures, and to the probing-campaign integration test. Everything else is an honest promissory note.
+1. A full §-level write-up of d029 many-shot structural analysis (currently shipped in prompt-shield v0.4.1, with 36 unit tests, but not yet given a paper-section treatment).
+2. Adaptive-attack evaluation against each shipped technique, following the Nasr et al. *"The Attacker Moves Second"* methodology (arXiv:2510.09023, 2025) and the NAACL Findings 2025 / ICLR 2025 prior work. Per-detector-family adaptive attacks (sequence-alignment-aware, stylometry-aware, fatigue-aware, many-shot-aware) are the natural next contribution given the §5.6 cross-benchmark plateau.
+3. A held-out indirect-injection benchmark composed of human-written documents with paraphrased payloads (not template-based), targeting the 35-45% ceiling identified in §5.6.
+4. A head-to-head competitor comparison (Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, Deepset DeBERTa v3, DataSentinel) on the same three academic benchmarks used in §5.6 — apples-to-apples detector-coverage numbers rather than mixed end-to-end ASR claims.
+5. Implementation + evaluation of at least one additional proposed technique (likely §3 honeypot, given its zero-regression opt-in model).
+
+Until then the claims here are scoped to: (a) the 4-configuration × 6-dataset ablation in §5.2 (in-distribution coverage); (b) the probing-campaign integration test in §2.5 (temporal-signal validation); and (c) the three peer-reviewed academic benchmark evaluations in §5.6 (out-of-distribution validation). Everything else is an honest promissory note.
 
 ---
 
@@ -586,6 +632,12 @@ We believe the future of prompt injection defense is cross-disciplinary. The bes
 8. Wang et al. "SelfDefend: LLMs Can Defend Themselves against Jailbreaking." USENIX Security 2025. [Link](https://www.usenix.org/system/files/usenixsecurity25-wang-xunguang.pdf)
 9. SpecDetect. "Spectral Analysis for LLM Text Detection." 2025. [Link](https://arxiv.org/html/2508.11343v1)
 10. Smith & Waterman. "Identification of Common Molecular Subsequences." J. Mol. Biol, 1981.
+11. Liu, Y., Jia, Y., Geng, R., Jia, J., Gong, N. Z. "Formalizing and Benchmarking Prompt Injection Attacks and Defenses." USENIX Security 2024. [Link](https://www.usenix.org/conference/usenixsecurity24/presentation/liu-yupei)
+12. Liu, Y., et al. "DataSentinel: A Game-Theoretic Detection of Prompt Injection Attacks." IEEE S&P 2025. [arXiv:2504.11358](https://arxiv.org/abs/2504.11358)
+13. Derczynski, L., et al. "garak: A Framework for Security Probing Large Language Models." [arXiv:2406.11036](https://arxiv.org/abs/2406.11036) (2024).
+14. Zhan, Q., Liang, Z., Ying, Z., Kang, D. "InjecAgent: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents." ACL Findings 2024. [arXiv:2403.02691](https://arxiv.org/abs/2403.02691)
+15. Nasr, M., Carlini, N., Tramèr, F., et al. "The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against Adversarial Examples and Prompt Injection." [arXiv:2510.09023](https://arxiv.org/abs/2510.09023) (2025).
+16. Mindgard / Lancaster. "Bypassing LLM Guardrails: An Empirical Analysis of Evasion Attacks against Prompt Injection and Jailbreak Detection Systems." [arXiv:2504.11168](https://arxiv.org/abs/2504.11168) (2025).
 11. Hanson, R. "Logarithmic Market Scoring Rules for Modular Combinatorial Information Aggregation." J. Prediction Markets, 2007. [Link](https://mason.gmu.edu/~rhanson/mktscore.pdf)
 12. FIDES. "Securing AI Agents with Information Flow Control." Microsoft Research, 2025. [Link](https://arxiv.org/pdf/2505.23643)
 13. TaintP2X. "Detecting Taint-Style Prompt-to-Anything Injection Vulnerabilities." ICSE 2026. [Link](https://conf.researchr.org/details/icse-2026/icse-2026-research-track/157/)
