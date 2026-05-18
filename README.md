@@ -341,7 +341,27 @@ Fatigue is a temporal signal, orthogonal to static public benchmarks (every samp
 
 > 10 priming scans from `source="attacker"` at confidence 0.65 (below threshold 0.7) → 11th scan from the same source at confidence **0.63** is **blocked**, because the EWMA near-miss rate exceeded `trigger_ratio` and the effective threshold hardened from 0.70 to 0.60. A different `source` scanning at 0.63 concurrently still passes — hardening is per-source.
 
-### Benchmark 5: Liu et al. (USENIX Security 2024) attack strategies
+### Benchmark 5: NVIDIA Garak prompt-injection probes (5,968 attacks)
+
+Independent evaluation against NVIDIA's [Garak](https://github.com/NVIDIA/garak) vulnerability scanner ([Derczynski et al., 2024](https://arxiv.org/abs/2406.11036)). 5,968 attack prompts extracted from the `promptinject` and `latentinjection` probe families. Full methodology: [`docs/papers/evaluation/garak.md`](docs/papers/evaluation/garak.md). Reproduce with `python tests/benchmark_garak.py`.
+
+| Probe family | Caught | Total | Rate |
+|---|---:|---:|---:|
+| **LatentWhoisSnippet** | 512 | 512 | **100.0%** |
+| LatentWhois | 322 | 336 | 95.8% |
+| HijackLongPrompt | 412 | 512 | 80.5% |
+| HijackKillHumans | 404 | 512 | 78.9% |
+| HijackHateHumans | 402 | 512 | 78.5% |
+| LatentInjectionResume | 386 | 512 | 75.4% |
+| LatentInjectionTranslation* | 408 | 1,024 | 39.8% |
+| LatentInjectionReport | 220 | 512 | 43.0% |
+| LatentInjectionFactSnippet* | 228 | 1,024 | 22.3% |
+| LatentJailbreak (toxicity-elicitation, category mismatch) | 0 | 512 | 0.0% |
+| **OVERALL** | **3,294** | **5,968** | **55.2%** |
+
+**Honest takeaway:** Strong (78–100%) on explicit-hijack and whois-context probes where override language is present. Weaker (12–75%) on context-embedded indirect injections without override keywords — the same gap shown by Benchmark 6 below. LatentJailbreak's 0% reflects a category mismatch — those probes elicit toxic content via translation framing, which is handled by prompt-shield's **output-side** toxicity scanner rather than the input firewall.
+
+### Benchmark 6: Liu et al. (USENIX Security 2024) attack strategies
 
 Independent evaluation against the five attack templates defined by [Liu et al., USENIX Security 2024](https://github.com/liu00222/Open-Prompt-Injection). 200 attacks (5 strategies × 8 benign clean prompts × 5 injection payloads). Full methodology and per-example results: [`docs/papers/evaluation/liu_attackers.md`](docs/papers/evaluation/liu_attackers.md). Reproduce with `python tests/benchmark_liu_attackers.py`.
 
