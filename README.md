@@ -13,12 +13,12 @@
   <a href="https://pypi.org/project/prompt-shield-ai/"><img src="https://img.shields.io/pypi/pyversions/prompt-shield-ai.svg" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.npmjs.com/package/n8n-nodes-prompt-shield"><img src="https://img.shields.io/npm/v/n8n-nodes-prompt-shield.svg?label=n8n" alt="npm" /></a>
-  <img src="https://img.shields.io/badge/detectors-29-brightgreen" alt="29 detectors" />
-  <img src="https://img.shields.io/badge/output_scanners-6-blue" alt="6 output scanners" />
+  <img src="https://img.shields.io/badge/detectors-33-brightgreen" alt="33 detectors" />
+  <img src="https://img.shields.io/badge/output_scanners-9-blue" alt="9 output scanners" />
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
-  <img src="https://img.shields.io/badge/tests-829-blue" alt="829 tests" />
+  <img src="https://img.shields.io/badge/tests-1040-blue" alt="1040 tests" />
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
 </p>
@@ -29,7 +29,7 @@
 
 ---
 
-The most comprehensive open-source prompt injection firewall for LLM applications. Combines **29 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection), **6 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection), a semantic ML classifier (DeBERTa), parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
+The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
 ### Benchmarked against 5 open-source competitors on 54 real-world 2025-2026 attacks:
 
@@ -123,7 +123,7 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
 ## Table of Contents
 
 - [Quick Install](#quick-install) | [Quickstart](#30-second-quickstart) | [Features](#features) | [Architecture](#architecture)
-- [Detectors (27)](#built-in-detectors) | [Output Scanners (6)](#output-scanners-6) | [Benchmarks](#benchmark-results)
+- [Detectors (33)](#built-in-detectors) | [Output Scanners (9)](#output-scanners-9) | [Benchmarks](#benchmark-results)
 - [Research: Novel Techniques (v0.4.0)](#research-novel-cross-domain-techniques-v040) -- **NEW**
 - [PII Redaction](#pii-detection--redaction) | [Output Scanning](#output-scanning) | [Red Team](#adversarial-self-testing-red-team)
 - [3-Gate Agent Protection](#protecting-agentic-apps-3-gate-model) | [Integrations](#integrations)
@@ -159,7 +159,7 @@ print(report.overall_risk_score)  # 0.95
 
 ## Features
 
-### Input Protection (26 Detectors)
+### Input Protection (33 Detectors)
 
 | Category | Detectors | What It Catches |
 |----------|-----------|----------------|
@@ -169,11 +169,15 @@ print(report.overall_risk_score)  # 0.95
 | **Indirect Injection** | d013-d016 | Data exfiltration, tool/function abuse (JSON/MCP), RAG poisoning, URL injection |
 | **Jailbreak** | d017-d019 | Hypothetical framing, HILL educational reframing, dual persona, dual intention |
 | **Resource Abuse** | d026 | **Denial-of-Wallet**: context flooding, recursive loops, token-maximizing prompts |
-| **ML Semantic** | d022 | DeBERTa-v3 catches paraphrased attacks that bypass regex |
+| **ML Semantic** | d022 | DeBERTa-v3 catches paraphrased attacks that bypass regex (now with chunking — no input-length cap) |
 | **Self-Learning** | d021 | Vector similarity vault learns from every detected attack |
 | **Data Protection** | d023 | PII: emails, phones, SSNs, credit cards, API keys, IP addresses |
+| **Cross-Domain (v0.4)** | d027-d029 | Stylometric discontinuity, Smith-Waterman alignment, many-shot structural |
+| **Operator Policy** | d030, d032 | **Custom YAML rules** engine, **denied-topic** enforcement (medical/legal/etc.) |
+| **Language Policy** | d031 | **Language enforcement** — block non-allowed languages (script + langdetect) |
+| **Multi-Turn** | d033 | **Topic drift** detector — slow-jailbreak / cumulative steering across turns |
 
-### Output Protection (6 Scanners)
+### Output Protection (9 Scanners)
 
 | Scanner | What It Catches |
 |---------|----------------|
@@ -183,6 +187,18 @@ print(report.overall_risk_score)  # 0.95
 | **Output PII** | PII in LLM responses (emails, SSNs, credit cards, etc.) |
 | **Schema Validation** | Invalid JSON, suspicious fields (`__proto__`, `system_prompt`), injection in values |
 | **Relevance** | Jailbreak persona adoption, DAN mode, unrestricted claims |
+| **Sentiment** | VADER-based negative / hostile / inflammatory LLM outputs (with keyword fallback) |
+| **Bias / Fairness** | Stereotype templates + protected-group + loaded-language proximity |
+| **Hallucination / Grounding** | N-gram support ratio against retrieved RAG documents |
+
+### Pre-Detector Pipeline & Platform
+
+| Component | Description |
+|-----------|-------------|
+| **Normalization Pipeline** | NFKC normalization, zero-width stripping, Cyrillic→Latin homoglyph mapping, whitespace collapse (idempotent stages) |
+| **Multi-Encoding Preprocessor** | Decodes base64, hex, URL, HTML entities, and ROT13 candidates before detection — catches layered obfuscation |
+| **Prometheus /metrics** | Scan counters, detections by `(detector_id, severity)`, scan-duration / input-size histograms — drop-in observability |
+| **Sliding-Window Rate Limiter** | Per-key (user / session / tenant) throttle with `check` / `acquire` / `enforce`, bounded memory, pluggable clock for testing |
 
 ### DevOps & CI/CD
 
@@ -211,7 +227,7 @@ print(report.overall_risk_score)  # 0.95
 | Feature | Description |
 |---------|-------------|
 | **Red Team Self-Testing** | `prompt-shield attackme` uses Claude/GPT to attack itself across 12 categories |
-| **OWASP LLM Top 10** | All 27 detectors mapped with coverage reports |
+| **OWASP LLM Top 10** | All 33 detectors mapped with coverage reports |
 | **OWASP Agentic Top 10** | 2026 agentic risks mapped (9/10 covered) |
 | **EU AI Act** | Article-level compliance mapping (Aug 2026 deadline) |
 | **Invisible Watermarks** | Unicode zero-width canary watermarks (ICLR 2026 technique) |
@@ -227,7 +243,7 @@ print(report.overall_risk_score)  # 0.95
 
 ## Built-in Detectors
 
-### Input Detectors (26)
+### Input Detectors (33)
 
 | ID | Name | Category | Severity |
 |----|------|----------|----------|
@@ -252,7 +268,7 @@ print(report.overall_risk_score)  # 0.95
 | d019 | Dual Persona | Jailbreak | High |
 | d020 | Token Smuggling | Obfuscation | High |
 | d021 | Vault Similarity | Self-Learning | High |
-| d022 | Semantic Classifier | ML / Semantic | High |
+| d022 | Semantic Classifier (chunked) | ML / Semantic | High |
 | d023 | PII Detection | Data Protection | High |
 | d024 | Multilingual Injection | Multilingual | High |
 | d025 | Multi-Encoding Decoder | Obfuscation | High |
@@ -260,8 +276,12 @@ print(report.overall_risk_score)  # 0.95
 | d027 | Stylometric Discontinuity | Author-change / Cross-Domain | Medium |
 | d028 | Sequence Alignment (Smith-Waterman) | Paraphrase / Cross-Domain | High |
 | d029 | Many-Shot Structural | Many-shot Jailbreak | High |
+| d030 | Custom YAML Rules | Operator Policy | Configurable |
+| d031 | Language Enforcement | Language Policy | Medium |
+| d032 | Topic Enforcement (denied topics) | Operator Policy | Configurable |
+| d033 | Multi-Turn Topic Drift | Multi-Turn / Jailbreak | Medium |
 
-### Output Scanners (6)
+### Output Scanners (9)
 
 | Scanner | Categories | Severity |
 |---------|-----------|----------|
@@ -271,6 +291,9 @@ print(report.overall_risk_score)  # 0.95
 | Output PII | email, phone, ssn, credit_card, api_key, ip_address | High |
 | Schema Validation | invalid_json, schema_violation, suspicious_fields, injection_in_values | High |
 | Relevance | jailbreak_compliance, jailbreak_persona | High |
+| Sentiment | negative_sentiment (VADER compound below threshold; keyword fallback) | Medium |
+| Bias / Fairness | biased_framing (stereotype templates + loaded-language proximity) | Medium |
+| Hallucination / Grounding | ungrounded (n-gram support ratio vs. retrieved documents) | Medium |
 
 ## Benchmark Results
 
@@ -585,7 +608,7 @@ prompt-shield compliance report --framework all            # All frameworks
 
 | Framework | Coverage | Details |
 |-----------|----------|---------|
-| **OWASP LLM Top 10 (2025)** | 7/10 categories | 27 detectors mapped |
+| **OWASP LLM Top 10 (2025)** | 7/10 categories | 33 detectors mapped |
 | **OWASP Agentic Top 10 (2026)** | 9/10 categories | AgentGuard + detectors + output scanners |
 | **EU AI Act** | 7 articles | Art.9, 10, 13, 14, 15, 50, 52 |
 
@@ -857,12 +880,19 @@ Open an issue or PR. We're especially interested in adversarial evaluations.
 
 - **v0.1.x**: 22 detectors, DeBERTa ML classifier, ensemble scoring, self-learning vault
 - **v0.2.0**: OWASP LLM Top 10 compliance, standardized benchmarking
-- **v0.3.x** (current): 26 input detectors + 6 output scanners, 10 languages, 7 encoding schemes, PII redaction, red team, GitHub Action, pre-commit, Docker API, webhook alerting, parallel execution, 3 compliance frameworks, invisible watermarks, Dify/n8n/CrewAI
-- **v0.4.0** (in progress, **2 of 7 techniques shipped**): 7 novel cross-domain techniques --
-  - ✅ **d028 Smith-Waterman alignment** (phase 4) — regex-alignment with semantic substitution matrix. +34.5 pp F1 on deepset with 0 FP cost.
-  - ✅ **Adversarial fatigue tracker** (phase 2) — EWMA near-miss detection + per-source threshold hardening. Opt-in.
-  - ⬜ Stylometric discontinuity, honeypot tools, prediction market ensemble, perplexity spectral analysis, runtime taint tracking — remain in development.
-- **v0.5.0** (planned): MCP protocol-level security scanner, multimodal OCR/audio scanning, many-shot structural analysis, multi-turn topic drift ML, hallucination/grounding detection, OpenTelemetry, Prometheus /metrics, Helm charts
+- **v0.3.x**: 26 input detectors + 6 output scanners, 10 languages, 7 encoding schemes, PII redaction, red team, GitHub Action, pre-commit, Docker API, webhook alerting, parallel execution, 3 compliance frameworks, invisible watermarks, Dify/n8n/CrewAI
+- **v0.4.0**: 3 novel cross-domain techniques shipped —
+  - ✅ **d027 Stylometric discontinuity** (phase 1)
+  - ✅ **d028 Smith-Waterman alignment** (phase 4) — +34.5 pp F1 on deepset with 0 FP cost
+  - ✅ **Adversarial fatigue tracker** (phase 2) — EWMA near-miss detection + per-source threshold hardening
+  - ⬜ Honeypot tools, prediction market ensemble, perplexity spectral analysis, runtime taint tracking — remain in development
+- **v0.5.x (current): 33 input detectors + 9 output scanners** —
+  - ✅ d030 custom YAML rules, d031 language enforcement, d032 denied topics, d033 multi-turn topic drift
+  - ✅ Sentiment / bias-fairness / hallucination output scanners
+  - ✅ NFKC + homoglyph normalization pipeline, multi-encoding preprocessor
+  - ✅ d022 input-length cap removed (chunking + max-pool)
+  - ✅ Prometheus `/metrics`, sliding-window rate limiter
+- **v0.6.0** (planned): MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
