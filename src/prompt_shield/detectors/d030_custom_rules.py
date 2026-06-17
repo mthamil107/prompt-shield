@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import ClassVar, Literal
 
 import regex
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity

@@ -129,6 +129,13 @@ module = ["crewai_tools", "crewai_tools.*"]
 ignore_missing_imports = true
 ignore_errors = true
 
+# yaml ships as a separate types-PyYAML package; CI installs it via [dev,all]
+# but contributor envs may not have it. d030 imports yaml — silence the
+# missing-stub error in the importing module since it varies by env.
+[[tool.mypy.overrides]]
+module = ["prompt_shield.detectors.d030_custom_rules"]
+disable_error_code = ["import-untyped", "unused-ignore"]
+
 [[tool.mypy.overrides]]
 module = [
     "prompt_shield.config.*",
