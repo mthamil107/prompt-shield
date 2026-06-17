@@ -36,11 +36,26 @@ class SemanticClassifierDetector(BaseDetector):
         self._model_name: str = _DEFAULT_MODEL
         self._device: str = "cpu"
         self._available: bool | None = None  # None = not checked yet
+        # Chunking defaults; setup() may override.
+        self._chunk_size: int = 512
+        self._chunk_stride: int = 384
+        self._max_chunks: int = 8
 
     def setup(self, config: dict[str, object]) -> None:
         """Read model_name and device from per-detector config."""
         self._model_name = str(config.get("model_name", _DEFAULT_MODEL))
         self._device = str(config.get("device", "cpu"))
+        # Long-input handling: chunk + max-pool aggregation.
+        # Window = 512 chars (the model's per-call cap), stride = 384 chars
+        # (75% overlap, so each token is scored in at least two windows).
+        # Max chunks bounds wall-clock; the model is ~10ms per call on CPU,
+        # so 8 chunks = ~80ms worst case for very long inputs.
+        chunk_size = config.get("chunk_size", 512)
+        chunk_stride = config.get("chunk_stride", 384)
+        max_chunks = config.get("max_chunks", 8)
+        self._chunk_size = int(chunk_size) if isinstance(chunk_size, (int, float, str)) else 512
+        self._chunk_stride = int(chunk_stride) if isinstance(chunk_stride, (int, float, str)) else 384
+        self._max_chunks = int(max_chunks) if isinstance(max_chunks, (int, float, str)) else 8
 
     def _ensure_pipeline(self) -> bool:
         """Lazy-load the classification pipeline. Returns True if available."""
@@ -78,27 +93,46 @@ class SemanticClassifierDetector(BaseDetector):
             )
 
         try:
-            result = self._pipeline(input_text[:512])
-            label = result[0]["label"].upper()
-            score = float(result[0]["score"])
+            # Chunk long inputs with overlap; score each chunk; max-pool the
+            # confidences. Previously the d022 detector truncated to 512 chars
+            # and ignored anything beyond; injections placed late in a long
+            # document slipped through.
+            chunks = self._chunk(input_text)
+            best_score = 0.0
+            best_label = "SAFE"
+            best_span = (0, min(len(input_text), self._chunk_size))
+            for start, end, chunk_text in chunks:
+                pred = self._pipeline(chunk_text)
+                label = pred[0]["label"].upper()
+                score = float(pred[0]["score"])
+                if label == "INJECTION" and score > best_score:
+                    best_score = score
+                    best_label = "INJECTION"
+                    best_span = (start, end)
 
-            if label == "INJECTION" and score > 0.5:
+            if best_label == "INJECTION" and best_score > 0.5:
+                start, end = best_span
                 return DetectionResult(
                     detector_id=self.detector_id,
                     detected=True,
-                    confidence=score,
+                    confidence=best_score,
                     severity=self.severity,
                     matches=[
                         MatchDetail(
                             pattern="semantic_classifier",
-                            matched_text=input_text[:120]
-                            + ("..." if len(input_text) > 120 else ""),
-                            position=(0, min(len(input_text), 512)),
-                            description=(f"Classified as injection with score {score:.4f}"),
+                            matched_text=input_text[start : start + min(120, end - start)]
+                            + ("..." if end - start > 120 else ""),
+                            position=best_span,
+                            description=(
+                                f"Classified as injection with score {best_score:.4f} "
+                                f"on chunk [{start}:{end}]"
+                            ),
                         )
                     ],
                     explanation=(
-                        f"Semantic classifier detected injection (confidence: {score:.4f})"
+                        f"Semantic classifier detected injection "
+                        f"(confidence: {best_score:.4f}, "
+                        f"window [{start}:{end}] of {len(input_text)}-char input)"
                     ),
                 )
 
@@ -107,7 +141,10 @@ class SemanticClassifierDetector(BaseDetector):
                 detected=False,
                 confidence=0.0,
                 severity=self.severity,
-                explanation=(f"Classified as safe (label={label}, score={score:.4f})"),
+                explanation=(
+                    f"Classified as safe across {len(chunks)} chunk(s) "
+                    f"(max score: {best_score:.4f})"
+                ),
             )
         except Exception as exc:
             logger.warning("Semantic classification failed: %s", exc)
@@ -123,3 +160,23 @@ class SemanticClassifierDetector(BaseDetector):
         """Release model resources."""
         self._pipeline = None
         self._available = None
+
+    def _chunk(self, text: str) -> list[tuple[int, int, str]]:
+        """Split text into overlapping windows for chunked scoring.
+
+        Returns list of (start, end, text). For short inputs returns a single
+        chunk. The max-pool aggregation in detect() takes the maximum
+        injection-confidence across all chunks, so an attack in any window
+        produces a detection.
+        """
+        if len(text) <= self._chunk_size:
+            return [(0, len(text), text)]
+        chunks: list[tuple[int, int, str]] = []
+        start = 0
+        while start < len(text) and len(chunks) < self._max_chunks:
+            end = min(start + self._chunk_size, len(text))
+            chunks.append((start, end, text[start:end]))
+            if end >= len(text):
+                break
+            start += self._chunk_stride
+        return chunks
