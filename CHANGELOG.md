@@ -5,6 +5,110 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-06-17
+
+Operator-policy and observability release. Adds four new input detectors
+(d030–d033), three new output scanners, a pre-detector normalization
+pipeline, a multi-encoding preprocessor, Prometheus metrics, an
+in-process sliding-window rate limiter, and removes the 512-token
+input-length cap on the semantic ML classifier.
+
+Total: 33 input detectors, 9 output scanners, 1040 tests passing.
+
+### Added — input detectors (4 new, d030–d033)
+
+- **d030 Custom YAML rules** (`prompt_shield.detectors.d030_custom_rules`).
+  Operator-defined regex rules loaded from a configurable directory of
+  YAML files. Per-rule `id`, `pattern`, `severity`, `action`,
+  `description`, `case_sensitive`. Highest-severity match wins on
+  overlap. Skips malformed YAML / invalid regex / incomplete rules
+  without aborting the rest of the ruleset.
+- **d031 Language enforcement** (`prompt_shield.detectors.d031_language_enforcement`).
+  Two-stage detector: fast-path script-range regex (Cyrillic, Greek,
+  Arabic, Hebrew, Devanagari, Thai, CJK) and optional `langdetect`
+  fallback for Latin-script discrimination. Configurable
+  `allowed_languages`, `min_input_chars`. Useful for English-only
+  deployments that want to filter multilingual jailbreak attempts.
+- **d032 Topic enforcement** (`prompt_shield.detectors.d032_topic_enforcement`).
+  Operator-defined denied-topic keyword groups (medical, legal,
+  politics, etc.). Per-topic severity, configurable `min_keyword_hits`,
+  case-sensitivity. Strongest match wins among multiple matched topics.
+- **d033 Multi-turn topic drift** (`prompt_shield.detectors.d033_topic_drift`).
+  Jaccard n-gram similarity between the current turn and the
+  conversation anchor (first N turns). Flags slow-jailbreak patterns
+  where each turn looks innocuous in isolation but the cumulative drift
+  moves the model into unsafe territory. Accepts history as
+  `list[str]` or chat-format `{role, content}` dicts.
+
+### Added — output scanners (3 new)
+
+- **Sentiment output scanner** (`prompt_shield.output_scanners.sentiment`).
+  VADER (`vaderSentiment`) compound-score scanner with a small
+  keyword-lexicon fallback for environments without the optional
+  dependency. Configurable `threshold` (default −0.5).
+- **Bias / fairness output scanner**
+  (`prompt_shield.output_scanners.bias_fairness`). Stereotype-template
+  regexes plus protected-group + loaded-language proximity matching.
+  Configurable `threshold`, `extra_groups`, `extra_loaded_terms`.
+  Intentionally a lightweight signal — not a replacement for a full
+  fairness audit.
+- **Hallucination / grounding output scanner**
+  (`prompt_shield.output_scanners.hallucination`). N-gram support ratio
+  between the LLM output and grounding documents supplied via
+  `context={"documents": [...]}`. Configurable
+  `min_support_ratio`, `ngram_size`, `min_output_tokens`. Pure-lexical
+  by design — pairs well with NLI / embedding scanners for high-stakes
+  RAG.
+
+### Added — pre-detector pipeline
+
+- **Normalization pipeline** (`prompt_shield.normalization`). Four
+  idempotent stages — NFKC, zero-width stripping, Cyrillic→Latin
+  homoglyph mapping, whitespace collapse — that run before detectors
+  to canonicalize evasions.
+- **Multi-encoding preprocessor** (`prompt_shield.decoders`). Decodes
+  base64, hex, URL, HTML entities, and ROT13 candidates as a fan-out
+  set of candidate plaintexts to feed back through detectors. Catches
+  layered obfuscation patterns.
+
+### Added — platform
+
+- **Prometheus `/metrics` module** (`prompt_shield.observability`).
+  `PromptShieldMetrics` exposes `scans_total` (counter, by action),
+  `detections_total` (counter, by detector + severity), and three
+  histograms (scan duration, input chars, input tokens). `expose()`
+  returns `(body, content_type)` for drop-in HTTP handler use. Lazy
+  optional dep — `prometheus_client` not required at install time.
+- **Sliding-window rate limiter** (`prompt_shield.ratelimit`).
+  Per-key in-process throttle with `check` / `acquire` / `enforce` /
+  `reset`. Thread-safe (single lock), bounded memory via
+  `max_tracked_keys` LRU-style eviction, pluggable `time_func` for
+  deterministic tests. `RateLimitExceededError` raised by `enforce()`
+  carries the full decision.
+
+### Changed
+
+- **d022 semantic classifier** input-length cap removed. Long inputs
+  are now chunked with overlap (`chunk_size=512`, `chunk_stride=384`,
+  `max_chunks=8`) and the per-chunk confidences are max-pooled. Inputs
+  past ~6 k tokens previously fell out of coverage; they no longer do.
+
+### Optional dependencies
+
+Three new install extras for the lazy-loaded paths:
+
+- `pip install prompt-shield-ai[observability]` — adds `prometheus_client`
+- `pip install prompt-shield-ai[sentiment]` — adds `vaderSentiment`
+- `pip install prompt-shield-ai[language]` — adds `langdetect`
+
+`prompt-shield-ai[all]` now includes all three.
+
+### CI / tooling
+
+- Test suite expanded to **1040 tests** (up from 829).
+- `pyproject.toml` per-file lint ignores for legitimate homoglyph /
+  fullwidth / CJK test data.
+
 ## [0.4.0] - 2026-04-19
 
 First release of the cross-domain novel techniques plan. Ships two of the
