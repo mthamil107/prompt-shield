@@ -19,6 +19,7 @@ Pipeline stages (applied in order):
 Disabled by default to preserve backward compatibility; opt-in via the
 `normalization.enabled` config flag.
 """
+
 from __future__ import annotations
 
 from .pipeline import NormalizationPipeline, NormalizationResult

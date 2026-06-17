@@ -1,4 +1,5 @@
 """Tests for the d031 language enforcement detector."""
+
 from __future__ import annotations
 
 import pytest

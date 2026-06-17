@@ -15,6 +15,7 @@ Configuration:
       allowed_languages: ["en"]   # default
       min_input_chars: 32         # silent on short inputs
 """
+
 from __future__ import annotations
 
 import logging
@@ -75,9 +76,7 @@ class LanguageEnforcementDetector(BaseDetector):
         if isinstance(allowed, list) and all(isinstance(x, str) for x in allowed):
             self._allowed = tuple(x.lower() for x in allowed)
         min_chars = config.get("min_input_chars", 32)
-        self._min_input_chars = (
-            int(min_chars) if isinstance(min_chars, (int, float, str)) else 32
-        )
+        self._min_input_chars = int(min_chars) if isinstance(min_chars, (int, float, str)) else 32
         # Pre-compile script regexes once.
         self._compiled_scripts = [
             (name, regex.compile(pat, regex.UNICODE)) for name, pat in _SCRIPT_PATTERNS
@@ -188,8 +187,7 @@ class LanguageEnforcementDetector(BaseDetector):
                 )
             ],
             explanation=(
-                f"Detected language {lang!r} not in allow-list "
-                f"{list(self._allowed)} — {reason}"
+                f"Detected language {lang!r} not in allow-list {list(self._allowed)} — {reason}"
             ),
             metadata={"language": lang, "allowed_languages": list(self._allowed)},
         )

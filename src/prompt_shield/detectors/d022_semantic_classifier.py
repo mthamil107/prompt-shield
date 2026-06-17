@@ -54,7 +54,9 @@ class SemanticClassifierDetector(BaseDetector):
         chunk_stride = config.get("chunk_stride", 384)
         max_chunks = config.get("max_chunks", 8)
         self._chunk_size = int(chunk_size) if isinstance(chunk_size, (int, float, str)) else 512
-        self._chunk_stride = int(chunk_stride) if isinstance(chunk_stride, (int, float, str)) else 384
+        self._chunk_stride = (
+            int(chunk_stride) if isinstance(chunk_stride, (int, float, str)) else 384
+        )
         self._max_chunks = int(max_chunks) if isinstance(max_chunks, (int, float, str)) else 8
 
     def _ensure_pipeline(self) -> bool:

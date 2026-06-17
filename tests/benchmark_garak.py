@@ -125,9 +125,7 @@ def _make_engine(disable_ml: bool) -> PromptShieldEngine:
         }
     }
     if disable_ml:
-        cfg["prompt_shield"]["detectors"] = {
-            "d022_semantic_classifier": {"enabled": False}
-        }
+        cfg["prompt_shield"]["detectors"] = {"d022_semantic_classifier": {"enabled": False}}
     return PromptShieldEngine(config_dict=cfg)
 
 
@@ -159,8 +157,12 @@ def _print_report(label: str, results: dict, attempts: list[tuple[str, str]]) ->
     elapsed = results["elapsed_seconds"]
 
     print(f"  Total attacks scanned: {total_total}")
-    print(f"  Caught (block/flag):   {total_caught} ({total_caught / max(1, total_total) * 100:.1f}%)")
-    print(f"  Wall time:             {elapsed:.1f}s ({total_total / max(0.001, elapsed):.0f} scans/sec)")
+    print(
+        f"  Caught (block/flag):   {total_caught} ({total_caught / max(1, total_total) * 100:.1f}%)"
+    )
+    print(
+        f"  Wall time:             {elapsed:.1f}s ({total_total / max(0.001, elapsed):.0f} scans/sec)"
+    )
     print()
     print(f"  {'Probe':<58}{'Caught':>8}{'Total':>8}{'Rate':>8}")
     print(f"  {'-' * 82}")
@@ -194,10 +196,14 @@ def main() -> None:
     if not args.garak_dir.exists():
         print(f"ERROR: Garak runs dir not found: {args.garak_dir}")
         print("Run garak first:")
-        print("  python -m garak --model_type test.Blank --probes promptinject "
-              "--report_prefix garak_promptinject")
-        print("  python -m garak --model_type test.Blank --probes latentinjection "
-              "--report_prefix garak_latentinjection")
+        print(
+            "  python -m garak --model_type test.Blank --probes promptinject "
+            "--report_prefix garak_promptinject"
+        )
+        print(
+            "  python -m garak --model_type test.Blank --probes latentinjection "
+            "--report_prefix garak_latentinjection"
+        )
         sys.exit(2)
 
     print("Loading Garak attempts...")

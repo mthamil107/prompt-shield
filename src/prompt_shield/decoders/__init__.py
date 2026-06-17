@@ -9,6 +9,7 @@ Returns a DecodedSet — the original text plus a list of decoded candidates,
 each annotated with the encoding that produced it. Detectors can iterate the
 candidates and apply their patterns to each.
 """
+
 from __future__ import annotations
 
 from .preprocessor import DecodedCandidate, DecodedSet, MultiEncodingPreprocessor

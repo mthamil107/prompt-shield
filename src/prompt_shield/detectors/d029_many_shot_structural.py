@@ -100,8 +100,7 @@ class ManyShotStructuralDetector(BaseDetector):
 
     def __init__(self) -> None:
         self._compiled = [
-            (regex.compile(src), label, family, role)
-            for src, label, family, role in _PATTERNS
+            (regex.compile(src), label, family, role) for src, label, family, role in _PATTERNS
         ]
 
     def setup(self, config: dict[str, object]) -> None:
@@ -130,9 +129,7 @@ class ManyShotStructuralDetector(BaseDetector):
             score = min(0.99, score + self._pivot_boost)
         return min(1.0, score)
 
-    def detect(
-        self, input_text: str, context: dict[str, object] | None = None
-    ) -> DetectionResult:
+    def detect(self, input_text: str, context: dict[str, object] | None = None) -> DetectionResult:
         if not input_text or len(input_text) < 16:
             return DetectionResult(
                 detector_id=self.detector_id,

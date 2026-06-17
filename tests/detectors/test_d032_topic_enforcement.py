@@ -1,4 +1,5 @@
 """Tests for the d032 topic enforcement detector."""
+
 from __future__ import annotations
 
 import pytest
@@ -10,22 +11,24 @@ from prompt_shield.models import Severity
 @pytest.fixture
 def detector() -> TopicEnforcementDetector:
     d = TopicEnforcementDetector()
-    d.setup({
-        "denied_topics": [
-            {
-                "name": "medical_advice",
-                "keywords": ["diagnose", "prescription", "dosage", "symptoms"],
-                "severity": "high",
-                "description": "Block medical-advice requests",
-            },
-            {
-                "name": "legal_advice",
-                "keywords": ["lawsuit", "attorney", "court", "litigation"],
-                "severity": "medium",
-            },
-        ],
-        "min_keyword_hits": 2,
-    })
+    d.setup(
+        {
+            "denied_topics": [
+                {
+                    "name": "medical_advice",
+                    "keywords": ["diagnose", "prescription", "dosage", "symptoms"],
+                    "severity": "high",
+                    "description": "Block medical-advice requests",
+                },
+                {
+                    "name": "legal_advice",
+                    "keywords": ["lawsuit", "attorney", "court", "litigation"],
+                    "severity": "medium",
+                },
+            ],
+            "min_keyword_hits": 2,
+        }
+    )
     return d
 
 
@@ -81,13 +84,13 @@ class TestDetection:
 class TestConfiguration:
     def test_case_sensitive_mode(self):
         d = TopicEnforcementDetector()
-        d.setup({
-            "denied_topics": [
-                {"name": "brand", "keywords": ["FooBrand", "FooCorp"]}
-            ],
-            "min_keyword_hits": 1,
-            "case_sensitive": True,
-        })
+        d.setup(
+            {
+                "denied_topics": [{"name": "brand", "keywords": ["FooBrand", "FooCorp"]}],
+                "min_keyword_hits": 1,
+                "case_sensitive": True,
+            }
+        )
         # lowercase shouldn't match in case-sensitive mode
         result_lower = d.detect("we use foobrand and foocorp internally")
         assert result_lower.detected is False
@@ -96,26 +99,28 @@ class TestConfiguration:
 
     def test_min_hits_config(self):
         d = TopicEnforcementDetector()
-        d.setup({
-            "denied_topics": [
-                {"name": "x", "keywords": ["alpha", "beta"]}
-            ],
-            "min_keyword_hits": 1,
-        })
+        d.setup(
+            {
+                "denied_topics": [{"name": "x", "keywords": ["alpha", "beta"]}],
+                "min_keyword_hits": 1,
+            }
+        )
         result = d.detect("only alpha here, no beta")
         assert result.detected is True
 
     def test_invalid_topic_entries_are_skipped(self):
         d = TopicEnforcementDetector()
-        d.setup({
-            "denied_topics": [
-                {"name": "good", "keywords": ["foo", "bar"]},
-                {"name": "missing_keywords"},
-                "not-a-dict",
-                {"keywords": ["x"]},  # missing name
-            ],
-            "min_keyword_hits": 1,
-        })
+        d.setup(
+            {
+                "denied_topics": [
+                    {"name": "good", "keywords": ["foo", "bar"]},
+                    {"name": "missing_keywords"},
+                    "not-a-dict",
+                    {"keywords": ["x"]},  # missing name
+                ],
+                "min_keyword_hits": 1,
+            }
+        )
         assert len(d._topics) == 1
         assert d._topics[0].name == "good"
 

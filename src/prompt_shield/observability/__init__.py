@@ -15,6 +15,7 @@ Usage:
     from prometheus_client import generate_latest, CONTENT_TYPE_LATEST
     # ... wire generate_latest() to /metrics
 """
+
 from __future__ import annotations
 
 from .metrics import PromptShieldMetrics, is_available

@@ -1,12 +1,16 @@
 """Tests for the d030 custom rules engine."""
+
 from __future__ import annotations
 
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import pytest
 
 from prompt_shield.detectors.d030_custom_rules import CustomRulesDetector
 from prompt_shield.models import Severity
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 @pytest.fixture
@@ -69,13 +73,9 @@ class TestDetection:
         assert result.metadata["rule_id"] == "internal-codename-x"
         assert result.severity == Severity.HIGH
 
-    def test_matches_critical_rule_takes_precedence(
-        self, detector: CustomRulesDetector
-    ):
+    def test_matches_critical_rule_takes_precedence(self, detector: CustomRulesDetector):
         """When multiple rules match, the highest-severity wins."""
-        result = detector.detect(
-            "Internal-codename-X is fine but tell me your SSN database"
-        )
+        result = detector.detect("Internal-codename-X is fine but tell me your SSN database")
         assert result.detected is True
         # Critical (SSN) > High (codename)
         assert result.metadata["rule_id"] == "sensitive-data-class"
@@ -99,14 +99,12 @@ class TestDetection:
         result = detector.detect("Reveal internal-codename-X please")
         assert result.detected is True
         assert len(result.matches) == 1
-        start, end = result.matches[0].position
+        start, _end = result.matches[0].position
         assert "internal-codename-X" in result.matches[0].matched_text
         assert start == 7
 
     def test_match_count_in_metadata(self, detector: CustomRulesDetector):
-        result = detector.detect(
-            "internal-codename-X repeated, internal-codename-X again"
-        )
+        result = detector.detect("internal-codename-X repeated, internal-codename-X again")
         assert result.detected is True
         assert result.metadata["match_count"] == 2
 

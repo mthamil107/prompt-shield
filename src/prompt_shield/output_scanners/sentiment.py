@@ -9,10 +9,10 @@ lexicon.
 Typical use: a customer-support chatbot deployment that wants to catch
 the model going off the rails into rude or aggressive responses.
 """
+
 from __future__ import annotations
 
 import logging
-from typing import ClassVar
 
 from prompt_shield.models import MatchDetail
 from prompt_shield.output_scanners.base import BaseOutputScanner
@@ -23,21 +23,34 @@ logger = logging.getLogger(__name__)
 # Minimal fallback lexicon used when vaderSentiment is unavailable.
 # Compound score thresholds: VADER returns -1.0 (most negative) to 1.0.
 _FALLBACK_NEGATIVE_WORDS = {
-    "stupid", "idiot", "moron", "hate", "loathe", "despise",
-    "worthless", "useless", "pathetic", "disgusting", "awful",
-    "terrible", "horrible", "garbage", "trash", "shut up",
-    "kill yourself", "die", "kill",
+    "stupid",
+    "idiot",
+    "moron",
+    "hate",
+    "loathe",
+    "despise",
+    "worthless",
+    "useless",
+    "pathetic",
+    "disgusting",
+    "awful",
+    "terrible",
+    "horrible",
+    "garbage",
+    "trash",
+    "shut up",
+    "kill yourself",
+    "die",
+    "kill",
 }
 
 
 class SentimentOutputScanner(BaseOutputScanner):
     """Flag LLM outputs whose sentiment falls below a configured threshold."""
 
-    scanner_id: ClassVar[str] = "sentiment"
-    name: ClassVar[str] = "Sentiment"
-    description: ClassVar[str] = (
-        "Flag LLM outputs that are strongly negative, hostile, or inflammatory."
-    )
+    scanner_id: str = "sentiment"
+    name: str = "Sentiment"
+    description: str = "Flag LLM outputs that are strongly negative, hostile, or inflammatory."
 
     def __init__(self) -> None:
         self._analyzer: object | None = None
@@ -47,9 +60,7 @@ class SentimentOutputScanner(BaseOutputScanner):
 
     def setup(self, config: dict[str, object]) -> None:
         threshold = config.get("threshold", -0.5)
-        self._threshold = (
-            float(threshold) if isinstance(threshold, (int, float, str)) else -0.5
-        )
+        self._threshold = float(threshold) if isinstance(threshold, (int, float, str)) else -0.5
 
     def _ensure_vader(self) -> bool:
         if self._available is not None:
@@ -81,10 +92,8 @@ class SentimentOutputScanner(BaseOutputScanner):
         return self._scan_with_fallback(output_text)
 
     def _scan_with_vader(self, output_text: str) -> OutputScanResult:
-        from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer  # noqa: F401
-
         assert self._analyzer is not None  # narrowed by _ensure_vader
-        scores = self._analyzer.polarity_scores(output_text)  # type: ignore[union-attr]
+        scores: dict[str, float] = self._analyzer.polarity_scores(output_text)  # type: ignore[attr-defined]
         compound = float(scores["compound"])
 
         flagged = compound <= self._threshold
@@ -96,8 +105,7 @@ class SentimentOutputScanner(BaseOutputScanner):
             confidence=confidence if flagged else 0.0,
             categories=list(self._categories) if flagged else [],
             explanation=(
-                f"VADER compound sentiment = {compound:+.3f} "
-                f"(threshold {self._threshold:+.3f})"
+                f"VADER compound sentiment = {compound:+.3f} (threshold {self._threshold:+.3f})"
             ),
             metadata={
                 "compound": compound,

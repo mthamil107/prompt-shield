@@ -1,4 +1,5 @@
 """Tests for the hallucination / grounding output scanner."""
+
 from __future__ import annotations
 
 import pytest
@@ -19,9 +20,7 @@ class TestBasic:
         assert result.flagged is False
 
     def test_no_documents_means_no_op(self, scanner: HallucinationOutputScanner):
-        result = scanner.scan(
-            "This is a long output without any grounding documents present."
-        )
+        result = scanner.scan("This is a long output without any grounding documents present.")
         assert result.flagged is False
         assert result.metadata.get("reason") == "no_documents"
 
@@ -54,9 +53,7 @@ class TestGroundedOutput:
 
 
 class TestUngroundedOutput:
-    def test_completely_unrelated_output_flagged(
-        self, scanner: HallucinationOutputScanner
-    ):
+    def test_completely_unrelated_output_flagged(self, scanner: HallucinationOutputScanner):
         doc = (
             "The Eiffel Tower is a wrought-iron lattice tower on the Champ "
             "de Mars in Paris, France. It was completed in 1889."
@@ -113,10 +110,11 @@ class TestConfiguration:
 
 class TestMetadata:
     def test_metadata_reports_counts(self, scanner: HallucinationOutputScanner):
+        unrelated_doc = "totally different content here entirely unrelated to the output"
         result = scanner.scan(
             "long output with several words and phrases for content analysis "
             "should have enough tokens for the threshold check to actually run",
-            context={"documents": ["totally different content here entirely unrelated to the output"]},
+            context={"documents": [unrelated_doc]},
         )
         assert "support_ratio" in result.metadata
         assert "output_ngrams" in result.metadata

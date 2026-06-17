@@ -20,6 +20,7 @@ Configuration:
       min_keyword_hits: 2          # require at least 2 keyword hits
       case_sensitive: false
 """
+
 from __future__ import annotations
 
 import logging
@@ -39,7 +40,7 @@ class DeniedTopic:
     keywords: list[str]
     severity: Severity = Severity.MEDIUM
     description: str = ""
-    compiled: list[re.Pattern] = field(default_factory=list)
+    compiled: list[re.Pattern[str]] = field(default_factory=list)
 
 
 class TopicEnforcementDetector(BaseDetector):
@@ -64,9 +65,7 @@ class TopicEnforcementDetector(BaseDetector):
     def setup(self, config: dict[str, object]) -> None:
         self._case_sensitive = bool(config.get("case_sensitive", False))
         min_hits = config.get("min_keyword_hits", 2)
-        self._min_hits = (
-            int(min_hits) if isinstance(min_hits, (int, float, str)) else 2
-        )
+        self._min_hits = int(min_hits) if isinstance(min_hits, (int, float, str)) else 2
         topics_cfg = config.get("denied_topics", [])
         if not isinstance(topics_cfg, list):
             return
@@ -97,9 +96,7 @@ class TopicEnforcementDetector(BaseDetector):
         for kw in keywords:
             try:
                 # Treat keywords as word-bounded literal phrases.
-                compiled.append(
-                    re.compile(r"\b" + re.escape(kw.strip()) + r"\b", flags)
-                )
+                compiled.append(re.compile(r"\b" + re.escape(kw.strip()) + r"\b", flags))
             except re.error:
                 continue
         return DeniedTopic(
@@ -121,11 +118,7 @@ class TopicEnforcementDetector(BaseDetector):
                 detected=False,
                 confidence=0.0,
                 severity=self.severity,
-                explanation=(
-                    "No denied topics configured"
-                    if not self._topics
-                    else "Empty input"
-                ),
+                explanation=("No denied topics configured" if not self._topics else "Empty input"),
             )
 
         best_topic: DeniedTopic | None = None
@@ -165,8 +158,7 @@ class TopicEnforcementDetector(BaseDetector):
             severity=best_topic.severity,
             matches=best_matches[:10],
             explanation=(
-                f"Matched denied topic {best_topic.name!r} with "
-                f"{best_hits} keyword hit(s)"
+                f"Matched denied topic {best_topic.name!r} with {best_hits} keyword hit(s)"
             ),
             metadata={
                 "topic": best_topic.name,

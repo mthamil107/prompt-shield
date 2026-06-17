@@ -1,4 +1,5 @@
 """Prometheus metrics implementation."""
+
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
@@ -47,34 +48,34 @@ class PromptShieldMetrics:
             "prompt_shield_scans_total",
             "Total scans performed, by final action.",
             labelnames=["action"],
-            registry=reg,
+            registry=reg,  # type: ignore[arg-type]
         )
         self.detections_total = Counter(
             "prompt_shield_detections_total",
             "Total positive detections, by detector and severity.",
             labelnames=["detector_id", "severity"],
-            registry=reg,
+            registry=reg,  # type: ignore[arg-type]
         )
         self.scan_duration_seconds = Histogram(
             "prompt_shield_scan_duration_seconds",
             "Wall-clock time per scan.",
             buckets=(0.001, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0),
-            registry=reg,
+            registry=reg,  # type: ignore[arg-type]
         )
         self.scan_input_size_chars = Histogram(
             "prompt_shield_scan_input_size_chars",
             "Distribution of scanned input sizes in characters.",
             buckets=(16, 64, 256, 1024, 4096, 16384, 65536, 262144),
-            registry=reg,
+            registry=reg,  # type: ignore[arg-type]
         )
         self.scan_input_size_tokens = Histogram(
             "prompt_shield_scan_input_size_tokens",
             "Distribution of scanned input sizes in whitespace tokens.",
             buckets=(4, 16, 64, 256, 1024, 4096, 16384),
-            registry=reg,
+            registry=reg,  # type: ignore[arg-type]
         )
 
-    def record_scan(self, report: "ScanReport") -> None:
+    def record_scan(self, report: ScanReport) -> None:
         """Update counters and histograms from a single ScanReport."""
         self.scans_total.labels(action=report.action.value).inc()
         for d in report.detections:

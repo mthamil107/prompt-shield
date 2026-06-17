@@ -1,4 +1,5 @@
 """Text normalization pipeline implementation."""
+
 from __future__ import annotations
 
 import re
@@ -7,39 +8,55 @@ from dataclasses import dataclass
 
 # Zero-width and invisible control characters commonly used in token smuggling.
 _ZERO_WIDTH_CHARS = (
-    "​"   # ZERO WIDTH SPACE
-    "‌"   # ZERO WIDTH NON-JOINER
-    "‍"   # ZERO WIDTH JOINER
-    "⁠"   # WORD JOINER
-    "﻿"   # ZERO WIDTH NO-BREAK SPACE
-    "­"   # SOFT HYPHEN
-    "͏"   # COMBINING GRAPHEME JOINER
-    "⁡"   # FUNCTION APPLICATION
-    "⁢"   # INVISIBLE TIMES
-    "⁣"   # INVISIBLE SEPARATOR
-    "⁤"   # INVISIBLE PLUS
+    "​"  # ZERO WIDTH SPACE
+    "‌"  # ZERO WIDTH NON-JOINER
+    "‍"  # ZERO WIDTH JOINER
+    "⁠"  # WORD JOINER
+    "﻿"  # ZERO WIDTH NO-BREAK SPACE
+    "­"  # SOFT HYPHEN
+    "͏"  # COMBINING GRAPHEME JOINER
+    "⁡"  # FUNCTION APPLICATION
+    "⁢"  # INVISIBLE TIMES
+    "⁣"  # INVISIBLE SEPARATOR
+    "⁤"  # INVISIBLE PLUS
 )
 _ZERO_WIDTH_RE = re.compile(f"[{_ZERO_WIDTH_CHARS}]")
 _WHITESPACE_RUN_RE = re.compile(r"[ \t]{2,}")
 
 # Cyrillic letters that visually match Latin letters in many fonts.
 _CYRILLIC_TO_LATIN = {
-    "а": "a", "А": "A",     # CYRILLIC SMALL/CAPITAL LETTER A
-    "е": "e", "Е": "E",     # E
-    "о": "o", "О": "O",     # O
-    "р": "p", "Р": "P",     # ER
-    "с": "c", "С": "C",     # ES
-    "х": "x", "Х": "X",     # HA
-    "у": "y", "У": "Y",     # U
-    "ұ": "h", "Ұ": "H",     # STRAIGHT U → loosely h/H
-    "і": "i", "І": "I",     # BYELORUSSIAN-UKRAINIAN I
-    "ј": "j", "Ј": "J",     # JE
-    "к": "k", "К": "K",     # KA
-    "м": "m", "М": "M",     # EM
-    "н": "n", "Н": "H",     # EN → looks like H in capital
-    "в": "v", "В": "B",     # VE → looks like B capital
-    "т": "t", "Т": "T",     # TE
-    "б": "b", "Б": "B",     # BE
+    "а": "a",
+    "А": "A",  # CYRILLIC SMALL/CAPITAL LETTER A
+    "е": "e",
+    "Е": "E",  # E
+    "о": "o",
+    "О": "O",  # O
+    "р": "p",
+    "Р": "P",  # ER
+    "с": "c",
+    "С": "C",  # ES
+    "х": "x",
+    "Х": "X",  # HA
+    "у": "y",
+    "У": "Y",  # U
+    "ұ": "h",
+    "Ұ": "H",  # STRAIGHT U → loosely h/H
+    "і": "i",
+    "І": "I",  # BYELORUSSIAN-UKRAINIAN I
+    "ј": "j",
+    "Ј": "J",  # JE
+    "к": "k",
+    "К": "K",  # KA
+    "м": "m",
+    "М": "M",  # EM
+    "н": "n",
+    "Н": "H",  # EN → looks like H in capital
+    "в": "v",
+    "В": "B",  # VE → looks like B capital
+    "т": "t",
+    "Т": "T",  # TE
+    "б": "b",
+    "Б": "B",  # BE
 }
 
 
@@ -103,7 +120,7 @@ class NormalizationPipeline:
                 text = after
 
         if self.homoglyph_map:
-            after = text.translate(str.maketrans(_CYRILLIC_TO_LATIN))
+            after = text.translate(str.maketrans(_CYRILLIC_TO_LATIN))  # type: ignore[arg-type]
             if after != text:
                 changes.append("homoglyph")
                 text = after
@@ -119,6 +136,7 @@ class NormalizationPipeline:
     @classmethod
     def from_config(cls, config: dict[str, object]) -> NormalizationPipeline:
         """Build a pipeline from a `normalization` config block."""
+
         def as_bool(key: str, default: bool) -> bool:
             v = config.get(key, default)
             return bool(v) if isinstance(v, (bool, int)) else default

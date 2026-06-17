@@ -1,4 +1,5 @@
 """Tests for the sentiment output scanner."""
+
 from __future__ import annotations
 
 import pytest
@@ -19,9 +20,7 @@ class TestBasicSentiment:
         assert result.flagged is False
 
     def test_positive_text_not_flagged(self, scanner: SentimentOutputScanner):
-        result = scanner.scan(
-            "Great work on the project! Really happy with your contribution."
-        )
+        result = scanner.scan("Great work on the project! Really happy with your contribution.")
         assert result.flagged is False
 
     def test_empty_text_not_flagged(self, scanner: SentimentOutputScanner):
@@ -67,9 +66,7 @@ class TestMetadata:
         assert result.metadata.get("method") in ("vader", "keyword_fallback")
 
     def test_flagged_result_has_confidence(self, scanner: SentimentOutputScanner):
-        result = scanner.scan(
-            "You are worthless stupid pathetic garbage. I hate you."
-        )
+        result = scanner.scan("You are worthless stupid pathetic garbage. I hate you.")
         if result.flagged:
             assert result.confidence > 0
 

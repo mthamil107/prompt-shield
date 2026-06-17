@@ -1,4 +1,5 @@
 """Tests for the text normalization pipeline."""
+
 from __future__ import annotations
 
 from prompt_shield.normalization import NormalizationPipeline

@@ -24,6 +24,7 @@ Configuration:
       min_anchor_similarity: 0.05  # Jaccard threshold for "drifted"
       ngram_size: 2
 """
+
 from __future__ import annotations
 
 import logging
@@ -36,14 +37,66 @@ from prompt_shield.models import DetectionResult, MatchDetail, Severity
 logger = logging.getLogger(__name__)
 
 _TOKEN_RE = re.compile(r"\b\w+\b")
-_STOP = frozenset({
-    "a", "an", "the", "and", "or", "but", "if", "then", "of", "in", "on",
-    "at", "to", "for", "by", "with", "from", "as", "is", "are", "was",
-    "were", "be", "been", "being", "this", "that", "these", "those",
-    "it", "its", "i", "you", "we", "they", "he", "she", "him", "her",
-    "do", "does", "did", "will", "would", "should", "could", "can",
-    "may", "might", "have", "has", "had", "not", "no", "so", "what",
-})
+_STOP = frozenset(
+    {
+        "a",
+        "an",
+        "the",
+        "and",
+        "or",
+        "but",
+        "if",
+        "then",
+        "of",
+        "in",
+        "on",
+        "at",
+        "to",
+        "for",
+        "by",
+        "with",
+        "from",
+        "as",
+        "is",
+        "are",
+        "was",
+        "were",
+        "be",
+        "been",
+        "being",
+        "this",
+        "that",
+        "these",
+        "those",
+        "it",
+        "its",
+        "i",
+        "you",
+        "we",
+        "they",
+        "he",
+        "she",
+        "him",
+        "her",
+        "do",
+        "does",
+        "did",
+        "will",
+        "would",
+        "should",
+        "could",
+        "can",
+        "may",
+        "might",
+        "have",
+        "has",
+        "had",
+        "not",
+        "no",
+        "so",
+        "what",
+    }
+)
 
 
 def _tokens(text: str) -> list[str]:
@@ -56,7 +109,7 @@ def _ngrams(tokens: list[str], n: int) -> set[tuple[str, ...]]:
     return {tuple(tokens[i : i + n]) for i in range(len(tokens) - n + 1)}
 
 
-def _jaccard(a: set, b: set) -> float:
+def _jaccard(a: set[tuple[str, ...]], b: set[tuple[str, ...]]) -> float:
     if not a and not b:
         return 1.0
     if not a or not b:
@@ -86,29 +139,19 @@ class TopicDriftDetector(BaseDetector):
 
     def setup(self, config: dict[str, object]) -> None:
         at = config.get("anchor_turns", 2)
-        self._anchor_turns = (
-            max(1, int(at)) if isinstance(at, (int, float, str)) else 2
-        )
+        self._anchor_turns = max(1, int(at)) if isinstance(at, (int, float, str)) else 2
         mt = config.get("min_turns", 4)
-        self._min_turns = (
-            max(2, int(mt)) if isinstance(mt, (int, float, str)) else 4
-        )
+        self._min_turns = max(2, int(mt)) if isinstance(mt, (int, float, str)) else 4
         sim = config.get("min_anchor_similarity", 0.05)
-        self._min_anchor_sim = (
-            float(sim) if isinstance(sim, (int, float, str)) else 0.05
-        )
+        self._min_anchor_sim = float(sim) if isinstance(sim, (int, float, str)) else 0.05
         ng = config.get("ngram_size", 2)
-        self._ngram_size = (
-            max(1, int(ng)) if isinstance(ng, (int, float, str)) else 2
-        )
+        self._ngram_size = max(1, int(ng)) if isinstance(ng, (int, float, str)) else 2
 
     def _collect_turns(self, context: dict[str, object] | None) -> list[str]:
         if not context:
             return []
         history = (
-            context.get("conversation_history")
-            or context.get("turns")
-            or context.get("history")
+            context.get("conversation_history") or context.get("turns") or context.get("history")
         )
         if isinstance(history, str):
             return [history]
@@ -141,8 +184,7 @@ class TopicDriftDetector(BaseDetector):
                 confidence=0.0,
                 severity=self.severity,
                 explanation=(
-                    f"Conversation too short ({len(all_turns)} turns, "
-                    f"min {self._min_turns})"
+                    f"Conversation too short ({len(all_turns)} turns, min {self._min_turns})"
                 ),
             )
 
@@ -189,13 +231,10 @@ class TopicDriftDetector(BaseDetector):
             matches=[
                 MatchDetail(
                     pattern=f"topic_drift:jaccard<{self._min_anchor_sim:.3f}",
-                    matched_text=input_text[:120] + (
-                        "..." if len(input_text) > 120 else ""
-                    ),
+                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
                     position=(0, len(input_text)),
                     description=(
-                        f"Current turn has Jaccard similarity {sim:.3f} "
-                        f"to the conversation anchor"
+                        f"Current turn has Jaccard similarity {sim:.3f} to the conversation anchor"
                     ),
                 )
             ],

@@ -19,11 +19,11 @@ Configuration:
       extra_groups: []             # optional: additional group keywords
       extra_loaded_terms: []       # optional: additional pejoratives
 """
+
 from __future__ import annotations
 
 import logging
 import re
-from typing import ClassVar
 
 from prompt_shield.models import MatchDetail
 from prompt_shield.output_scanners.base import BaseOutputScanner
@@ -34,19 +34,55 @@ logger = logging.getLogger(__name__)
 
 # Protected-group references (single words or short phrases).
 _PROTECTED_GROUPS: tuple[str, ...] = (
-    "women", "men", "girls", "boys", "females", "males",
-    "blacks", "whites", "asians", "latinos", "latinas", "hispanics",
-    "jews", "muslims", "christians", "hindus", "buddhists", "atheists",
-    "immigrants", "foreigners", "refugees",
-    "gays", "lesbians", "trans people", "transgender people",
-    "old people", "elderly", "disabled people", "poor people",
+    "women",
+    "men",
+    "girls",
+    "boys",
+    "females",
+    "males",
+    "blacks",
+    "whites",
+    "asians",
+    "latinos",
+    "latinas",
+    "hispanics",
+    "jews",
+    "muslims",
+    "christians",
+    "hindus",
+    "buddhists",
+    "atheists",
+    "immigrants",
+    "foreigners",
+    "refugees",
+    "gays",
+    "lesbians",
+    "trans people",
+    "transgender people",
+    "old people",
+    "elderly",
+    "disabled people",
+    "poor people",
 )
 
 # Negative / loaded adjectives commonly used in biased framing.
 _LOADED_TERMS: tuple[str, ...] = (
-    "lazy", "stupid", "violent", "criminal", "dirty", "greedy",
-    "untrustworthy", "dangerous", "primitive", "inferior", "superior",
-    "subhuman", "savage", "barbaric", "deceitful", "treacherous",
+    "lazy",
+    "stupid",
+    "violent",
+    "criminal",
+    "dirty",
+    "greedy",
+    "untrustworthy",
+    "dangerous",
+    "primitive",
+    "inferior",
+    "superior",
+    "subhuman",
+    "savage",
+    "barbaric",
+    "deceitful",
+    "treacherous",
 )
 
 # High-precision stereotype templates.
@@ -61,23 +97,20 @@ _STEREOTYPE_TEMPLATES: tuple[str, ...] = (
 class BiasFairnessOutputScanner(BaseOutputScanner):
     """Flag LLM outputs containing biased framing of protected groups."""
 
-    scanner_id: ClassVar[str] = "bias_fairness"
-    name: ClassVar[str] = "Bias / Fairness"
-    description: ClassVar[str] = (
-        "Flag LLM outputs that frame protected groups with loaded language "
-        "or stereotype templates."
+    scanner_id: str = "bias_fairness"
+    name: str = "Bias / Fairness"
+    description: str = (
+        "Flag LLM outputs that frame protected groups with loaded language or stereotype templates."
     )
 
     def __init__(self) -> None:
         self._threshold: int = 1
-        self._loaded_pattern: re.Pattern | None = None
-        self._stereotype_patterns: list[re.Pattern] = []
+        self._loaded_pattern: re.Pattern[str] | None = None
+        self._stereotype_patterns: list[re.Pattern[str]] = []
 
     def setup(self, config: dict[str, object]) -> None:
         threshold = config.get("threshold", 1)
-        self._threshold = (
-            int(threshold) if isinstance(threshold, (int, float, str)) else 1
-        )
+        self._threshold = int(threshold) if isinstance(threshold, (int, float, str)) else 1
         extra_groups = config.get("extra_groups", [])
         extra_loaded = config.get("extra_loaded_terms", [])
         groups = list(_PROTECTED_GROUPS)
@@ -153,8 +186,7 @@ class BiasFairnessOutputScanner(BaseOutputScanner):
             categories=["biased_framing"] if flagged else [],
             matches=hits[:10],
             explanation=(
-                f"Matched {len(hits)} bias indicator(s) "
-                f"(threshold {self._threshold})"
+                f"Matched {len(hits)} bias indicator(s) (threshold {self._threshold})"
                 if flagged
                 else "No bias indicators above threshold"
             ),

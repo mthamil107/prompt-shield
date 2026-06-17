@@ -49,7 +49,6 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import os
 import sys
 import time
 from collections import defaultdict
@@ -81,9 +80,7 @@ def _make_engine(disable_ml: bool) -> PromptShieldEngine:
         }
     }
     if disable_ml:
-        cfg["prompt_shield"]["detectors"] = {
-            "d022_semantic_classifier": {"enabled": False}
-        }
+        cfg["prompt_shield"]["detectors"] = {"d022_semantic_classifier": {"enabled": False}}
     return PromptShieldEngine(config_dict=cfg)
 
 
@@ -160,9 +157,7 @@ def main() -> None:
         help="InjecAgent/data directory",
     )
     parser.add_argument("--ml", action="store_true", help="Enable d022 ML classifier")
-    parser.add_argument(
-        "--save-json", type=Path, default=None, help="Optional JSON output path"
-    )
+    parser.add_argument("--save-json", type=Path, default=None, help="Optional JSON output path")
     args = parser.parse_args()
 
     if not args.data_dir.exists():

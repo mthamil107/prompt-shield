@@ -18,13 +18,17 @@ Usage:
         # 429 — retry after decision.retry_after_seconds
         ...
 """
+
 from __future__ import annotations
 
 import threading
 import time
 from collections import deque
 from dataclasses import dataclass
-from typing import Callable
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 @dataclass(frozen=True)
@@ -39,7 +43,7 @@ class RateLimitDecision:
     retry_after_seconds: float  # 0.0 when allowed
 
 
-class RateLimitExceeded(Exception):
+class RateLimitExceededError(Exception):
     """Raised by :meth:`SlidingWindowLimiter.enforce` when the limit is exceeded."""
 
     def __init__(self, decision: RateLimitDecision) -> None:
@@ -117,9 +121,7 @@ class SlidingWindowLimiter:
             self._prune_locked(bucket, now)
             allowed = len(bucket) < self._max_requests
             retry_after = (
-                max(0.0, bucket[0] + self._window - now)
-                if not allowed and bucket
-                else 0.0
+                max(0.0, bucket[0] + self._window - now) if not allowed and bucket else 0.0
             )
             return RateLimitDecision(
                 allowed=allowed,
@@ -166,10 +168,10 @@ class SlidingWindowLimiter:
             )
 
     def enforce(self, key: str) -> RateLimitDecision:
-        """Like :meth:`acquire` but raises :class:`RateLimitExceeded` on denial."""
+        """Like :meth:`acquire` but raises :class:`RateLimitExceededError` on denial."""
         decision = self.acquire(key)
         if not decision.allowed:
-            raise RateLimitExceeded(decision)
+            raise RateLimitExceededError(decision)
         return decision
 
     def reset(self, key: str | None = None) -> None:

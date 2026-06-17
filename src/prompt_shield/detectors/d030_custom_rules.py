@@ -23,16 +23,16 @@ YAML schema (one rule per list entry):
 The default rule directory is configured via ``rules_dir`` in the
 per-detector config; falls back to no rules if the dir is empty or absent.
 """
+
 from __future__ import annotations
 
 import logging
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import ClassVar, Literal
 
 import regex
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, MatchDetail, Severity
@@ -200,7 +200,9 @@ class CustomRulesDetector(BaseDetector):
                 explanation="no custom rule matched",
             )
 
-        confidence = 0.95 if best_rule.action == "block" else 0.75 if best_rule.action == "flag" else 0.5
+        confidence = (
+            0.95 if best_rule.action == "block" else 0.75 if best_rule.action == "flag" else 0.5
+        )
 
         return DetectionResult(
             detector_id=self.detector_id,

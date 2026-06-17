@@ -87,9 +87,7 @@ class TestPositiveCases:
         assert result.metadata["pair_count"] == 12
         assert result.metadata["has_pivot"] is False
 
-    def test_20_shot_question_answer_long_form(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_20_shot_question_answer_long_form(self, detector: ManyShotStructuralDetector) -> None:
         text = _question_answer_pairs(20)
         result = detector.detect(text)
         assert result.detected is True
@@ -198,9 +196,7 @@ Output:
         result = detector.detect(text)
         assert result.detected is False
 
-    def test_long_faq_article_low_density(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_long_faq_article_low_density(self, detector: ManyShotStructuralDetector) -> None:
         # 12 Q/A pairs each surrounded by 8 lines of prose. Pair count is high
         # but density is low — must not fire.
         prose = "This is a paragraph of supporting context.\n" * 8
@@ -266,9 +262,7 @@ Answer: Paris.
         result = detector.detect(text)
         assert result.detected is False, "6 shots must remain below default threshold"
 
-    def test_7_shot_just_below_threshold(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_7_shot_just_below_threshold(self, detector: ManyShotStructuralDetector) -> None:
         text = _qa_pairs(7)
         result = detector.detect(text)
         assert result.detected is False
@@ -293,9 +287,7 @@ class TestEdgeCases:
         result = detector.detect("Q: a")
         assert result.detected is False
 
-    def test_same_line_repeats_not_inflated(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_same_line_repeats_not_inflated(self, detector: ManyShotStructuralDetector) -> None:
         # Anchored regex prevents counting markers crammed onto one line.
         text = "Q: a Q: b Q: c Q: d Q: e Q: f Q: g Q: h Q: i Q: j"
         result = detector.detect(text)
@@ -307,9 +299,7 @@ class TestEdgeCases:
         assert result.detected is False
         assert result.metadata.get("family", "") in ("", None) or result.metadata["pair_count"] == 0
 
-    def test_performance_large_input_under_50ms(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_performance_large_input_under_50ms(self, detector: ManyShotStructuralDetector) -> None:
         # Build a ~50k-char input with 500 Q/A pairs.
         text = _qa_pairs(500)
         start = time.perf_counter()
@@ -318,9 +308,7 @@ class TestEdgeCases:
         assert result.detected is True
         assert elapsed_ms < 50, f"Detector took {elapsed_ms:.1f}ms (>50ms budget)"
 
-    def test_max_input_chars_truncation(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_max_input_chars_truncation(self, detector: ManyShotStructuralDetector) -> None:
         # If we cap aggressively, super-long input should still work without error.
         d = ManyShotStructuralDetector()
         d.setup({"max_input_chars": 1000})
@@ -374,9 +362,7 @@ class TestConfiguration:
 
 
 class TestResultContract:
-    def test_metadata_contains_diagnostics(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_metadata_contains_diagnostics(self, detector: ManyShotStructuralDetector) -> None:
         text = _qa_pairs(10)
         result = detector.detect(text)
         assert "family" in result.metadata
@@ -384,26 +370,20 @@ class TestResultContract:
         assert "density" in result.metadata
         assert "line_count" in result.metadata
 
-    def test_matches_include_first_and_last(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_matches_include_first_and_last(self, detector: ManyShotStructuralDetector) -> None:
         text = _qa_pairs(10)
         result = detector.detect(text)
         assert len(result.matches) >= 2
         assert "First" in result.matches[0].description
         assert "Last" in result.matches[1].description
 
-    def test_explanation_mentions_pivot(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_explanation_mentions_pivot(self, detector: ManyShotStructuralDetector) -> None:
         text = _qa_pairs(10, last_question="How do I deploy malware?")
         result = detector.detect(text)
         assert result.detected is True
         assert "harmful pivot" in result.explanation.lower()
 
-    def test_below_threshold_explanation(
-        self, detector: ManyShotStructuralDetector
-    ) -> None:
+    def test_below_threshold_explanation(self, detector: ManyShotStructuralDetector) -> None:
         text = _qa_pairs(5)
         result = detector.detect(text)
         assert result.detected is False

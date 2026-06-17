@@ -1,8 +1,9 @@
 """In-process rate-limiting utilities for the scan API."""
+
 from prompt_shield.ratelimit.limiter import (
     RateLimitDecision,
-    RateLimitExceeded,
+    RateLimitExceededError,
     SlidingWindowLimiter,
 )
 
-__all__ = ["RateLimitDecision", "RateLimitExceeded", "SlidingWindowLimiter"]
+__all__ = ["RateLimitDecision", "RateLimitExceededError", "SlidingWindowLimiter"]

@@ -1,11 +1,11 @@
 """Tests for the sliding-window rate limiter."""
+
 from __future__ import annotations
 
 import pytest
 
 from prompt_shield.ratelimit import (
-    RateLimitDecision,
-    RateLimitExceeded,
+    RateLimitExceededError,
     SlidingWindowLimiter,
 )
 
@@ -34,18 +34,14 @@ class TestBasic:
             SlidingWindowLimiter(max_requests=10, window_seconds=0)
 
     def test_first_request_allowed(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=3, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=3, window_seconds=60, time_func=clock)
         decision = limiter.acquire("alice")
         assert decision.allowed is True
         assert decision.requests_in_window == 1
         assert decision.retry_after_seconds == 0.0
 
     def test_check_does_not_record(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=2, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=2, window_seconds=60, time_func=clock)
         # Several checks shouldn't consume any tokens
         for _ in range(5):
             d = limiter.check("alice")
@@ -55,9 +51,7 @@ class TestBasic:
 
 class TestLimiting:
     def test_blocks_at_limit(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=2, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=2, window_seconds=60, time_func=clock)
         assert limiter.acquire("alice").allowed is True
         assert limiter.acquire("alice").allowed is True
         denied = limiter.acquire("alice")
@@ -66,9 +60,7 @@ class TestLimiting:
         assert denied.requests_in_window == 2
 
     def test_recovers_after_window(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=2, window_seconds=10, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=2, window_seconds=10, time_func=clock)
         limiter.acquire("alice")
         limiter.acquire("alice")
         assert limiter.acquire("alice").allowed is False
@@ -76,9 +68,7 @@ class TestLimiting:
         assert limiter.acquire("alice").allowed is True
 
     def test_per_key_independence(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=1, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=1, window_seconds=60, time_func=clock)
         assert limiter.acquire("alice").allowed is True
         assert limiter.acquire("bob").allowed is True
         # Alice is over her quota but Bob is not
@@ -88,11 +78,9 @@ class TestLimiting:
 
 class TestEnforce:
     def test_enforce_raises_on_deny(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=1, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=1, window_seconds=60, time_func=clock)
         limiter.enforce("alice")
-        with pytest.raises(RateLimitExceeded) as exc_info:
+        with pytest.raises(RateLimitExceededError) as exc_info:
             limiter.enforce("alice")
         assert exc_info.value.decision.key == "alice"
         assert exc_info.value.decision.allowed is False
@@ -100,9 +88,7 @@ class TestEnforce:
 
 class TestReset:
     def test_reset_specific_key(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=1, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=1, window_seconds=60, time_func=clock)
         limiter.acquire("alice")
         limiter.acquire("bob")
         limiter.reset("alice")
@@ -111,9 +97,7 @@ class TestReset:
         assert limiter.acquire("bob").allowed is False
 
     def test_reset_all(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=1, window_seconds=60, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=1, window_seconds=60, time_func=clock)
         limiter.acquire("alice")
         limiter.acquire("bob")
         limiter.reset()
@@ -138,9 +122,7 @@ class TestEviction:
 
 class TestSlidingBehavior:
     def test_partial_window_expiry(self, clock: FakeClock):
-        limiter = SlidingWindowLimiter(
-            max_requests=3, window_seconds=10, time_func=clock
-        )
+        limiter = SlidingWindowLimiter(max_requests=3, window_seconds=10, time_func=clock)
         # Three requests spread across the window
         limiter.acquire("alice")  # t=0
         clock.advance(3)

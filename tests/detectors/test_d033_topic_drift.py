@@ -1,4 +1,5 @@
 """Tests for the d033 multi-turn topic drift detector."""
+
 from __future__ import annotations
 
 import pytest
@@ -9,12 +10,14 @@ from prompt_shield.detectors.d033_topic_drift import TopicDriftDetector
 @pytest.fixture
 def detector() -> TopicDriftDetector:
     d = TopicDriftDetector()
-    d.setup({
-        "anchor_turns": 2,
-        "min_turns": 4,
-        "min_anchor_similarity": 0.05,
-        "ngram_size": 2,
-    })
+    d.setup(
+        {
+            "anchor_turns": 2,
+            "min_turns": 4,
+            "min_anchor_similarity": 0.05,
+            "ngram_size": 2,
+        }
+    )
     return d
 
 
@@ -37,15 +40,16 @@ class TestOnTopicConversation:
         # Use unigrams (ngram_size=1) for short-conversation tests so that
         # lexical overlap is achievable on realistic turns.
         d = TopicDriftDetector()
-        d.setup({"anchor_turns": 2, "min_turns": 4,
-                 "min_anchor_similarity": 0.05, "ngram_size": 1})
+        d.setup({"anchor_turns": 2, "min_turns": 4, "min_anchor_similarity": 0.05, "ngram_size": 1})
         history = [
             "Can you help me debug this Python function for parsing JSON?",
             "Here's the Python function code parsing JSON with an error",
             "I'm seeing a KeyError on line 5 when the JSON is missing a field",
             "I tried using dict.get with a default but it still raises an error",
         ]
-        current = "Should I use json.loads with object_hook to handle missing JSON fields in Python?"
+        current = (
+            "Should I use json.loads with object_hook to handle missing JSON fields in Python?"
+        )
         result = d.detect(current, context={"history": history})
         assert result.detected is False
 
@@ -84,13 +88,24 @@ class TestTopicDrift:
 class TestContextFormats:
     def test_chat_format_dicts_accepted(self):
         d = TopicDriftDetector()
-        d.setup({"anchor_turns": 2, "min_turns": 4,
-                 "min_anchor_similarity": 0.05, "ngram_size": 1})
+        d.setup({"anchor_turns": 2, "min_turns": 4, "min_anchor_similarity": 0.05, "ngram_size": 1})
         history = [
-            {"role": "user", "content": "Help me with Python sorting algorithms and recursive sort code"},
-            {"role": "assistant", "content": "Sure, here's a Python quicksort sorting implementation with code"},
-            {"role": "user", "content": "Now show me mergesort sorting with Python code please"},
-            {"role": "assistant", "content": "Here's the Python mergesort sorting implementation code"},
+            {
+                "role": "user",
+                "content": ("Help me with Python sorting algorithms and recursive sort code"),
+            },
+            {
+                "role": "assistant",
+                "content": ("Sure, here's a Python quicksort sorting implementation with code"),
+            },
+            {
+                "role": "user",
+                "content": ("Now show me mergesort sorting with Python code please"),
+            },
+            {
+                "role": "assistant",
+                "content": ("Here's the Python mergesort sorting implementation code"),
+            },
         ]
         current = "Now write a recursive bubble sort sorting implementation in Python code"
         result = d.detect(current, context={"conversation_history": history})
@@ -109,12 +124,14 @@ class TestContextFormats:
 class TestConfiguration:
     def test_strict_similarity_threshold(self):
         d = TopicDriftDetector()
-        d.setup({
-            "min_turns": 2,
-            "anchor_turns": 1,
-            "min_anchor_similarity": 0.95,  # extremely strict
-            "ngram_size": 2,
-        })
+        d.setup(
+            {
+                "min_turns": 2,
+                "anchor_turns": 1,
+                "min_anchor_similarity": 0.95,  # extremely strict
+                "ngram_size": 2,
+            }
+        )
         # Even on-topic continuation should flag with such a strict threshold
         result = d.detect(
             "another related question about pasta and cheese ingredients",
@@ -124,12 +141,14 @@ class TestConfiguration:
 
     def test_lenient_similarity_threshold(self):
         d = TopicDriftDetector()
-        d.setup({
-            "min_turns": 2,
-            "anchor_turns": 1,
-            "min_anchor_similarity": 0.0,  # impossible to trigger
-            "ngram_size": 2,
-        })
+        d.setup(
+            {
+                "min_turns": 2,
+                "anchor_turns": 1,
+                "min_anchor_similarity": 0.0,  # impossible to trigger
+                "ngram_size": 2,
+            }
+        )
         result = d.detect(
             "completely different topic about nuclear physics",
             context={"history": ["tell me about pasta"]},
