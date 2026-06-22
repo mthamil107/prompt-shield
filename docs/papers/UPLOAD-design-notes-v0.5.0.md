@@ -9,15 +9,18 @@ Source-of-truth files in this repo:
 - `docs/papers/build_design_notes_v0_5_0.py` — DOCX builder
 - `docs/papers/design-notes-v0.5.0.docx` — generated DOCX (do not hand-edit)
 
-## Step 0 — Convert DOCX → PDF
+## Step 0 — DOCX → PDF (already done)
 
-Open `docs/papers/design-notes-v0.5.0.docx` in Microsoft Word, then:
+The PDF is committed at `docs/papers/design-notes-v0.5.0.pdf` (~380 KB).
+Re-generate from source any time with:
 
-- `File → Save As → PDF`
-- Save as `docs/papers/design-notes-v0.5.0.pdf`
+```
+python docs/papers/build_design_notes_v0_5_0.py
+```
 
-(If Word isn't installed: any modern alternative — LibreOffice, Google Docs,
-the Word web app — produces an equivalent PDF.)
+(requires Word + `docx2pdf` on Windows/Mac, or LibreOffice + `soffice
+--headless --convert-to pdf` on Linux. The script auto-detects and
+falls back gracefully if neither is present.)
 
 ## Step 1 — Zenodo (5 min, gets a DOI)
 

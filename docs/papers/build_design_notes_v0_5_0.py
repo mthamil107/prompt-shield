@@ -680,5 +680,23 @@ def build() -> None:
     print(f"Wrote {OUT_DOCX}")
 
 
+def to_pdf() -> None:
+    """Convert the DOCX to PDF using Word (Win/Mac via docx2pdf).
+
+    Requires Microsoft Word installed. On Linux / CI, install LibreOffice
+    and run ``soffice --headless --convert-to pdf design-notes-v0.5.0.docx``
+    instead.
+    """
+    try:
+        from docx2pdf import convert
+    except ImportError:
+        print("docx2pdf not installed. Run: pip install docx2pdf")
+        return
+    out_pdf = OUT_DOCX.with_suffix(".pdf")
+    convert(str(OUT_DOCX), str(out_pdf))
+    print(f"Wrote {out_pdf}")
+
+
 if __name__ == "__main__":
     build()
+    to_pdf()
