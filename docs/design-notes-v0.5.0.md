@@ -5,7 +5,9 @@
 **Project:** prompt-shield — https://github.com/mthamil107/prompt-shield
 **Companion paper:** *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection*, arXiv:2604.18248 (CC BY 4.0)
 **License:** CC BY 4.0
-**Code release:** v0.5.0 on PyPI (`prompt-shield-ai==0.5.0`, Apache 2.0); commit `298c01f` on `main`.
+**Code release:** v0.5.1 on PyPI (`prompt-shield-ai`, Apache 2.0); commit `298c01f` on `main`.
+**DOI:** [10.5281/zenodo.20809165](https://doi.org/10.5281/zenodo.20809165)
+**Zenodo record:** https://zenodo.org/records/20809165
 
 ## Purpose and scope
 

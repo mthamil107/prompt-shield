@@ -880,6 +880,16 @@ Open an issue or PR. We're especially interested in adversarial evaluations.
 
 ---
 
+## Prior art / design notes
+
+The novel detection and pre-processing techniques in v0.5.0 — d029 many-shot structural, d030 custom YAML rules, d031 language enforcement, d032 topic enforcement, d033 multi-turn topic drift, the normalization pipeline, and the multi-encoding preprocessor — are described in algorithmic detail in [`docs/design-notes-v0.5.0.md`](docs/design-notes-v0.5.0.md) and archived on Zenodo:
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20809165.svg)](https://doi.org/10.5281/zenodo.20809165)
+
+These notes are published as a dated public disclosure. The author makes no claim to patent rights over the techniques described. The companion paper covering d027 / d028 / adversarial fatigue remains at [arXiv:2604.18248](https://arxiv.org/abs/2604.18248).
+
+---
+
 ## Roadmap
 
 - **v0.1.x**: 22 detectors, DeBERTa ML classifier, ensemble scoring, self-learning vault

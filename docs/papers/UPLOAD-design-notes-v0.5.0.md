@@ -22,7 +22,12 @@ python docs/papers/build_design_notes_v0_5_0.py
 --headless --convert-to pdf` on Linux. The script auto-detects and
 falls back gracefully if neither is present.)
 
-## Step 1 — Zenodo (5 min, gets a DOI)
+## Step 1 — Zenodo (DONE — DOI 10.5281/zenodo.20809165)
+
+Published 2026-06-23 at https://zenodo.org/records/20809165. Use this DOI
+in the arXiv submission below.
+
+## Step 1 (archived, for reference) — Zenodo (5 min, gets a DOI)
 
 Zenodo is fastest and unlocks a citable DOI right away. Patent examiners
 don't search Zenodo as routinely as arXiv, but a DOI + permanent archive
