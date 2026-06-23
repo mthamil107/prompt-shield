@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.1] - 2026-06-23
+
+Documentation patch release. No code changes.
+
+### Fixed
+
+- README image references switched from relative paths to absolute
+  `raw.githubusercontent.com` URLs so they render on PyPI (PyPI's
+  camo proxy cannot resolve relative paths; the demo GIFs and
+  architecture diagram were broken on the package page).
+
+### Added
+
+- Small star-the-repo prompt under the install command (visible on
+  GitHub and PyPI).
+
 ## [0.5.0] - 2026-06-17
 
 Operator-policy and observability release. Adds four new input detectors

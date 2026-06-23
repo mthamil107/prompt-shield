@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="prompt-shield-logo.png" alt="prompt-shield" width="280" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/prompt-shield-logo.png" alt="prompt-shield" width="280" />
 </p>
 
 <h1 align="center">prompt-shield</h1>
@@ -91,7 +91,7 @@ The most comprehensive open-source prompt injection firewall for LLM application
 #### Classic detectors — pattern, encoding, PII, multilingual
 
 <p align="center">
-  <img src="docs/images/demo_classic.gif" alt="Classic detectors: regex, encoding, PII, multilingual" width="820" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_classic.gif" alt="Classic detectors: regex, encoding, PII, multilingual" width="820" />
 </p>
 
 #### d027 Stylometric Discontinuity — forensic-linguistics technique
@@ -99,7 +99,7 @@ The most comprehensive open-source prompt injection firewall for LLM application
 Detects indirect injection in benign documents by measuring writing-style breaks.
 
 <p align="center">
-  <img src="docs/images/demo_d027.gif" alt="d027 stylometric discontinuity demo" width="820" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d027.gif" alt="d027 stylometric discontinuity demo" width="820" />
 </p>
 
 #### d028 Smith-Waterman Sequence Alignment — bioinformatics technique
@@ -107,7 +107,7 @@ Detects indirect injection in benign documents by measuring writing-style breaks
 Catches paraphrased attacks that regex misses by aligning input against known attack sequences with a synonym-aware substitution matrix.
 
 <p align="center">
-  <img src="docs/images/demo_d028.gif" alt="d028 Smith-Waterman alignment demo" width="820" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d028.gif" alt="d028 Smith-Waterman alignment demo" width="820" />
 </p>
 
 #### d029 Many-Shot Structural Analysis — Anthropic 2024 attack class
@@ -115,7 +115,7 @@ Catches paraphrased attacks that regex misses by aligning input against known at
 Detects many-shot jailbreaks by structural density (paired-marker counts and density), not by payload content.
 
 <p align="center">
-  <img src="docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
 </p>
 
 <p align="center">
@@ -242,7 +242,7 @@ print(report.overall_risk_score)  # 0.95
 ## Architecture
 
 <p align="center">
-  <img src="architecture.png" alt="prompt-shield architecture" width="900" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/architecture.png" alt="prompt-shield architecture" width="900" />
 </p>
 
 ## Built-in Detectors
