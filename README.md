@@ -27,6 +27,10 @@
   <code>pip install prompt-shield-ai</code>
 </p>
 
+<p align="center">
+  <sub>If prompt-shield helps you ship safer LLM apps, please ⭐ <a href="https://github.com/mthamil107/prompt-shield">the repo</a> — it helps other developers find the project.</sub>
+</p>
+
 ---
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
