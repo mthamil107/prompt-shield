@@ -914,6 +914,29 @@ See [ROADMAP.md](ROADMAP.md) for details.
 
 Contributions welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## Show your support — "Protected by prompt-shield" badge
+
+If your project uses prompt-shield in production, drop this badge into your README to signal to your users that you scan LLM input/output for injection, PII, and policy violations. It also helps other developers discover the project.
+
+[![Protected by prompt-shield](https://img.shields.io/badge/protected%20by-prompt--shield-1E40AF?style=flat&logo=shield&logoColor=white)](https://github.com/mthamil107/prompt-shield)
+
+**Markdown:**
+```markdown
+[![Protected by prompt-shield](https://img.shields.io/badge/protected%20by-prompt--shield-1E40AF?style=flat&logo=shield&logoColor=white)](https://github.com/mthamil107/prompt-shield)
+```
+
+**reStructuredText:**
+```rst
+.. image:: https://img.shields.io/badge/protected%20by-prompt--shield-1E40AF?style=flat&logo=shield&logoColor=white
+   :target: https://github.com/mthamil107/prompt-shield
+   :alt: Protected by prompt-shield
+```
+
+**HTML:**
+```html
+<a href="https://github.com/mthamil107/prompt-shield"><img src="https://img.shields.io/badge/protected%20by-prompt--shield-1E40AF?style=flat&logo=shield&logoColor=white" alt="Protected by prompt-shield" /></a>
+```
+
 ## License
 
 Apache 2.0 -- see [LICENSE](LICENSE).
