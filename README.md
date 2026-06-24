@@ -35,7 +35,9 @@
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
-### Benchmarked against 5 open-source competitors on 54 real-world 2025-2026 attacks:
+### Evaluated on 8 datasets, 9,150+ samples, including 7 public/academic sources
+
+Below: head-to-head against 5 OSS competitors on 54 real-world 2025-2026 attacks. Full breakdown across all 8 datasets (Garak, InjecAgent, HarmBench, Liu/USENIX, deepset, NotInject, v0.4.0 ablation set) in the [Benchmark Results](#benchmark-results) section, with honest commentary on where we win and where we lose.
 
 <table>
 <tr>
@@ -301,6 +303,21 @@ print(report.overall_risk_score)  # 0.95
 
 ## Benchmark Results
 
+prompt-shield is evaluated on **8 datasets totalling 9,150+ samples**, of which 7 are public (academic / industry sources, no self-curation). We publish numbers transparently — including where we lose. Below is the at-a-glance summary; per-dataset detail follows.
+
+| # | Dataset | Source | Samples | prompt-shield detection | Notes |
+|---|---|---|---:|---:|---|
+| 1 | Real-world 2025-2026 attacks | Self-curated | 54 + 15 benign | **92.3%** (96.0% F1) | Live attack corpus; the only self-curated set |
+| 2 | [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) | HuggingFace | 116 | 36.7% (regex+ML) | Subtle paraphrases — DeBERTa-trained-on-it wins |
+| 3 | [NotInject](https://github.com/leolee99/NotInject) | leolee99 (academic) | 339 benign | 0% FP | Specificity test |
+| 4 | v0.4.0 ablation (5 datasets) | Mixed | 1,228 | per-technique | d028 isolation eval |
+| 5 | [NVIDIA Garak](https://github.com/NVIDIA/garak) | NVIDIA | 5,968 | 55.2% | Full promptinject + latentinjection probes |
+| 6 | [InjecAgent](https://arxiv.org/abs/2403.02691) | ACL Findings 2024 | 2,108 | 85.2% | Indirect injection via tool outputs |
+| 7 | [Liu et al.](https://arxiv.org/abs/2308.01990) | USENIX Security 2024 | 200 | 64.0% | 5 attack strategies × 8 prompts × 5 payloads |
+| 8 | [HarmBench](https://arxiv.org/abs/2402.04249) | CAIS, Mazeika et al. 2024 | 400 | 31.0% (contextual subset) | Honest scope breakdown below |
+
+**On the spread (10% → 96%) — methodology matters.** Each dataset measures something different. Garak probes are designed adversarial corpora (where we score 55%); deepset's set is intentionally subtle ML-paraphrased attacks that need a model trained on them (where we score 37%); HarmBench is primarily an LLM refusal benchmark, not a prompt-injection benchmark (where the 31% is on the *only* injection-shaped subset). The 96% on Benchmark 1 reflects the *current* live-attack landscape, not the entire historical paper-published space.
+
 ### Benchmark 1: Real-World 2025-2026 Attacks
 
 54 attack prompts across 8 categories (multilingual, encoded, tool-disguised, educational reframing, dual intention) + 15 benign inputs:
@@ -418,6 +435,21 @@ Independent evaluation against the five attack templates defined by [Liu et al.,
 Benign baseline (8 clean prompts, no attack): **0% false positives.**
 
 **Honest takeaway:** prompt-shield catches 100% of attacks containing explicit override language but only 40% of subtle task-hijacking attacks where the injected instruction *looks like a legitimate task request*. The ML classifier (`d022`) does not close this gap — both regex-only and full configurations score identically. **This is the niche addressed by Liu et al.'s [DataSentinel](https://arxiv.org/abs/2504.11358) (IEEE S&P 2025)**, a fine-tuned model specifically trained on this attack class. We publish self-critical numbers because that's what advances the field.
+
+### Benchmark 8: HarmBench (CAIS, Mazeika et al. 2024) — 400 behaviors
+
+Evaluation against the [HarmBench standardized red-team benchmark](https://arxiv.org/abs/2402.04249). HarmBench is primarily an **LLM-refusal benchmark** (does the model refuse harmful content?), not a prompt-injection benchmark — so we report transparently by category. Reproduce: `python tests/benchmark_harmbench.py`. Full output in [`docs/papers/evaluation/harmbench.json`](docs/papers/evaluation/harmbench.json).
+
+| Category | Total | Detected | Rate | What it tests |
+|---|---:|---:|---:|---|
+| **contextual** | 100 | 31 | **31.0%** | Harmful request + context document — closest to **indirect / RAG-style injection** |
+| standard | 200 | 14 | 7.0% | Raw harmful requests (chemical, illegal, cybercrime) — **not injection attacks**; LLM-refusal job |
+| copyright | 100 | 0 | 0.0% | Requests for copyrighted lyrics/books — **out of scope** for prompt-injection defense |
+| **OVERALL** | 400 | 45 | 11.2% | Headline; misleading without the breakdown |
+
+**Top firing detectors on this dataset:** d011 whitespace injection (11), d023 PII detection (10), **d027 stylometric discontinuity (10)**, d001 system prompt extraction (9), **d028 sequence alignment (5)**. The cross-domain techniques (d027/d028) are doing visible work on the contextual subset.
+
+**Honest takeaway:** **31% on the contextual subset is below Lakera's typical claims on similar tests**, but no other open-source defense currently publishes a HarmBench score at all. Being the first to publish — with honest category breakdown — is itself the credibility play. Closing the gap on contextual behaviours is on the v0.6.0 roadmap (the federated threat-intel feed + counterfactual explanations directly attack this category).
 
 ## Output Scanning
 

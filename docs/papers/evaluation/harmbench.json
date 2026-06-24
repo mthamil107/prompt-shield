@@ -1,0 +1,44 @@
+{
+  "dataset": "HarmBench (CAIS, Mazeika et al. 2024)",
+  "csv_path": "data\\harmbench_behaviors_text_all.csv",
+  "ml_enabled": false,
+  "by_category": {
+    "standard": {
+      "total": 200,
+      "detected": 14,
+      "blocked": 12,
+      "flagged": 2,
+      "rate": 0.07
+    },
+    "contextual": {
+      "total": 100,
+      "detected": 31,
+      "blocked": 14,
+      "flagged": 17,
+      "rate": 0.31
+    },
+    "copyright": {
+      "total": 100,
+      "detected": 0,
+      "blocked": 0,
+      "flagged": 0,
+      "rate": 0.0
+    }
+  },
+  "overall": {
+    "total": 400,
+    "detected": 45,
+    "rate": 0.1125
+  },
+  "top_detectors": {
+    "d011_whitespace_injection": 11,
+    "d023_pii_detection": 10,
+    "d027_stylometric_discontinuity": 10,
+    "d001_system_prompt_extraction": 9,
+    "d028_sequence_alignment": 5,
+    "d012_markdown_html_injection": 4,
+    "d013_data_exfiltration": 3,
+    "d031_language_enforcement": 2,
+    "d014_tool_function_abuse": 1
+  }
+}

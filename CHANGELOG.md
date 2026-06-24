@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added — benchmarks
+
+- **HarmBench evaluation** (`tests/benchmark_harmbench.py`). Runs prompt-shield
+  against all 400 behaviors in the CAIS HarmBench benchmark (Mazeika et al.,
+  2024) with per-category reporting (standard / contextual / copyright).
+  Contextual subset (100 indirect-injection-style behaviors) detected at
+  31.0%; standard at 7.0%; copyright at 0%. Raw results in
+  `docs/papers/evaluation/harmbench.json`. README §"Benchmark 8" documents
+  scope, top-firing detectors, and an honest gap-framing note.
+
+### Changed — README positioning
+
+- Benchmark Results section restructured to lead with an 8-dataset / 9,150+
+  sample overview table (7 public, 1 self-curated) instead of leading with
+  the 54-attack self-curated number. Addresses the "everyone thinks
+  prompt-shield benchmarks only on local data" perception.
+- Headline framing in the intro changed from "Benchmarked against 5 OSS
+  competitors on 54 attacks" to "Evaluated on 8 datasets, 9,150+ samples,
+  7 public sources", with a link into the detailed section.
+
 ## [0.5.1] - 2026-06-23
 
 Documentation patch release. No code changes.

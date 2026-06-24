@@ -53,6 +53,11 @@ plugins/n8n/package-lock.json
 # Outreach drafts (not for public repo)
 docs/drafts/
 
+# Benchmark raw datasets (fetched by users, not redistributed)
+data/harmbench_behaviors_text_all.csv
+data/garak_*.jsonl
+data/injecagent_*.json
+
 # Dify packaging artifacts
 dify.exe
 *.difypkg
