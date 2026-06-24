@@ -159,7 +159,9 @@ def main() -> None:
                 missed_examples[cat].append(row["Behavior"][:100])
 
     print("\n=== Detection rate by FunctionalCategory ===")
-    print(f"{'Category':<14} {'Total':>6} {'Detected':>9} {'Blocked':>8} {'Flagged':>8} {'Rate':>7}")
+    print(
+        f"{'Category':<14} {'Total':>6} {'Detected':>9} {'Blocked':>8} {'Flagged':>8} {'Rate':>7}"
+    )
     overall_total = 0
     overall_detected = 0
     summary: dict[str, dict] = {}

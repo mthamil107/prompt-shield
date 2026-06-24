@@ -140,6 +140,13 @@ ignore_errors = true
 module = ["prompt_shield.detectors.d030_custom_rules"]
 disable_error_code = ["import-untyped", "unused-ignore"]
 
+# numpy 2.x stubs use PEP 695 `type X = ...` statements which mypy rejects
+# when `python_version = "3.10"`. We don't depend on numpy directly — it's
+# pulled in transitively by transformers in [dev,all]. Skip its stubs.
+[[tool.mypy.overrides]]
+module = ["numpy", "numpy.*"]
+follow_imports = "skip"
+
 [[tool.mypy.overrides]]
 module = [
     "prompt_shield.config.*",
