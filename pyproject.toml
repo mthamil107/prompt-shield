@@ -100,7 +100,11 @@ select = ["E", "F", "W", "I", "N", "UP", "B", "A", "SIM", "TCH", "RUF"]
 "tests/detectors/test_d031_language_enforcement.py" = ["RUF001", "RUF002", "RUF003"]
 
 [tool.mypy]
-python_version = "3.10"
+# Bumped from 3.10 to 3.12 so mypy can parse PEP 695 `type X = ...` syntax
+# in numpy 2.x stubs (transitive dep via transformers). Project's runtime
+# requirement remains `requires-python = ">=3.10"` — the CI test matrix on
+# 3.10/3.11/3.12/3.13 catches any 3.12-only feature that sneaks into code.
+python_version = "3.12"
 strict = true
 packages = ["prompt_shield"]
 mypy_path = "src"
@@ -140,12 +144,13 @@ ignore_errors = true
 module = ["prompt_shield.detectors.d030_custom_rules"]
 disable_error_code = ["import-untyped", "unused-ignore"]
 
-# numpy 2.x stubs use PEP 695 `type X = ...` statements which mypy rejects
-# when `python_version = "3.10"`. We don't depend on numpy directly — it's
-# pulled in transitively by transformers in [dev,all]. Skip its stubs.
+# numpy 2.x stubs use PEP 695 `type X = ...` statements; we don't depend on
+# numpy directly (transitive via transformers in [dev,all]). Skip its stubs
+# defensively in case the mypy python_version bump above isn't enough.
 [[tool.mypy.overrides]]
 module = ["numpy", "numpy.*"]
 follow_imports = "skip"
+ignore_errors = true
 
 [[tool.mypy.overrides]]
 module = [

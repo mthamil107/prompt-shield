@@ -139,7 +139,9 @@ class DetectorRegistry:
             if hasattr(eps, "select"):
                 detector_eps = eps.select(group="prompt_shield.detectors")
             else:
-                detector_eps = eps.get("prompt_shield.detectors", [])
+                # Pre-3.10 EntryPoints API — unreachable on supported Pythons
+                # but kept for any leftover environments.
+                detector_eps = eps.get("prompt_shield.detectors", [])  # type: ignore[attr-defined]
 
             base_cls = _get_base_class()
 
