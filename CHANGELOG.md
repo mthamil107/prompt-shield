@@ -16,6 +16,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   31.0%; standard at 7.0%; copyright at 0%. Raw results in
   `docs/papers/evaluation/harmbench.json`. README §"Benchmark 8" documents
   scope, top-firing detectors, and an honest gap-framing note.
+- **PINT benchmark submission** to [lakeraai/pint-benchmark](https://github.com/lakeraai/pint-benchmark)
+  via [PR #38](https://github.com/lakeraai/pint-benchmark/pull/38). prompt-shield
+  scores 8/8 on the public 8-entry `example-dataset.yaml` sanity-check. The
+  proprietary 4,314-input PINT dataset evaluation requires Lakera's team to
+  run it on their end; official score pending. README §"Benchmark 9" documents
+  scope and the in-flight submission.
 
 ### Changed — README positioning
 

@@ -35,9 +35,9 @@
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
-### Evaluated on 8 datasets, 9,150+ samples, including 7 public/academic sources
+### Evaluated on 9 datasets, 9,150+ samples — 8 public/academic sources
 
-Below: head-to-head against 5 OSS competitors on 54 real-world 2025-2026 attacks. Full breakdown across all 8 datasets (Garak, InjecAgent, HarmBench, Liu/USENIX, deepset, NotInject, v0.4.0 ablation set) in the [Benchmark Results](#benchmark-results) section, with honest commentary on where we win and where we lose.
+Below: head-to-head against 5 OSS competitors on 54 real-world 2025-2026 attacks. Full breakdown across all 9 datasets (Garak, InjecAgent, HarmBench, Liu/USENIX, deepset, NotInject, v0.4.0 ablation set, PINT) in the [Benchmark Results](#benchmark-results) section, with honest commentary on where we win and where we lose.
 
 <table>
 <tr>
@@ -303,7 +303,7 @@ print(report.overall_risk_score)  # 0.95
 
 ## Benchmark Results
 
-prompt-shield is evaluated on **8 datasets totalling 9,150+ samples**, of which 7 are public (academic / industry sources, no self-curation). We publish numbers transparently — including where we lose. Below is the at-a-glance summary; per-dataset detail follows.
+prompt-shield is evaluated on **9 datasets totalling 9,150+ samples**, of which 8 are public (academic / industry sources, no self-curation). We publish numbers transparently — including where we lose, and including where verification is still pending. Below is the at-a-glance summary; per-dataset detail follows.
 
 | # | Dataset | Source | Samples | prompt-shield detection | Notes |
 |---|---|---|---:|---:|---|
@@ -315,6 +315,7 @@ prompt-shield is evaluated on **8 datasets totalling 9,150+ samples**, of which 
 | 6 | [InjecAgent](https://arxiv.org/abs/2403.02691) | ACL Findings 2024 | 2,108 | 85.2% | Indirect injection via tool outputs |
 | 7 | [Liu et al.](https://arxiv.org/abs/2308.01990) | USENIX Security 2024 | 200 | 64.0% | 5 attack strategies × 8 prompts × 5 payloads |
 | 8 | [HarmBench](https://arxiv.org/abs/2402.04249) | CAIS, Mazeika et al. 2024 | 400 | 31.0% (contextual subset) | Honest scope breakdown below |
+| 9 | [PINT example-dataset](https://github.com/lakeraai/pint-benchmark) | Lakera (public subset) | 8 | 100% (8/8, 0 FP) | Sanity-only; full PINT score [pending Lakera verification](https://github.com/lakeraai/pint-benchmark/pull/38) |
 
 **On the spread (10% → 96%) — methodology matters.** Each dataset measures something different. Garak probes are designed adversarial corpora (where we score 55%); deepset's set is intentionally subtle ML-paraphrased attacks that need a model trained on them (where we score 37%); HarmBench is primarily an LLM refusal benchmark, not a prompt-injection benchmark (where the 31% is on the *only* injection-shaped subset). The 96% on Benchmark 1 reflects the *current* live-attack landscape, not the entire historical paper-published space.
 
@@ -450,6 +451,16 @@ Evaluation against the [HarmBench standardized red-team benchmark](https://arxiv
 **Top firing detectors on this dataset:** d011 whitespace injection (11), d023 PII detection (10), **d027 stylometric discontinuity (10)**, d001 system prompt extraction (9), **d028 sequence alignment (5)**. The cross-domain techniques (d027/d028) are doing visible work on the contextual subset.
 
 **Honest takeaway:** **31% on the contextual subset is below Lakera's typical claims on similar tests**, but no other open-source defense currently publishes a HarmBench score at all. Being the first to publish — with honest category breakdown — is itself the credibility play. Closing the gap on contextual behaviours is on the v0.6.0 roadmap (the federated threat-intel feed + counterfactual explanations directly attack this category).
+
+### Benchmark 9: PINT (Lakera) — submission pending verification
+
+[PINT](https://github.com/lakeraai/pint-benchmark) is Lakera's standardized 4,314-input prompt-injection benchmark, with an [official scoreboard](https://github.com/lakeraai/pint-benchmark#pint-scores) covering Lakera Guard, AWS Bedrock Guardrails, Azure AI Prompt Shield, Google Model Armor, ProtectAI, Llama Prompt Guard 1+2, and Aporia.
+
+**The full PINT dataset is proprietary** (a mix of public and Lakera's internal data) — only an 8-entry `example-dataset.yaml` is public. Official scores require Lakera's team to run the dataset on their end against a submitted evaluator. We've submitted prompt-shield via [PR #38](https://github.com/lakeraai/pint-benchmark/pull/38) and are awaiting their evaluation.
+
+**Public example-set sanity check:** prompt-shield scores 8/8 (100%) on the public `example-dataset.yaml`, including all 6 benign categories (long descriptive prose, hard negatives, technical documents, terse / chat / document inputs — no false positives) and both injection categories. The d028 Smith-Waterman alignment detector fires on both attacks. This validates the evaluator; it is **not** a defensible benchmark number on its own (n=8).
+
+**What landing on the PINT scoreboard would mean:** prompt-shield would be the only complete open-source prompt-injection firewall on the board. ProtectAI's there as a single HuggingFace model, not a full detection stack. We will publish the official score the moment Lakera verifies it — including if it lands below the incumbents. (See [PR #38](https://github.com/lakeraai/pint-benchmark/pull/38) for status.)
 
 ## Output Scanning
 
