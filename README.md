@@ -18,7 +18,8 @@
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
-  <img src="https://img.shields.io/badge/tests-1040-blue" alt="1040 tests" />
+  <img src="https://img.shields.io/badge/tests-1057-blue" alt="1057 tests" />
+  <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
 </p>
@@ -34,6 +35,8 @@
 ---
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
+
+> **New in v0.6.0 — [federated threat-intel feed](#federated-threat-intel-feed-v060).** Fetch and verify a public ed25519-signed catalog of known prompt-injection attack patterns from [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures). First OSS feed of its kind; Lakera / ProtectAI / Cisco keep their threat intel proprietary because it *is* their business model. CC0 data, Apache 2.0 code, offline-signed.
 
 ### Evaluated on 9 datasets, 9,150+ samples — 8 public/academic sources
 
@@ -135,6 +138,7 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
 - [3-Gate Agent Protection](#protecting-agentic-apps-3-gate-model) | [Integrations](#integrations)
 - [GitHub Action](#github-action) | [Pre-commit](#pre-commit-hooks) | [Docker + API](#docker--rest-api)
 - [Compliance](#compliance) | [Webhook Alerting](#webhook-alerting) | [Self-Learning](#self-learning)
+- [**Federated Threat-Intel Feed (v0.6.0)**](#federated-threat-intel-feed-v060) -- **NEW**
 - [Configuration](#configuration) | [Custom Detectors](#writing-custom-detectors) | [CLI](#cli-reference) | [Roadmap](#roadmap)
 
 ---
@@ -674,6 +678,38 @@ engine.import_threats("community-threats.json")
 3. False positive -> auto-tunes detector thresholds
 4. Threat feed -> import shared intelligence
 
+## Federated Threat-Intel Feed (v0.6.0)
+
+A public, ed25519-signed, CC0-licensed catalog of known prompt-injection attack patterns. Fetched daily, verified locally, and merged into your engine's detection stack. Think AV signature updates, but for LLMs.
+
+```python
+from prompt_shield.signatures import SignaturesClient
+
+client = SignaturesClient()
+update = client.fetch()
+# update.signatures is a list[dict] of verified attack patterns,
+# ready to feed into the d030 custom-rules engine.
+print(update)  # SignaturesUpdate(success=True, signature_count=56, ...)
+```
+
+**Properties:**
+- **Pure-Python verification** — no `minisign` binary needed at runtime; uses the `cryptography` library already pulled in transitively.
+- **Maintainer public key pinned in source** (key ID `31F125ADDE54B24A`) — clients trust the embedded key, not a runtime fetch.
+- **Verification failure never overwrites the local cache** — a poisoned CDN can't replace good rules with bad ones.
+- **Offline fallback** — `~/.cache/prompt-shield/signatures.json` keeps clients functional during network outages.
+- **CC0 for the data, Apache 2.0 for the code** — combine with closed-source commercial products without legal friction.
+
+**Why it's structurally novel.** Lakera, ProtectAI, and Cisco AI Defense all sell threat intel as their product line; open-sourcing the catalog would cannibalize their revenue. prompt-shield doesn't depend on selling intel, so we can ship it for free. The companion repo with the actual feed lives at [github.com/mthamil107/prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures).
+
+**Status: v0.6.0-alpha.** Schema may evolve. Signing cadence is currently manual (~daily); v0.7.0 migrates to [Sigstore Cosign](https://www.sigstore.dev/) keyless signing for hourly cadence and eliminating the single-point-of-failure on the maintainer's local key.
+
+```bash
+# Try it from the command line — fetch + verify the live feed:
+curl -O https://cdn.jsdelivr.net/gh/mthamil107/prompt-shield-signatures@main/v1/signatures.json
+curl -O https://cdn.jsdelivr.net/gh/mthamil107/prompt-shield-signatures@main/v1/signatures.json.minisig
+minisign -V -P RWRKslTerSXxMfTgML57AMf7Hwu8djP7mYxdRFopQriPW4+9UG4zcdVi -m signatures.json
+```
+
 ## Configuration
 
 ```yaml
@@ -943,13 +979,18 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ **d028 Smith-Waterman alignment** (phase 4) — +34.5 pp F1 on deepset with 0 FP cost
   - ✅ **Adversarial fatigue tracker** (phase 2) — EWMA near-miss detection + per-source threshold hardening
   - ⬜ Honeypot tools, prediction market ensemble, perplexity spectral analysis, runtime taint tracking — remain in development
-- **v0.5.x (current): 33 input detectors + 9 output scanners** —
+- **v0.5.x**: 33 input detectors + 9 output scanners —
   - ✅ d030 custom YAML rules, d031 language enforcement, d032 denied topics, d033 multi-turn topic drift
   - ✅ Sentiment / bias-fairness / hallucination output scanners
   - ✅ NFKC + homoglyph normalization pipeline, multi-encoding preprocessor
   - ✅ d022 input-length cap removed (chunking + max-pool)
   - ✅ Prometheus `/metrics`, sliding-window rate limiter
-- **v0.6.0** (planned): MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts
+- **v0.6.0 (current): federated threat-intel feed** —
+  - ✅ `prompt_shield.signatures` module — fetch + verify the public ed25519-signed feed
+  - ✅ Pure-Python `verify_minisign` — no `minisign` binary at runtime
+  - ✅ Offline cache fallback; verification failure never overwrites cached good data
+  - ✅ Companion repo [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures) (56 seed signatures from Garak / OWASP / Anthropic / community / multilingual)
+- **v0.7.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
