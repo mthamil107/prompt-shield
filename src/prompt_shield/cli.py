@@ -583,13 +583,17 @@ def compliance() -> None:
 @compliance.command("report")
 @click.option(
     "--framework",
-    type=click.Choice(["owasp-llm", "owasp-agentic", "eu-ai-act", "all"]),
+    type=click.Choice(["owasp-llm", "owasp-agentic", "mitre-atlas", "eu-ai-act", "all"]),
     default="owasp-llm",
     help="Compliance framework to report on",
 )
 @click.pass_context
 def compliance_report(ctx: click.Context, framework: str) -> None:
     """Show compliance coverage matrix for a given framework."""
+    from prompt_shield.compliance.mitre_atlas_mapping import (
+        DETECTOR_ATLAS_MAP,
+        generate_atlas_report,
+    )
     from prompt_shield.compliance.owasp_mapping import (
         generate_agentic_compliance_report,
         generate_compliance_report,
@@ -602,7 +606,11 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
     dets = engine.list_detectors()
     det_ids = [d["detector_id"] for d in dets]
 
-    frameworks = ["owasp-llm", "owasp-agentic", "eu-ai-act"] if framework == "all" else [framework]
+    frameworks = (
+        ["owasp-llm", "owasp-agentic", "mitre-atlas", "eu-ai-act"]
+        if framework == "all"
+        else [framework]
+    )
 
     for fw in frameworks:
         if fw == "owasp-llm":
@@ -663,6 +671,35 @@ def compliance_report(ctx: click.Context, framework: str) -> None:
                     if cat.covered:
                         for feat_id in cat.detector_ids:
                             click.echo(f"           - {feat_id}")
+                click.echo()
+
+        elif fw == "mitre-atlas":
+            # Pass detector IDs + non-detector feature keys (canary_tokens etc.)
+            # that DETECTOR_ATLAS_MAP has entries for, so the report reflects
+            # what's actually enabled in the engine.
+            engine_keys = det_ids + [k for k in DETECTOR_ATLAS_MAP if not k.startswith("d0")]
+            atlas_report = generate_atlas_report(engine_keys)
+            if use_json:
+                click.echo(atlas_report.model_dump_json(indent=2))
+            else:
+                click.echo()
+                click.secho("  MITRE ATLAS Coverage Report", bold=True)
+                click.echo(
+                    f"  Coverage: {atlas_report.techniques_covered}/"
+                    f"{atlas_report.total_techniques} "
+                    f"({atlas_report.coverage_percentage:.1f}%)"
+                )
+                click.echo()
+                for row in atlas_report.coverage:
+                    status = (
+                        click.style("COVERED", fg="green")
+                        if row.is_covered
+                        else click.style("GAP", fg="red")
+                    )
+                    click.echo(f"  {row.technique_id:12s} {row.technique_name:42s} [{status}]")
+                    if row.is_covered:
+                        for det_id in row.detector_ids:
+                            click.echo(f"               - {det_id}")
                 click.echo()
 
         elif fw == "eu-ai-act":

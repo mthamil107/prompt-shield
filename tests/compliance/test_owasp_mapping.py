@@ -18,38 +18,33 @@ from prompt_shield.compliance.owasp_mapping import (
     generate_eu_ai_act_report,
 )
 
-# All 25 built-in detector IDs
-ALL_DETECTOR_IDS = [
-    "d001_system_prompt_extraction",
-    "d002_role_hijack",
-    "d003_instruction_override",
-    "d004_recursive_prompt_attack",
-    "d005_payload_delimiter_smuggling",
-    "d006_context_window_abuse",
-    "d007_few_shot_injection",
-    "d008_encoding_evasion",
-    "d009_invisible_unicode",
-    "d010_multilingual_injection",
-    "d011_markdown_html_abuse",
-    "d012_data_exfiltration",
-    "d013_tool_misuse",
-    "d014_indirect_injection",
-    "d015_chain_of_thought_exploit",
-    "d016_rag_poisoning",
-    "d017_persona_switching",
-    "d018_output_format_manipulation",
-    "d019_hypothetical_framing",
-    "d020_nested_instruction",
-    "d021_vault_similarity",
-    "d022_semantic_classifier",
-    "d023_pii_detection",
-    "d024_multilingual_injection",
-    "d025_multi_encoding",
-    "d026_denial_of_wallet",
-    "d027_stylometric_discontinuity",
-    "d028_sequence_alignment",
-    "d029_many_shot_structural",
-]
+
+# Canonical detector ID list — discovered from the actual registry so the
+# test catches drift if a detector is renamed or added without updating the
+# compliance map. (The previous hardcoded list went stale for 2 releases.)
+def _discover_detector_ids() -> list[str]:
+    import importlib
+    import pkgutil
+
+    import prompt_shield.detectors as pkg
+
+    ids: set[str] = set()
+    for _, modname, _ in pkgutil.iter_modules(pkg.__path__):
+        if not modname.startswith("d0"):
+            continue
+        try:
+            mod = importlib.import_module(f"prompt_shield.detectors.{modname}")
+        except Exception:
+            continue
+        for attr in dir(mod):
+            obj = getattr(mod, attr)
+            det_id = getattr(obj, "detector_id", None)
+            if isinstance(obj, type) and det_id and getattr(obj, "__module__", "") == mod.__name__:
+                ids.add(det_id)
+    return sorted(ids)
+
+
+ALL_DETECTOR_IDS = _discover_detector_ids()
 
 # Fake metadata matching the IDs
 ALL_DETECTOR_METADATA = [
@@ -58,15 +53,30 @@ ALL_DETECTOR_METADATA = [
 
 
 class TestDetectorMappingCompleteness:
-    """Every detector must have a mapping entry."""
+    """Every registered detector must have a mapping entry — both ways."""
 
-    def test_all_22_detectors_are_mapped(self) -> None:
+    def test_all_registered_detectors_are_mapped(self) -> None:
         for did in ALL_DETECTOR_IDS:
-            assert did in DETECTOR_OWASP_MAP, f"{did} missing from DETECTOR_OWASP_MAP"
+            assert did in DETECTOR_OWASP_MAP, (
+                f"{did} missing from DETECTOR_OWASP_MAP — "
+                f"every new detector must add an OWASP mapping"
+            )
 
     def test_no_extra_detectors_in_map(self) -> None:
         for did in DETECTOR_OWASP_MAP:
-            assert did in ALL_DETECTOR_IDS, f"Unknown detector {did} in DETECTOR_OWASP_MAP"
+            assert did in ALL_DETECTOR_IDS, (
+                f"Unknown detector {did!r} in DETECTOR_OWASP_MAP — "
+                f"either the detector was renamed/removed without updating the map, "
+                f"or the map has a typo"
+            )
+
+    def test_at_least_33_detectors_discoverable(self) -> None:
+        # Hard floor — if this fails, the discovery walk likely broke,
+        # NOT a missing detector. Adjust upward when adding more.
+        assert len(ALL_DETECTOR_IDS) >= 33, (
+            f"Detector discovery walk only found {len(ALL_DETECTOR_IDS)} (expected >= 33). "
+            f"Check tests/compliance/test_owasp_mapping.py::_discover_detector_ids"
+        )
 
 
 class TestOwaspIdValidity:
@@ -93,7 +103,7 @@ class TestComplianceReportFull:
         return generate_compliance_report(ALL_DETECTOR_IDS, ALL_DETECTOR_METADATA)
 
     def test_total_detectors(self, full_report) -> None:
-        assert full_report.total_detectors == 29
+        assert full_report.total_detectors == len(ALL_DETECTOR_IDS)
 
     def test_owasp_version(self, full_report) -> None:
         assert full_report.owasp_version == "2025"
@@ -144,10 +154,10 @@ class TestComplianceReportPartial:
         meta = [{"detector_id": "d001_system_prompt_extraction", "name": "SPE"}]
         report = generate_compliance_report(subset, meta)
         assert report.total_detectors == 1
-        # d001 maps to LLM01 and LLM06
+        # d001 maps to LLM01 (Prompt Injection) and LLM07 (System Prompt Leakage)
         covered_ids = [c.category_id for c in report.category_details if c.covered]
         assert "LLM01" in covered_ids
-        assert "LLM06" in covered_ids
+        assert "LLM07" in covered_ids
 
 
 class TestCoveragePercentage:

@@ -237,8 +237,9 @@ print(report.overall_risk_score)  # 0.95
 | Feature | Description |
 |---------|-------------|
 | **Red Team Self-Testing** | `prompt-shield attackme` uses Claude/GPT to attack itself across 12 categories |
-| **OWASP LLM Top 10** | All 33 detectors mapped with coverage reports |
-| **OWASP Agentic Top 10** | 2026 agentic risks mapped (9/10 covered) |
+| **OWASP LLM Top 10** | All 33 detectors mapped; 8/10 categories covered |
+| **OWASP Agentic Top 10** | 2026 agentic risks mapped (10/10 covered) |
+| **MITRE ATLAS** | 9/9 techniques covered (NEW v0.6.x) |
 | **EU AI Act** | Article-level compliance mapping (Aug 2026 deadline) |
 | **Invisible Watermarks** | Unicode zero-width canary watermarks (ICLR 2026 technique) |
 | **Ensemble Scoring** | Weak signals from multiple detectors amplify into strong detection |
@@ -648,20 +649,24 @@ prompt_shield:
 
 ## Compliance
 
-Three compliance frameworks mapped out of the box:
+Four compliance frameworks mapped out of the box. Every detector → framework mapping is **machine-verified** at test time against the live detector registry (see [`tests/compliance/`](tests/compliance/)) — the mapping cannot silently drift when detectors are renamed or added.
 
 ```bash
-prompt-shield compliance report                          # OWASP LLM Top 10
+prompt-shield compliance report                            # OWASP LLM Top 10
 prompt-shield compliance report --framework owasp-agentic  # OWASP Agentic Top 10 (2026)
+prompt-shield compliance report --framework mitre-atlas    # MITRE ATLAS (NEW v0.6.x)
 prompt-shield compliance report --framework eu-ai-act      # EU AI Act
 prompt-shield compliance report --framework all            # All frameworks
 ```
 
 | Framework | Coverage | Details |
 |-----------|----------|---------|
-| **OWASP LLM Top 10 (2025)** | 7/10 categories | 33 detectors mapped |
-| **OWASP Agentic Top 10 (2026)** | 9/10 categories | AgentGuard + detectors + output scanners |
+| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 33 detectors mapped; 22 detectors map to LLM01 alone |
+| **OWASP Agentic Top 10 (2026)** | **10/10 categories** | All 33 detectors + AgentGuard gates + 4 output scanners |
+| **MITRE ATLAS** *(new)* | **9/9 techniques (100%)** | T0051 LLM Prompt Injection: 22 detectors. T0054 LLM Jailbreak: 11. T0057 LLM Data Leakage: 7. |
 | **EU AI Act** | 7 articles | Art.9, 10, 13, 14, 15, 50, 52 |
+
+**Why MITRE ATLAS matters.** Enterprise security teams already inventory their controls against ATLAS — the same way ATT&CK governs traditional security. Without an explicit ATLAS mapping, prompt-shield's coverage was invisible to SOC playbooks. The mapping makes the engine's telemetry consumable by SIEM rules + red-team coverage models without translation work.
 
 ## Self-Learning
 

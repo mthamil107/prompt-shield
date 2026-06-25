@@ -140,35 +140,46 @@ OWASP_LLM_TOP_10: list[OwaspCategory] = [
 
 # Maps each detector_id to the OWASP LLM Top 10 categories it addresses.
 DETECTOR_OWASP_MAP: dict[str, list[str]] = {
-    "d001_system_prompt_extraction": ["LLM01", "LLM06"],
+    # Direct injection family — LLM01
+    "d001_system_prompt_extraction": ["LLM01", "LLM07"],
     "d002_role_hijack": ["LLM01"],
     "d003_instruction_override": ["LLM01"],
-    "d004_recursive_prompt_attack": ["LLM01", "LLM06", "LLM10"],
-    "d005_payload_delimiter_smuggling": ["LLM01"],
-    "d006_context_window_abuse": ["LLM01"],
-    "d007_few_shot_injection": ["LLM01"],
-    "d008_encoding_evasion": ["LLM01"],
-    "d009_invisible_unicode": ["LLM01"],
-    "d010_multilingual_injection": ["LLM01"],
-    "d011_markdown_html_abuse": ["LLM01"],
-    "d012_data_exfiltration": ["LLM01", "LLM02"],
-    "d013_tool_misuse": ["LLM06", "LLM08"],
-    "d014_indirect_injection": ["LLM07", "LLM08"],
-    "d015_chain_of_thought_exploit": ["LLM01", "LLM03"],
-    "d016_rag_poisoning": ["LLM02", "LLM08"],
-    "d017_persona_switching": ["LLM01"],
-    "d018_output_format_manipulation": ["LLM01"],
-    "d019_hypothetical_framing": ["LLM01"],
-    "d020_nested_instruction": ["LLM01"],
+    "d004_prompt_leaking": ["LLM01", "LLM07"],
+    "d005_context_manipulation": ["LLM01"],
+    "d006_multi_turn_escalation": ["LLM01"],
+    "d007_task_deflection": ["LLM01"],
+    # Obfuscation family — LLM01
+    "d008_base64_payload": ["LLM01"],
+    "d009_rot13_substitution": ["LLM01"],
+    "d010_unicode_homoglyph": ["LLM01"],
+    "d011_whitespace_injection": ["LLM01"],
+    "d012_markdown_html_injection": ["LLM01", "LLM05"],
+    # Indirect injection / agentic
+    "d013_data_exfiltration": ["LLM02", "LLM05"],
+    "d014_tool_function_abuse": ["LLM06"],
+    "d015_rag_poisoning": ["LLM04", "LLM08"],
+    "d016_url_injection": ["LLM05"],
+    # Jailbreak framings
+    "d017_hypothetical_framing": ["LLM01"],
+    "d018_academic_pretext": ["LLM01"],
+    "d019_dual_persona": ["LLM01"],
+    "d020_token_smuggling": ["LLM01"],
+    # ML + self-learning + breadth
     "d021_vault_similarity": ["LLM01"],
     "d022_semantic_classifier": ["LLM01"],
     "d023_pii_detection": ["LLM02"],
     "d024_multilingual_injection": ["LLM01"],
     "d025_multi_encoding": ["LLM01"],
     "d026_denial_of_wallet": ["LLM10"],
-    "d027_stylometric_discontinuity": ["LLM01", "LLM07"],
+    # v0.4.0 cross-domain
+    "d027_stylometric_discontinuity": ["LLM01", "LLM04"],
     "d028_sequence_alignment": ["LLM01"],
     "d029_many_shot_structural": ["LLM01"],
+    # v0.5.0 operator-policy + multi-turn
+    "d030_custom_rules": ["LLM01", "LLM02"],
+    "d031_language_enforcement": ["LLM01"],
+    "d032_topic_enforcement": ["LLM02", "LLM05"],
+    "d033_topic_drift": ["LLM01"],
 }
 
 # All valid OWASP category IDs for validation
@@ -246,18 +257,46 @@ OWASP_AGENTIC_TOP_10: list[OwaspCategory] = [
 
 # Maps detector/feature IDs to Agentic Top 10 categories.
 DETECTOR_AGENTIC_MAP: dict[str, list[str]] = {
+    # Direct goal hijack
     "d001_system_prompt_extraction": ["ASI01", "ASI04"],
     "d002_role_hijack": ["ASI01"],
     "d003_instruction_override": ["ASI01"],
-    "d013_data_exfiltration": ["ASI04"],
+    "d004_prompt_leaking": ["ASI01", "ASI04"],
+    "d005_context_manipulation": ["ASI01", "ASI05"],
+    "d006_multi_turn_escalation": ["ASI01"],
+    "d007_task_deflection": ["ASI01"],
+    # Obfuscation — all flow into goal hijack
+    "d008_base64_payload": ["ASI01"],
+    "d009_rot13_substitution": ["ASI01"],
+    "d010_unicode_homoglyph": ["ASI01"],
+    "d011_whitespace_injection": ["ASI01"],
+    "d012_markdown_html_injection": ["ASI01"],
+    # Indirect / tool-mediated injection
+    "d013_data_exfiltration": ["ASI04", "ASI10"],
     "d014_tool_function_abuse": ["ASI02", "ASI07"],
     "d015_rag_poisoning": ["ASI05"],
+    "d016_url_injection": ["ASI02", "ASI10"],
+    # Jailbreak framings
+    "d017_hypothetical_framing": ["ASI01"],
+    "d018_academic_pretext": ["ASI01"],
+    "d019_dual_persona": ["ASI01"],
+    "d020_token_smuggling": ["ASI01"],
+    # ML + breadth
+    "d021_vault_similarity": ["ASI01"],
+    "d022_semantic_classifier": ["ASI01"],
     "d023_pii_detection": ["ASI04"],
     "d024_multilingual_injection": ["ASI01", "ASI08"],
     "d025_multi_encoding": ["ASI01"],
+    "d026_denial_of_wallet": ["ASI07"],
+    # v0.4.0 cross-domain
     "d027_stylometric_discontinuity": ["ASI01", "ASI05"],
     "d028_sequence_alignment": ["ASI01", "ASI08"],
     "d029_many_shot_structural": ["ASI01"],
+    # v0.5.0 operator-policy + multi-turn
+    "d030_custom_rules": ["ASI01", "ASI03"],
+    "d031_language_enforcement": ["ASI01"],
+    "d032_topic_enforcement": ["ASI03", "ASI07"],
+    "d033_topic_drift": ["ASI01", "ASI08"],
     # AgentGuard features (not detector-based)
     "agent_guard_input_gate": ["ASI01", "ASI10"],
     "agent_guard_data_gate": ["ASI02", "ASI05", "ASI08"],
