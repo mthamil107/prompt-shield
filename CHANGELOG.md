@@ -7,6 +7,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-06-25
+
+Docs + compliance-mapping patch release. No runtime behavior change.
+
+### Fixed — compliance mappings (was silently wrong since v0.3)
+
+- **`DETECTOR_OWASP_MAP`** had stale detector IDs from a pre-v0.3
+  lineup (e.g. `d010_multilingual_injection` instead of the actual
+  `d010_unicode_homoglyph`). The compliance test was hardcoded against
+  the same stale IDs, so the drift went undetected for ~2 releases.
+  v0.5.0's d030–d033 were also missing entirely. All 33 detector
+  mappings are now correct; the test now derives the canonical list
+  from the actual detector registry so the same class of drift cannot
+  recur silently.
+- **`DETECTOR_AGENTIC_MAP`** extended from 12 → 33 detectors
+  (OWASP Agentic Top 10 now reports 10/10 categories covered).
+
+### Added — MITRE ATLAS mapping (new module)
+
+- `prompt_shield.compliance.mitre_atlas_mapping` — maps every detector
+  + engine feature to MITRE ATLAS techniques (T0051 LLM Prompt Injection,
+  T0054 LLM Jailbreak, T0057 LLM Data Leakage, T0053 LLM Plugin
+  Compromise, T0052 Publish Poisoned Datasets, T0048 Financial Harm,
+  T0042 Verify Attack, T0044 Full ML Model Access, T0049 Exploit
+  Public-Facing Application). 9/9 ATLAS techniques covered.
+- CLI: `prompt-shield compliance report --framework mitre-atlas`
+  (and included in `--framework all`).
+- 24 new compliance tests (drift protection + ATLAS structure/coverage).
+
+### Changed — README
+
+- Compliance section now documents 4 frameworks instead of 3, with
+  accurate coverage numbers (OWASP LLM 8/10, OWASP Agentic 10/10,
+  MITRE ATLAS 9/9, EU AI Act 7 articles).
+- Federated threat-intel feed section expanded with concrete signature
+  count (56) and trust-model link.
+
 ## [0.6.0] - 2026-06-25
 
 First feature release adding the federated threat-intel feed client. Pure-Python ed25519 verification, opt-in by design, ships with the maintainer's public key pinned in source.
