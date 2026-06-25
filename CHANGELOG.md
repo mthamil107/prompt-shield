@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-06-25
+
+First feature release adding the federated threat-intel feed client. Pure-Python ed25519 verification, opt-in by design, ships with the maintainer's public key pinned in source.
+
+### Added — federated threat-intel client (new module `prompt_shield.signatures`)
+
+- **`SignaturesClient`** — fetch + verify the public ed25519-signed
+  signature feed at [`prompt-shield-signatures`](https://github.com/mthamil107/prompt-shield-signatures).
+  Local on-disk cache at `~/.cache/prompt-shield/signatures.json` is used
+  as fallback when the CDN is unreachable. Verification failures NEVER
+  overwrite the cache — the last known-good payload stays in effect.
+- **`verify_minisign(data, sig_text, public_key)`** — pure-Python
+  ed25519 verification of [minisign](https://jedisct1.github.io/minisign/)
+  detached signatures. No `minisign` binary required at runtime; uses the
+  `cryptography` library that's already pulled in transitively. Supports
+  both `Ed` (PureEdDSA) and `ED` (HashEdDSA with BLAKE2b-512) algos.
+- **17 tests** (16 hermetic + 1 live-network, opt-in via
+  `PROMPT_SHIELD_TEST_LIVE_FEED=1`). Hermetic tests build minisign-format
+  signatures from scratch using `cryptography.ed25519` to prove the
+  parser + verifier match minisign's wire format byte-for-byte.
+
+### Why this matters
+
+This is the **first open-source federated threat-intel feed for LLM
+prompt injection**. Lakera, ProtectAI, Cisco AI Defense keep their attack-
+pattern catalogs proprietary — that's their business model. The feed is
+CC0-licensed, the code is Apache 2.0, and the maintainer's signing key
+lives offline on the maintainer's machine, not in CI.
+
+Companion repo: https://github.com/mthamil107/prompt-shield-signatures
+
+### Benchmarks (carried forward from [Unreleased])
+
 ### Added — benchmarks
 
 - **HarmBench evaluation** (`tests/benchmark_harmbench.py`). Runs prompt-shield
