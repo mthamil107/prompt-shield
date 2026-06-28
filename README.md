@@ -32,6 +32,11 @@
   <sub>If prompt-shield helps you ship safer LLM apps, please ⭐ <a href="https://github.com/mthamil107/prompt-shield">the repo</a> — it helps other developers find the project.</sub>
 </p>
 
+<p align="center">
+  <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/dynamic/json?label=live%20feed%20hits%20%2830d%29&query=%24.hits.total&url=https%3A%2F%2Fdata.jsdelivr.com%2Fv1%2Fstats%2Fpackages%2Fgh%2Fmthamil107%2Fprompt-shield-signatures%3Fperiod%3Dmonth&color=blue" alt="Live federated-feed hits (30d)" /></a>
+  <sub>— the honest adoption metric. PyPI counts CI, mirrors, and scanners; this counts production subscribers polling the federated threat-intel feed. Subscribe in <a href="#federated-threat-intel-feed-v060">3 lines</a>.</sub>
+</p>
+
 ---
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
