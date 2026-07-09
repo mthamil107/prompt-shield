@@ -1,0 +1,63 @@
+title: "prompt-shield — open-source prompt-injection firewall for LLM applications"
+description: >-
+  Apache 2.0 prompt-injection firewall with 33 input detectors and 9 output
+  scanners. Novel cross-domain techniques (Smith-Waterman alignment,
+  stylometric discontinuity, multi-turn Jaccard drift, adversarial fatigue).
+  First OSS federated ed25519-signed threat-intel feed.
+
+baseurl: "/prompt-shield"
+url: "https://mthamil107.github.io"
+
+# Jekyll built-in theme (no dependencies to add)
+theme: minima
+minima:
+  skin: auto
+
+# SEO plugin auto-generates canonical URLs, Open Graph tags, JSON-LD
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Site-wide SEO defaults
+author:
+  name: "Thamilvendhan Munirathinam"
+twitter:
+  card: summary_large_image
+social:
+  name: "Thamilvendhan Munirathinam"
+  links:
+    - "https://github.com/mthamil107"
+    - "https://arxiv.org/a/munirathinam_t_1"
+
+# Show README as home
+show_downloads: false
+show_excerpts: true
+
+# Keywords that Jekyll SEO plugin surfaces in <meta name="keywords">
+keywords:
+  - prompt injection
+  - LLM security
+  - LLM firewall
+  - AI guardrails
+  - prompt injection detection
+  - open source security
+  - Smith-Waterman
+  - stylometric analysis
+  - federated threat intelligence
+  - LangChain guardrails
+  - LlamaIndex safety
+  - CrewAI security
+
+# Exclude files that shouldn't be indexed
+exclude:
+  - drafts/
+  - papers/*.docx
+  - papers/*.py
+  - papers/UPLOAD-*.md
+  - "*.b64"
+  - Gemfile
+  - Gemfile.lock
+
+# Include the design-notes markdown as a top-level page
+include:
+  - design-notes-v0.5.0.md
