@@ -18,6 +18,9 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
 
+# Google Search Console verification (auto-emitted by jekyll-seo-tag).
+google_site_verification: "p-o7T9_nikA43v5pcn-3C5-gZNMNCB7L0uFfhFIlcoA"
+
 # Site-wide SEO defaults
 author:
   name: "Thamilvendhan Munirathinam"
