@@ -6,18 +6,30 @@ readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.10"
 authors = [{ name = "prompt-shield contributors" }]
-keywords = ["llm", "security", "prompt-injection", "ai-safety", "firewall", "self-learning"]
+keywords = [
+    "llm", "llm-security", "llm-firewall", "prompt-injection", "prompt-injection-detection",
+    "ai-safety", "guardrails", "firewall", "self-learning", "threat-intelligence",
+    "federated-feed", "langchain", "llamaindex", "crewai", "fastapi",
+    "deberta", "smith-waterman", "stylometric", "pii-detection", "red-team",
+]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
     "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Framework :: FastAPI",
     "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
 ]
 
 dependencies = [
