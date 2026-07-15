@@ -46,6 +46,8 @@ fastapi = ["fastapi>=0.100", "starlette>=0.27"]
 flask = ["flask>=2.0"]
 langchain = ["langchain-core>=0.1"]
 llamaindex = ["llama-index-core>=0.10"]
+haystack = ["haystack-ai>=2.0"]
+pydantic-ai = ["pydantic-ai>=0.0.10"]
 django = ["django>=4.0"]
 crewai = ["crewai>=0.70", "crewai-tools>=0.12"]
 mcp = ["mcp>=1.0"]
@@ -59,7 +61,7 @@ ml = [
 observability = ["prometheus_client>=0.17"]
 sentiment = ["vaderSentiment>=3.3"]
 language = ["langdetect>=1.0"]
-all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,django,crewai,mcp,openai,anthropic,ml,observability,sentiment,language]"]
+all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,haystack,pydantic-ai,django,crewai,mcp,openai,anthropic,ml,observability,sentiment,language]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -155,6 +157,24 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = ["prompt_shield.detectors.d030_custom_rules"]
 disable_error_code = ["import-untyped", "unused-ignore"]
+
+# haystack-ai and pydantic-ai are optional deps; their decorators aren't
+# fully typed for our usage, and the internal factory functions build
+# classes dynamically. Silence the resulting decorator/return-type noise.
+[[tool.mypy.overrides]]
+module = [
+    "prompt_shield.integrations.haystack_component",
+    "prompt_shield.integrations.pydantic_ai_guard",
+]
+disable_error_code = [
+    "no-untyped-def",
+    "no-untyped-call",
+    "untyped-decorator",
+    "assignment",
+    "misc",
+    "import-untyped",
+    "unused-ignore",
+]
 
 # numpy 2.x stubs use PEP 695 `type X = ...` statements; we don't depend on
 # numpy directly (transitive via transformers in [dev,all]). Skip its stubs

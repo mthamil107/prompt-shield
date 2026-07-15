@@ -232,6 +232,8 @@ print(report.overall_risk_score)  # 0.95
 | **FastAPI / Flask / Django** | Middleware (one-line setup) |
 | **LangChain** | Callback handler |
 | **LlamaIndex** | Event handler |
+| **Haystack** | `PromptShieldGuard` + `PromptShieldOutputGuard` pipeline components (v2) |
+| **Pydantic AI** | `scan_input()` + `PromptShieldOutputValidator` (`attach()` one-liner) |
 | **CrewAI** | `PromptShieldCrewAITool` + `CrewAIGuard` |
 | **MCP** | Tool result filter |
 | **Dify** | Marketplace plugin (4 tools) |
