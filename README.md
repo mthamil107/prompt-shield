@@ -16,9 +16,9 @@
   <img src="https://img.shields.io/badge/detectors-33-brightgreen" alt="33 detectors" />
   <img src="https://img.shields.io/badge/output_scanners-9-blue" alt="9 output scanners" />
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
-  <img src="https://img.shields.io/badge/F1_score-96.0%25-success" alt="F1: 96.0%" />
+  <img src="https://img.shields.io/badge/F1_(benchmark_1)-96.0%25-success" alt="F1 96% on Benchmark 1: real-world 2025-2026 attacks" />
   <img src="https://img.shields.io/badge/false_positives-0%25-success" alt="0% FP" />
-  <img src="https://img.shields.io/badge/tests-1057-blue" alt="1057 tests" />
+  <img src="https://img.shields.io/badge/tests-1097-blue" alt="1097 tests" />
   <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
@@ -41,7 +41,7 @@
 
 The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
-> **New in v0.6.0 — [federated threat-intel feed](#federated-threat-intel-feed-v060).** Fetch and verify a public ed25519-signed catalog of known prompt-injection attack patterns from [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures). First OSS feed of its kind; Lakera / ProtectAI / Cisco keep their threat intel proprietary because it *is* their business model. CC0 data, Apache 2.0 code, offline-signed.
+> **New in v0.6.0 — [federated threat-intel feed](#federated-threat-intel-feed-v060).** Fetch and verify a public ed25519-signed catalog of known prompt-injection attack patterns from [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures). First OSS feed we're aware of; Lakera / ProtectAI / Cisco keep their threat intel proprietary because it *is* their business model. CC0 data, Apache 2.0 code, offline-signed.
 
 ### Evaluated on 9 datasets, 9,150+ samples — 8 public/academic sources
 
@@ -246,7 +246,7 @@ print(report.overall_risk_score)  # 0.95
 | **Red Team Self-Testing** | `prompt-shield attackme` uses Claude/GPT to attack itself across 12 categories |
 | **OWASP LLM Top 10** | All 33 detectors mapped; 8/10 categories covered |
 | **OWASP Agentic Top 10** | 2026 agentic risks mapped (10/10 covered) |
-| **MITRE ATLAS** | 9/9 techniques covered (NEW v0.6.x) |
+| **MITRE ATLAS** | 9/9 techniques covered |
 | **EU AI Act** | Article-level compliance mapping (Aug 2026 deadline) |
 | **Invisible Watermarks** | Unicode zero-width canary watermarks (ICLR 2026 technique) |
 | **Ensemble Scoring** | Weak signals from multiple detectors amplify into strong detection |
@@ -320,8 +320,8 @@ prompt-shield is evaluated on **9 datasets totalling 9,150+ samples**, of which 
 | # | Dataset | Source | Samples | prompt-shield detection | Notes |
 |---|---|---|---:|---:|---|
 | 1 | Real-world 2025-2026 attacks | Self-curated | 54 + 15 benign | **92.3%** (96.0% F1) | Live attack corpus; the only self-curated set |
-| 2 | [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) | HuggingFace | 116 | 36.7% (regex+ML) | Subtle paraphrases — DeBERTa-trained-on-it wins |
-| 3 | [NotInject](https://github.com/leolee99/NotInject) | leolee99 (academic) | 339 benign | 0% FP | Specificity test |
+| 2 | [deepset/prompt-injections](https://huggingface.co/datasets/deepset/prompt-injections) | HuggingFace | 116 | 53.7% F1 (regex+ML) | Subtle paraphrases — DeBERTa-trained-on-it wins |
+| 3 | [NotInject](https://huggingface.co/datasets/leolee99/NotInject) | leolee99 (academic) | 339 benign | 0% FP | Specificity test |
 | 4 | v0.4.0 ablation (5 datasets) | Mixed | 1,228 | per-technique | d028 isolation eval |
 | 5 | [NVIDIA Garak](https://github.com/NVIDIA/garak) | NVIDIA | 5,968 | 55.2% | Full promptinject + latentinjection probes |
 | 6 | [InjecAgent](https://arxiv.org/abs/2403.02691) | ACL Findings 2024 | 2,108 | 85.2% | Indirect injection via tool outputs |
@@ -333,7 +333,7 @@ prompt-shield is evaluated on **9 datasets totalling 9,150+ samples**, of which 
 
 ### Benchmark 1: Real-World 2025-2026 Attacks
 
-54 attack prompts across 8 categories (multilingual, encoded, tool-disguised, educational reframing, dual intention) + 15 benign inputs:
+54 attack prompts across 8 categories — including multilingual, encoded, tool-disguised, educational reframing, and dual intention — plus 15 benign inputs:
 
 | Scanner | F1 | Detection | FP Rate | Speed |
 |---------|-----|-----------|---------|-------|
@@ -380,7 +380,7 @@ python tests/benchmark_realistic.py        # per-category breakdown
 
 Empirical validation of each shipped v0.4.0 novel technique in isolation, regex-only baseline (d022 ML off). Full data: [`docs/papers/evaluation/ANALYSIS.md`](docs/papers/evaluation/ANALYSIS.md) and [`docs/papers/evaluation/fatigue_probing_campaign.md`](docs/papers/evaluation/fatigue_probing_campaign.md). Reproduce with `python docs/papers/evaluation/run_public_datasets.py`.
 
-#### d028 Smith-Waterman alignment — on vs off (26-detector control, 27-detector treatment)
+#### d028 Smith-Waterman alignment — on vs off (26-detector control, 27-detector treatment — at v0.4.0)
 
 | Dataset | Samples | F1 off | F1 on | ΔF1 | ΔRecall | ΔFPR | Verdict |
 |---|---:|---:|---:|---:|---:|---:|---|
@@ -520,7 +520,7 @@ print(result.redacted_text)    # Email: [EMAIL_REDACTED], SSN: [SSN_REDACTED]
 
 ## Adversarial Self-Testing (Red Team)
 
-Use Claude or GPT to continuously attack prompt-shield across 12 categories. No other open-source tool has this built-in.
+Use Claude or GPT to continuously attack prompt-shield across 12 categories. We're not aware of another OSS prompt-injection library shipping this as a built-in.
 
 ```bash
 prompt-shield attackme                                    # Quick: 10 min, all categories
@@ -610,7 +610,7 @@ See [docs/github-action.md](docs/github-action.md) for advanced configuration.
 ```yaml
 repos:
   - repo: https://github.com/mthamil107/prompt-shield
-    rev: v0.3.2
+    rev: v0.6.1
     hooks:
       - id: prompt-shield-scan
       - id: prompt-shield-pii
@@ -668,7 +668,7 @@ prompt-shield compliance report --framework all            # All frameworks
 
 | Framework | Coverage | Details |
 |-----------|----------|---------|
-| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 33 detectors mapped; 22 detectors map to LLM01 alone |
+| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 33 detectors mapped; 26 detectors map to LLM01 alone |
 | **OWASP Agentic Top 10 (2026)** | **10/10 categories** | All 33 detectors + AgentGuard gates + 4 output scanners |
 | **MITRE ATLAS** *(new)* | **9/9 techniques (100%)** | T0051 LLM Prompt Injection: 22 detectors. T0054 LLM Jailbreak: 11. T0057 LLM Data Leakage: 7. |
 | **EU AI Act** | 7 articles | Art.9, 10, 13, 14, 15, 50, 52 |
@@ -678,8 +678,8 @@ prompt-shield compliance report --framework all            # All frameworks
 ## Self-Learning
 
 ```python
-engine.feedback(report.scan_id, is_correct=True)   # Confirmed attack
-engine.feedback(report.scan_id, is_correct=False)  # False positive
+engine.feedback(report.scan_id, is_correct=True)                              # Confirmed attack
+engine.feedback(report.scan_id, is_correct=False, notes="internal codename")  # FP + reason (optional)
 
 engine.export_threats("my-threats.json")
 engine.import_threats("community-threats.json")
@@ -816,10 +816,14 @@ prompt-shield benchmark performance -n 100
 - :memo: [Markdown source](docs/research-post-cross-domain-techniques.md) (browse on GitHub)
 - :books: [`CITATION.cff`](CITATION.cff) (auto-rendered by GitHub's *Cite this repository* sidebar)
 
+**Read more:**
+- :newspaper: [How Smith-Waterman (from bioinformatics) catches prompt injections that regex misses](https://dev.to/mthamil107/how-smith-waterman-from-bioinformatics-catches-prompt-injections-that-regex-misses-1mc2) — deep dive on d028
+- :satellite: [I built the first OSS federated threat-intel feed for LLM prompt injection](https://dev.to/mthamil107/i-built-the-first-oss-federated-threat-intel-feed-for-llm-prompt-injection-heres-how-it-works--2pj1) — the v0.6.0 story
+
 **Cite as:**
 > Munirathinam, T. (2026). *Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection.* arXiv:2604.18248 [cs.CR]. https://arxiv.org/abs/2604.18248
 
-> **Implementation status: 2 of 7 shipped** — d028 Smith-Waterman alignment (v0.4.0 phase 4) and adversarial fatigue tracker (v0.4.0 phase 2). Both empirically validated — see [`docs/papers/evaluation/`](docs/papers/evaluation/). 5 in development.
+> **Implementation status: 3 of 7 shipped** — d027 stylometric discontinuity (v0.4.0 phase 1), d028 Smith-Waterman alignment (v0.4.0 phase 4), and adversarial fatigue tracker (v0.4.0 phase 2). All three empirically validated — see [`docs/papers/evaluation/`](docs/papers/evaluation/). 4 in development.
 >
 > These techniques draw from fields outside LLM security. Each is either genuinely novel in application to prompt injection, or a new runtime implementation of a method explored only statically or in research. Prior art is credited per-technique below. We welcome peer review, feedback, and contributions.
 

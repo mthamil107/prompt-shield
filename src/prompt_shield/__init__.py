@@ -11,7 +11,7 @@ from prompt_shield.models import (
     ThreatFeed,
 )
 
-__version__ = "0.3.3"
+__version__ = "0.6.1"
 
 __all__ = [
     "Action",
