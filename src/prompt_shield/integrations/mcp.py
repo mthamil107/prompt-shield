@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from prompt_shield.models import Action
+from prompt_shield.tool_guard._sanitize import sanitize_text
+from prompt_shield.tool_guard.guard import ToolResultGuard
 
 if TYPE_CHECKING:
     from prompt_shield.engine import PromptShieldEngine
@@ -31,6 +33,10 @@ class PromptShieldMCPFilter:
         self.exempt_tools = set(exempt_tools or [])
         self.sanitize_replacement = sanitize_replacement
         self._stats = {"total_calls": 0, "blocked": 0, "sanitized": 0, "passed": 0}
+        # Delegate tool-result scanning to the first-class primitive.
+        self._tool_guard = ToolResultGuard(
+            engine=engine, mode="log", sanitize_replacement=sanitize_replacement
+        )
 
     async def call_tool(self, tool_name: str, arguments: dict[str, Any]) -> str:
         self._stats["total_calls"] += 1
@@ -53,9 +59,7 @@ class PromptShieldMCPFilter:
         # Scan results
         if self.scan_results and tool_name not in self.exempt_tools:
             result_text = str(result)
-            report = self._engine.scan(
-                result_text, context={"gate": "tool_result", "tool": tool_name}
-            )
+            report = self._tool_guard.scan(result_text, tool_name=tool_name)
 
             if report.detections:
                 if self.mode == "block":
@@ -65,7 +69,7 @@ class PromptShieldMCPFilter:
                     )
                 elif self.mode == "sanitize":
                     self._stats["sanitized"] += 1
-                    return self._sanitize(result_text, report)
+                    return sanitize_text(result_text, report, replacement=self.sanitize_replacement)
                 # flag/log modes pass through
 
         self._stats["passed"] += 1
@@ -77,15 +81,3 @@ class PromptShieldMCPFilter:
     @property
     def scan_stats(self) -> dict[str, int]:
         return dict(self._stats)
-
-    def _sanitize(self, text: str, report: Any) -> str:
-        positions: list[tuple[int, int]] = []
-        for det in report.detections:
-            for match in det.matches:
-                if match.position:
-                    positions.append(match.position)
-        positions.sort(key=lambda p: p[0], reverse=True)
-        result = text
-        for start, end in positions:
-            result = result[:start] + self.sanitize_replacement + result[end:]
-        return result

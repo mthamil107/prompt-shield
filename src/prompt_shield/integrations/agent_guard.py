@@ -6,6 +6,8 @@ import json
 from typing import TYPE_CHECKING, Any
 
 from prompt_shield.models import Action, GateResult, ScanReport
+from prompt_shield.tool_guard._sanitize import sanitize_text
+from prompt_shield.tool_guard.guard import ToolResultGuard
 
 if TYPE_CHECKING:
     from prompt_shield.engine import PromptShieldEngine
@@ -27,6 +29,12 @@ class AgentGuard:
         self.data_mode = data_mode
         self.output_mode = output_mode
         self.sanitize_replacement = sanitize_replacement
+        # Delegate tool-result scanning to the first-class primitive.
+        # mode="log" so this AgentGuard controls block/sanitize/flag decisions
+        # via its own data_mode (preserving pre-v0.7.0 external behavior).
+        self._tool_guard = ToolResultGuard(
+            engine=engine, mode="log", sanitize_replacement=sanitize_replacement
+        )
 
     def scan_input(self, user_message: str, context: dict[str, object] | None = None) -> GateResult:
         """Gate 1: Scan user input."""
@@ -66,11 +74,31 @@ class AgentGuard:
     def scan_tool_result(
         self, tool_name: str, result: str, context: dict[str, object] | None = None
     ) -> GateResult:
-        """Gate 2: Scan tool result for indirect injection."""
-        ctx = dict(context) if context else {}
-        ctx["gate"] = "tool_result"
-        ctx["tool"] = tool_name
-        report = self.engine.scan(result, context=ctx)
+        """Gate 2: Scan tool result for indirect injection.
+
+        Delegates to :class:`~prompt_shield.tool_guard.ToolResultGuard` for
+        the scan + attack-family classification, then applies this
+        ``AgentGuard``'s ``data_mode`` policy on top. Attack-family
+        metadata is exposed via ``GateResult.metadata['attack_families']``
+        and ``GateResult.metadata['scan_context']`` (added in v0.7.0);
+        the return type and existing fields are unchanged.
+        """
+        tool_type = str(context.get("tool_type")) if context and "tool_type" in context else None
+        parent_scan_id = (
+            str(context.get("parent_scan_id")) if context and "parent_scan_id" in context else None
+        )
+        report = self._tool_guard.scan(
+            result,
+            tool_name=tool_name,
+            tool_type=tool_type,
+            parent_scan_id=parent_scan_id,
+        )
+        scan_ctx = report.scan_context
+        families = [f.value for f in scan_ctx.attack_families] if scan_ctx else []
+        gate_meta: dict[str, object] = {"attack_families": families}
+        if scan_ctx is not None:
+            gate_meta["scan_context"] = scan_ctx.model_dump()
+
         has_detection = report.action != Action.PASS and report.detections
 
         if not has_detection:
@@ -80,10 +108,11 @@ class AgentGuard:
                 blocked=False,
                 scan_report=report,
                 explanation="Tool result passed",
+                metadata=gate_meta,
             )
 
         if self.data_mode == "sanitize":
-            sanitized = self._sanitize_text(result, report)
+            sanitized = sanitize_text(result, report, replacement=self.sanitize_replacement)
             return GateResult(
                 gate="tool_result",
                 action=Action.FLAG,
@@ -91,6 +120,7 @@ class AgentGuard:
                 scan_report=report,
                 explanation="Tool result sanitized",
                 sanitized_text=sanitized,
+                metadata=gate_meta,
             )
 
         blocked = self._should_block(report, self.data_mode)
@@ -100,7 +130,12 @@ class AgentGuard:
             blocked=blocked,
             scan_report=report,
             explanation=self._build_explanation(report) if blocked else "Tool result flagged",
-            sanitized_text=self._sanitize_text(result, report) if not blocked else None,
+            sanitized_text=(
+                sanitize_text(result, report, replacement=self.sanitize_replacement)
+                if not blocked
+                else None
+            ),
+            metadata=gate_meta,
         )
 
     def prepare_prompt(self, system_prompt: str) -> tuple[str, str]:
@@ -164,40 +199,5 @@ class AgentGuard:
         return f"{top.detector_id}: {top.explanation} (confidence: {top.confidence:.2f})"
 
     def _sanitize_text(self, text: str, report: ScanReport) -> str:
-        """Replace matched segments with sanitize_replacement.
-
-        Uses entity-type-aware placeholders for PII detections (d023).
-        """
-        if not report.detections:
-            return text
-
-        # Check for PII detections — use entity-type-aware redaction
-        pii_detections = [d for d in report.detections if d.detector_id == "d023_pii_detection"]
-        if pii_detections:
-            from prompt_shield.pii.redactor import PIIRedactor
-
-            redactor = PIIRedactor()
-            pii_matches = []
-            for det in pii_detections:
-                for match in det.matches:
-                    pii_matches.append(
-                        {
-                            "description": match.description,
-                            "position": match.position,
-                        }
-                    )
-            text = redactor.redact_with_detections(text, pii_matches)
-
-        # Handle non-PII detections with generic replacement
-        non_pii = [d for d in report.detections if d.detector_id != "d023_pii_detection"]
-        if non_pii:
-            positions: list[tuple[int, int]] = []
-            for det in non_pii:
-                for match in det.matches:
-                    if match.position:
-                        positions.append(match.position)
-            positions.sort(key=lambda p: p[0], reverse=True)
-            for start, end in positions:
-                text = text[:start] + self.sanitize_replacement + text[end:]
-
-        return text
+        """Backward-compat shim — delegates to shared ``tool_guard._sanitize.sanitize_text``."""
+        return sanitize_text(text, report, replacement=self.sanitize_replacement)

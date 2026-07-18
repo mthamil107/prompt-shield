@@ -7,6 +7,103 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-18
+
+**"Agent-Era Defense" release.** First-class primitive for scanning
+tool-result content — the highest-impact unsolved attack surface in
+agent-era LLM security — with an attack-family taxonomy that projects
+over the existing 33 detectors. Refactors 4 existing integrations to
+use the primitive, adds tool-result block scanning to the Anthropic
+wrapper, and normalizes a pre-existing gate-string inconsistency in
+the Haystack integration.
+
+### Added — `prompt_shield.tool_guard` (new module)
+
+- **`ToolResultGuard`** — reusable primitive with sync `scan()` and
+  async `ascan()`. Content-hash LRU cache (default 128 entries). Modes:
+  `block` / `flag` (default) / `log` / `sanitize`. Default mode is
+  `flag` — not `block` — because tool-result sanitization can destroy
+  legitimate agent context (e.g. redacting a URL from a `web_search`
+  result breaks the task). Callers opt into `block` explicitly.
+- **`scan_tool_result(text, tool_name=..., tool_type=..., ...)`** —
+  one-liner using a default engine.
+- **`ToolResultAttackFamily`** — 9-value enum (`IMPERATIVE_INJECTION`,
+  `DELIMITER_INJECTION`, `CONTEXT_TERMINATION`, `EXFILTRATION_COMMAND`,
+  `ROLE_HIJACK`, `TOOL_MISUSE`, `ENCODED_PAYLOAD`, `RENDERED_EXFIL`,
+  `UNCLASSIFIED`). Families are a pure *projection* over
+  `DetectionResult.detector_id` via `DETECTOR_TO_FAMILY` — no parallel
+  regex layer, so classifier F1 tracks detector F1. Two gap-filling
+  regexes cover `CONTEXT_TERMINATION` (`</context>`, `---END---`,
+  `[END SYSTEM]`) and `EXFILTRATION_COMMAND` phrasing that augments
+  `d013_data_exfiltration`.
+- **`ToolProvenance`** — `tool_name`, `tool_type`, `source_url`,
+  `parent_scan_id` (chains the tool-result scan back to the input scan
+  that triggered the tool call — critical for incident forensics).
+- **`ScanContext`** — new field on `ScanReport`. Carries `gate`,
+  `provenance`, `attack_families`, `is_indirect`,
+  `classifier_confidence`, `mitigation`, `sanitized_text`. Forward-
+  compatible: additional gates can attach their own metadata via
+  new optional fields.
+- **`is_indirect: bool`** — derived automatically from `tool_type`
+  (`retrieval` / `rag` / `web_search` / `search` → `True`) or
+  overridden explicitly. Distinguishes payloads that arrived via
+  retrieval from those a user typed directly.
+
+### Added — Anthropic wrapper: `tool_result` block scanning
+
+- `PromptShieldAnthropic` now scans every
+  `{"type": "tool_result", "content": ...}` block in a message's
+  content list before the request forwards to `messages.create`.
+  Handles both string and structured (`list[{"type": "text", ...}]`)
+  content shapes. New init flags: `scan_tool_results: bool = True`,
+  `tool_result_mode: str = "block"`.
+
+### Changed — 4 integrations delegate through `ToolResultGuard`
+
+- `AgentGuard.scan_tool_result()` — **backward-compatible**: return
+  type stays `GateResult`; attack families exposed via
+  `GateResult.metadata["attack_families"]` and
+  `metadata["scan_context"]`.
+- `PromptShieldCallback.on_tool_end()` (LangChain).
+- `PromptShieldHandler.scan_retrieved_nodes()` (LlamaIndex).
+- `PromptShieldMCPFilter.call_tool()` (MCP).
+- `PromptShieldGuard.run()` (Haystack) — **gate-string normalized**
+  from `"retrieved_document"` to `"tool_result"` + `"tool_type":
+  "retrieval"` sub-context; matches every other integration.
+
+### Added — CLI
+
+- `prompt-shield scan --gate [input|tool_result|output]` flag (default
+  `input`). With `--gate tool_result`, additionally accepts
+  `--tool-name` and `--tool-type` and prints attack-family
+  classification alongside the standard scan output.
+
+### Added — tests (68 new)
+
+- `tests/tool_guard/` — 5 new test files covering the primitive,
+  taxonomy, models, one-liner API, and end-to-end precision floor.
+- `tests/integrations/test_anthropic_tool_results.py` — 13 tests for
+  the new Anthropic `tool_result` block scanning.
+- `tests/integrations/test_langchain_on_tool_end.py` and
+  `test_llamaindex_retrieved_nodes.py` — **backfill**: zero tests
+  existed for these paths before v0.7.0.
+- `tests/fixtures/tool_result_attacks.py` — shared 25-sample attack
+  corpus (20 attacks across 8 families + 5 clean controls) reused by
+  precision tests.
+- Registry-drift protection: `test_taxonomy.py` asserts every
+  `DETECTOR_TO_FAMILY` key exists in the runtime detector registry —
+  same protection pattern introduced for compliance mappings in 0.6.1.
+- Full suite: **1155 passing, 18 skipped, 0 failures** (up from 1097).
+
+### Deferred to v0.7.1
+
+- pydantic-ai tool-result primitives, OpenAI wrapper `role="tool"`
+  message scanning, and CrewAI `scan_tool_result` method. Each has
+  edge cases worth isolating: OpenAI's legacy `function` role,
+  pydantic-ai's async validator context, CrewAI's undocumented tool
+  wrapping. Splitting keeps a flaky integration from blocking the
+  primitive.
+
 ## [0.6.1] - 2026-06-25
 
 Docs + compliance-mapping patch release. No runtime behavior change.

@@ -47,6 +47,52 @@ class DetectionResult(BaseModel):
     metadata: dict[str, object] = {}
 
 
+class ToolResultAttackFamily(str, Enum):
+    """Classification of prompt-injection attack families observed in tool-result content.
+
+    Populated on ``ScanReport.scan_context.attack_families`` when a scan
+    is routed through a specialized guard (currently ``ToolResultGuard``).
+    Families are a *projection* over ``DetectionResult.detector_id`` — the
+    projection lives in ``prompt_shield.tool_guard._taxonomy``.
+    """
+
+    IMPERATIVE_INJECTION = "imperative_injection"
+    DELIMITER_INJECTION = "delimiter_injection"
+    CONTEXT_TERMINATION = "context_termination"
+    EXFILTRATION_COMMAND = "exfiltration_command"
+    ROLE_HIJACK = "role_hijack"
+    TOOL_MISUSE = "tool_misuse"
+    ENCODED_PAYLOAD = "encoded_payload"
+    RENDERED_EXFIL = "rendered_exfil"
+    UNCLASSIFIED = "unclassified"
+
+
+class ToolProvenance(BaseModel):
+    """Where a tool result came from — attached to ``ScanContext.provenance``."""
+
+    tool_name: str | None = None
+    tool_type: str | None = None
+    source_url: str | None = None
+    parent_scan_id: str | None = None
+
+
+class ScanContext(BaseModel):
+    """Gate-specific metadata attached to ``ScanReport.scan_context``.
+
+    Populated when a scan is routed through a specialized guard (today:
+    ``ToolResultGuard``). Forward-compatible: additional gates can attach
+    their own metadata via new optional fields on this model.
+    """
+
+    gate: str
+    provenance: ToolProvenance | None = None
+    attack_families: list[ToolResultAttackFamily] = []
+    is_indirect: bool = False
+    classifier_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
+    mitigation: str = ""
+    sanitized_text: str | None = None
+
+
 class ScanReport(BaseModel):
     """Aggregated result from the engine running all detectors."""
 
@@ -63,6 +109,7 @@ class ScanReport(BaseModel):
     config_snapshot: dict[str, object] = {}
     token_count: int = 0
     char_count: int = 0
+    scan_context: ScanContext | None = None
 
 
 class ThreatEntry(BaseModel):

@@ -217,17 +217,32 @@ Key functions:
 - `_deep_merge()` → Recursive dict merge
 - `_apply_env_overrides()` → Reads `PROMPT_SHIELD_*` env vars
 
+### Tool Guard (`tool_guard/`) — new in v0.7.0
+
+First-class primitive for scanning tool-result content, with an attack-family taxonomy that projects over the 33 input detectors. Delegated to by every integration that scans tool-result content.
+
+| Module | Symbol | Purpose |
+|--------|--------|---------|
+| `tool_guard/guard.py` | `ToolResultGuard` | Reusable primitive with sync `scan()` + async `ascan()`. LRU content-hash cache. Modes: `block` / `flag` (default) / `log` / `sanitize`. |
+| `tool_guard/guard.py` | `scan_tool_result()` | One-liner using a default engine. |
+| `tool_guard/_taxonomy.py` | `DETECTOR_TO_FAMILY`, `classify()`, `build_mitigation()` | Projection dict + classifier + mitigation-string builder. |
+| `tool_guard/_sanitize.py` | `sanitize_text()` | Shared PII-aware span-replacer (previously private to `agent_guard.py`). |
+| `tool_guard/models.py` | Re-exports of `ScanContext`, `ToolProvenance`, `ToolResultAttackFamily` | Types live in `prompt_shield.models` to avoid circular imports; this file re-exports for the `tool_guard` namespace. |
+
 ### Integrations (`integrations/`)
 
 | Module | Class | Purpose | Key Methods |
 |--------|-------|---------|-------------|
-| `agent_guard.py` | `AgentGuard` | 3-gate protection for agent loops | `scan_input()`, `scan_tool_result()`, `scan_tool_call()`, `prepare_prompt()`, `scan_output()`, `scan_multi_hop()` |
-| `mcp.py` | `PromptShieldMCPFilter` | Transparent MCP server proxy | `call_tool()`, `list_tools()` |
+| `agent_guard.py` | `AgentGuard` | 3-gate protection for agent loops. Delegates tool-result scanning to `ToolResultGuard`; return type stays `GateResult` for backward compat. Families exposed via `GateResult.metadata["attack_families"]`. | `scan_input()`, `scan_tool_result()`, `scan_tool_call()`, `prepare_prompt()`, `scan_output()`, `scan_multi_hop()` |
+| `mcp.py` | `PromptShieldMCPFilter` | Transparent MCP server proxy. Tool-result path now delegates to `ToolResultGuard`. | `call_tool()`, `list_tools()` |
 | `fastapi_middleware.py` | `PromptShieldMiddleware` | Starlette ASGI middleware | Scans POST/PUT/PATCH bodies |
 | `flask_middleware.py` | `PromptShieldMiddleware` | WSGI middleware | Wraps `wsgi.input` stream |
 | `django_middleware.py` | `PromptShieldMiddleware` | Django middleware | `__call__(request)` |
-| `langchain_callback.py` | `PromptShieldCallback` | LangChain callback handler | `on_llm_start()`, `on_tool_end()`, `on_llm_end()` |
-| `llamaindex_handler.py` | `PromptShieldHandler` | LlamaIndex handler | `scan_query()`, `scan_retrieved_nodes()`, `scan_response()` |
+| `langchain_callback.py` | `PromptShieldCallback` | LangChain callback handler. `on_tool_end` delegates to `ToolResultGuard`. | `on_llm_start()`, `on_tool_end()`, `on_llm_end()` |
+| `llamaindex_handler.py` | `PromptShieldHandler` | LlamaIndex handler. `scan_retrieved_nodes` delegates to `ToolResultGuard`. | `scan_query()`, `scan_retrieved_nodes()`, `scan_response()` |
+| `haystack_component.py` | `PromptShieldGuard`, `PromptShieldOutputGuard` | Haystack v2 pipeline components. Document scanning delegates to `ToolResultGuard`; gate string normalized in v0.7.0 from `"retrieved_document"` → `"tool_result"` + `"tool_type": "retrieval"`. | `run()` |
+| `anthropic_wrapper.py` | `PromptShieldAnthropic` | Anthropic client wrapper. Scans input messages, output responses, and (new in v0.7.0) `tool_result` blocks inside message content lists. | `create()` |
+| `pydantic_ai_guard.py` | `PromptShieldOutputValidator`, `scan_input`, `attach` | pydantic-ai integration (input + output). Tool-result primitives arrive in v0.7.1. | `scan_input()`, `attach()` |
 
 ### CLI (`cli.py`)
 

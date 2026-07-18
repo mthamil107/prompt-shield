@@ -7,6 +7,7 @@ from typing import Any
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
+from prompt_shield.tool_guard.guard import ToolResultGuard
 
 logger = logging.getLogger("prompt_shield.llamaindex")
 
@@ -23,6 +24,8 @@ class PromptShieldHandler:
         self.engine = engine or PromptShieldEngine()
         self.mode = mode
         self.scan_retrieved = scan_retrieved
+        # Delegate retrieved-content scanning to the first-class primitive.
+        self._tool_guard = ToolResultGuard(engine=self.engine, mode="log")
 
     def scan_query(self, query: str) -> None:
         """Scan user query before processing."""
@@ -37,9 +40,19 @@ class PromptShieldHandler:
         safe_nodes = []
         for node in nodes:
             text = getattr(node, "text", str(node))
-            report = self.engine.scan(text, context={"gate": "tool_result", "source": "llamaindex"})
+            node_id = getattr(node, "node_id", None) or getattr(node, "id_", None)
+            report = self._tool_guard.scan(
+                text,
+                tool_name=str(node_id) if node_id else "retriever",
+                tool_type="retrieval",
+            )
             if report.action == Action.BLOCK:
-                logger.warning("Blocked poisoned node: %s", report.scan_id)
+                families = (
+                    [f.value for f in report.scan_context.attack_families]
+                    if report.scan_context
+                    else []
+                )
+                logger.warning("Blocked poisoned node: %s (families=%s)", report.scan_id, families)
                 continue
             safe_nodes.append(node)
         return safe_nodes

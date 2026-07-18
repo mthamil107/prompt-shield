@@ -54,8 +54,32 @@ def _get_engine(ctx: click.Context):  # type: ignore[no-untyped-def]
 @main.command()
 @click.argument("input_text", default="-")
 @click.option("--file", "-f", "file_path", default=None, help="Read input from file")
+@click.option(
+    "--gate",
+    type=click.Choice(["input", "tool_result", "output"]),
+    default="input",
+    help="Scan gate. 'tool_result' routes through ToolResultGuard "
+    "and prints attack-family classification.",
+)
+@click.option(
+    "--tool-name",
+    default=None,
+    help="Tool name (only used when --gate tool_result).",
+)
+@click.option(
+    "--tool-type",
+    default=None,
+    help="Tool type e.g. 'retrieval' / 'web_search' (only used when --gate tool_result).",
+)
 @click.pass_context
-def scan(ctx: click.Context, input_text: str, file_path: str | None) -> None:
+def scan(
+    ctx: click.Context,
+    input_text: str,
+    file_path: str | None,
+    gate: str,
+    tool_name: str | None,
+    tool_type: str | None,
+) -> None:
     """Scan text for prompt injection attacks."""
     use_json = ctx.obj.get("json", False)
 
@@ -73,7 +97,15 @@ def scan(ctx: click.Context, input_text: str, file_path: str | None) -> None:
         sys.exit(1)
 
     engine = _get_engine(ctx)
-    report = engine.scan(text)
+
+    if gate == "tool_result":
+        from prompt_shield.tool_guard import ToolResultGuard
+
+        report = ToolResultGuard(engine=engine, mode="log").scan(
+            text, tool_name=tool_name, tool_type=tool_type
+        )
+    else:
+        report = engine.scan(text, context={"gate": gate})
 
     if use_json:
         click.echo(report.model_dump_json(indent=2))

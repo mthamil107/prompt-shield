@@ -46,6 +46,7 @@ except ImportError:
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
+from prompt_shield.tool_guard.guard import ToolResultGuard
 
 if TYPE_CHECKING:
     from prompt_shield.models import ScanReport
@@ -82,6 +83,10 @@ def _make_guard_class():
                 raise ValueError(f"mode must be block/flag/log, got {mode!r}")
             self.engine = engine or PromptShieldEngine()
             self.mode = mode
+            # Delegate retrieved-document scanning to the first-class primitive.
+            # This also normalizes the gate string from "retrieved_document"
+            # (Haystack-specific, v0.6.x) to "tool_result" with tool_type=retrieval.
+            self._tool_guard = ToolResultGuard(engine=self.engine, mode="log")
 
         @component.output_types(query=str, documents=list, report=dict)
         def run(
@@ -104,18 +109,16 @@ def _make_guard_class():
                     content = getattr(doc, "content", None)
                     if not isinstance(content, str):
                         continue
-                    report = self.engine.scan(
+                    doc_id = getattr(doc, "id", None)
+                    report = self._tool_guard.scan(
                         content,
-                        context={
-                            "gate": "retrieved_document",
-                            "source": "haystack",
-                            "doc_index": i,
-                            "doc_id": getattr(doc, "id", None),
-                        },
+                        tool_name=f"haystack_doc[{i}]",
+                        tool_type="retrieval",
+                        source_url=doc_id,
                     )
                     self._enforce(
                         report,
-                        source_desc=f"document[{i}] id={getattr(doc, 'id', '?')}",
+                        source_desc=f"document[{i}] id={doc_id or '?'}",
                     )
                     reports.append(_summarize(report))
 

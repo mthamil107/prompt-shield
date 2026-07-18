@@ -32,6 +32,21 @@ class TestAgentGuard:
         )
         assert result.blocked is True
         assert result.gate == "tool_result"
+        # v0.7.0: attack_families exposed via GateResult.metadata (backward-
+        # compat contract — return type is still GateResult).
+        assert "attack_families" in result.metadata
+        assert isinstance(result.metadata["attack_families"], list)
+        assert len(result.metadata["attack_families"]) >= 1
+        assert "scan_context" in result.metadata
+
+    def test_scan_tool_result_metadata_on_clean(self, engine):
+        """v0.7.0: even clean results carry a scan_context in metadata."""
+        guard = AgentGuard(engine)
+        result = guard.scan_tool_result("web_search", "Paris is the capital of France.")
+        assert result.blocked is False
+        assert result.gate == "tool_result"
+        assert "attack_families" in result.metadata
+        assert result.metadata["attack_families"] == []
 
     def test_scan_tool_call(self, engine):
         guard = AgentGuard(engine)
