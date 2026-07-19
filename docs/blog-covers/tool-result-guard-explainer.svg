@@ -96,7 +96,7 @@
   </defs>
 
   <rect class="bg" width="900" height="380"/>
-  <text class="title-text" x="450" y="26">ToolResultGuard v0.7.0 &mdash; blocking indirect prompt injection at the tool-result boundary</text>
+  <text class="title-text" x="450" y="26">ToolResultGuard v0.7.0 — blocking indirect prompt injection at the tool-result boundary</text>
   <text class="subtitle-text" x="450" y="46">First-class OSS primitive with attack-family classification</text>
 
   <g id="stage-user">
