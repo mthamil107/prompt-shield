@@ -1,0 +1,273 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="arch-title arch-desc">
+  <title id="arch-title">prompt-shield v0.7.0 architecture</title>
+  <desc id="arch-desc">Five-gate architecture: user input runs through the Input Gate (33 detectors, DeBERTa classifier, ensemble scoring), reaches the LLM or agent, which may call external tools; the Tool-Result Gate (ToolResultGuard v0.7.0) scans tool output and classifies it into nine attack families before it re-enters the LLM context; the Output Gate applies nine output scanners before the response reaches the user. The Attack Vault (self-learning, auto-tuning) is fed by every detection and augmented by a federated ed25519-signed community threat feed.</desc>
+  <style>
+    :root { color-scheme: light dark; }
+    .bg { fill: #ffffff; }
+    .card { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1.5; }
+    .card-input  { fill: #ddf4ff; stroke: #54aeff; }
+    .card-llm    { fill: #eeeef5; stroke: #8b8fa8; }
+    .card-output { fill: #dafbe1; stroke: #4ac26b; }
+    .card-user   { fill: #f6f8fa; stroke: #d0d7de; }
+    .card-tool   { fill: #ffebe9; stroke: #ff8182; stroke-width: 2; }
+    .card-vault  { fill: #fbefff; stroke: #a475f9; }
+    .card-external { fill: #fff8c5; stroke: #d4a72c; }
+    .card-feed   { fill: #dafbe1; stroke: #1a7f37; stroke-width: 2; }
+    .family-bg   { fill: #cf222e; }
+    .h1 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 20px; font-weight: 800; fill: #1f2328; text-anchor: middle; }
+    .h2 { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 12px; font-weight: 700; fill: #57606a; text-anchor: middle; letter-spacing: 1px; }
+    .label { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #1f2328; text-anchor: middle; }
+    .sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; font-size: 11px; fill: #57606a; text-anchor: middle; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; fill: #1f2328; }
+    .mono-mid { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; fill: #57606a; }
+    .family { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 9.5px; font-weight: 700; fill: #ffffff; text-anchor: middle; }
+    .action-block { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; fill: #cf222e; }
+    .action-flag  { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; fill: #bf8700; }
+    .action-pass  { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; fill: #1a7f37; }
+    .action-log   { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; font-weight: 700; fill: #57606a; }
+    .arrow { stroke: #57606a; stroke-width: 1.8; fill: none; marker-end: url(#arrow); }
+    .arrow-tool { stroke: #cf222e; stroke-width: 2; fill: none; marker-end: url(#arrow-red); }
+    .arrow-safe { stroke: #1a7f37; stroke-width: 2; fill: none; marker-end: url(#arrow-green); }
+    .arrow-vault { stroke: #a475f9; stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; marker-end: url(#arrow-purple); }
+    .v070 { fill: #1a7f37; font-family: -apple-system, BlinkMacSystemFont, sans-serif; font-size: 9.5px; font-weight: 800; letter-spacing: 0.5px; }
+    .glow { filter: drop-shadow(0 0 3px rgba(26, 127, 55, 0.5)); }
+
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0d1117; }
+      .card { fill: #161b22; stroke: #30363d; }
+      .card-input  { fill: #0c2d6b; stroke: #388bfd; }
+      .card-llm    { fill: #21262d; stroke: #6e7681; }
+      .card-output { fill: #0f5323; stroke: #56d364; }
+      .card-user   { fill: #161b22; stroke: #30363d; }
+      .card-tool   { fill: #490202; stroke: #f85149; }
+      .card-vault  { fill: #2d0a5a; stroke: #a475f9; }
+      .card-external { fill: #4d3800; stroke: #d29922; }
+      .card-feed   { fill: #0f5323; stroke: #56d364; }
+      .h1, .label { fill: #f0f6fc; }
+      .h2, .sub, .mono-mid { fill: #8b949e; }
+      .mono { fill: #f0f6fc; }
+      .action-block { fill: #f85149; }
+      .action-flag { fill: #d29922; }
+      .action-pass { fill: #56d364; }
+      .action-log  { fill: #8b949e; }
+      .arrow { stroke: #8b949e; }
+      .v070 { fill: #56d364; }
+      .glow { filter: drop-shadow(0 0 4px rgba(86, 211, 100, 0.6)); }
+      .family-bg { fill: #da3633; }
+    }
+    :root[data-theme="dark"] .bg { fill: #0d1117; }
+    :root[data-theme="dark"] .card { fill: #161b22; stroke: #30363d; }
+    :root[data-theme="dark"] .card-input  { fill: #0c2d6b; stroke: #388bfd; }
+    :root[data-theme="dark"] .card-llm    { fill: #21262d; stroke: #6e7681; }
+    :root[data-theme="dark"] .card-output { fill: #0f5323; stroke: #56d364; }
+    :root[data-theme="dark"] .card-user   { fill: #161b22; stroke: #30363d; }
+    :root[data-theme="dark"] .card-tool   { fill: #490202; stroke: #f85149; }
+    :root[data-theme="dark"] .card-vault  { fill: #2d0a5a; stroke: #a475f9; }
+    :root[data-theme="dark"] .card-external { fill: #4d3800; stroke: #d29922; }
+    :root[data-theme="dark"] .card-feed   { fill: #0f5323; stroke: #56d364; }
+    :root[data-theme="dark"] .h1 { fill: #f0f6fc; }
+    :root[data-theme="dark"] .label { fill: #f0f6fc; }
+    :root[data-theme="dark"] .h2 { fill: #8b949e; }
+    :root[data-theme="dark"] .sub { fill: #8b949e; }
+    :root[data-theme="dark"] .mono-mid { fill: #8b949e; }
+    :root[data-theme="dark"] .mono { fill: #f0f6fc; }
+    :root[data-theme="dark"] .action-block { fill: #f85149; }
+    :root[data-theme="dark"] .action-flag { fill: #d29922; }
+    :root[data-theme="dark"] .action-pass { fill: #56d364; }
+    :root[data-theme="dark"] .action-log  { fill: #8b949e; }
+    :root[data-theme="dark"] .arrow { stroke: #8b949e; }
+    :root[data-theme="dark"] .v070 { fill: #56d364; }
+    :root[data-theme="dark"] .family-bg { fill: #da3633; }
+
+    @keyframes gentleGlow {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(207, 34, 46, 0)); }
+      50%      { filter: drop-shadow(0 0 5px rgba(207, 34, 46, 0.6)); }
+    }
+    @keyframes feedGlow {
+      0%, 100% { filter: drop-shadow(0 0 0 rgba(26, 127, 55, 0)); }
+      50%      { filter: drop-shadow(0 0 4px rgba(26, 127, 55, 0.7)); }
+    }
+    #tool-gate { animation: gentleGlow 3s ease-in-out infinite; }
+    #feed-badge { animation: feedGlow 3s ease-in-out infinite; }
+  </style>
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#57606a"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#cf222e"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#1a7f37"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a475f9"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1200" height="780"/>
+  <text class="h1" x="600" y="34">prompt-shield architecture</text>
+  <text class="sub" x="600" y="54">33 input detectors · 9 output scanners · ToolResultGuard v0.7.0 · federated ed25519 threat feed</text>
+
+  <!-- ============ Top row: main pipeline ============ -->
+  <!-- User -->
+  <g>
+    <rect class="card card-user" x="30" y="90" width="140" height="70" rx="10"/>
+    <text class="label" x="100" y="122">User</text>
+    <text class="sub" x="100" y="140">input · query</text>
+  </g>
+  <path class="arrow" d="M 175 125 L 245 125"/>
+
+  <!-- Input Gate -->
+  <g>
+    <rect class="card card-input" x="250" y="80" width="220" height="90" rx="10"/>
+    <text class="h2" x="360" y="103">INPUT GATE</text>
+    <text class="mono" x="360" y="126" text-anchor="middle">33 detectors · DeBERTa classifier</text>
+    <text class="mono-mid" x="360" y="143" text-anchor="middle">ensemble scoring · vault similarity</text>
+    <g transform="translate(360,158)">
+      <text class="action-block" x="-72" y="0" text-anchor="middle">BLOCK</text>
+      <text class="action-flag" x="-24" y="0" text-anchor="middle">FLAG</text>
+      <text class="action-pass" x="24" y="0" text-anchor="middle">PASS</text>
+      <text class="action-log" x="72" y="0" text-anchor="middle">LOG</text>
+    </g>
+  </g>
+  <path class="arrow" d="M 475 125 L 545 125"/>
+
+  <!-- LLM / Agent -->
+  <g>
+    <rect class="card card-llm" x="550" y="90" width="140" height="70" rx="10"/>
+    <text class="label" x="620" y="122">LLM / Agent</text>
+    <text class="sub" x="620" y="140">reasons · calls tools</text>
+  </g>
+  <path class="arrow" d="M 695 125 L 765 125"/>
+
+  <!-- Output Gate -->
+  <g>
+    <rect class="card card-output" x="770" y="80" width="220" height="90" rx="10"/>
+    <text class="h2" x="880" y="103">OUTPUT GATE</text>
+    <text class="mono" x="880" y="126" text-anchor="middle">9 output scanners</text>
+    <text class="mono-mid" x="880" y="143" text-anchor="middle">toxicity · PII · code-inj · prompt-leak</text>
+    <text class="mono-mid" x="880" y="158" text-anchor="middle">canary · hallucination · relevance …</text>
+  </g>
+  <path class="arrow" d="M 995 125 L 1055 125"/>
+
+  <!-- Response -->
+  <g>
+    <rect class="card card-user" x="1060" y="90" width="110" height="70" rx="10"/>
+    <text class="label" x="1115" y="122">Response</text>
+    <text class="sub" x="1115" y="140">to user</text>
+  </g>
+
+  <!-- ============ Tool-Result Gate (v0.7.0 centerpiece) ============ -->
+  <!-- Down-arrow from LLM to Tool-Result Gate -->
+  <path class="arrow-tool" d="M 620 165 L 620 235"/>
+  <text class="mono-mid" x="640" y="205" text-anchor="start">call_tool(…)</text>
+
+  <!-- Return arrow (safe) from Tool-Result Gate back to LLM -->
+  <path class="arrow-safe" d="M 720 240 Q 780 200 720 168"/>
+  <text class="v070" x="770" y="200" text-anchor="start">verified</text>
+
+  <g id="tool-gate">
+    <rect class="card card-tool" x="400" y="240" width="440" height="220" rx="14"/>
+    <text class="h2" x="620" y="266" style="fill: #cf222e;">TOOL-RESULT GATE</text>
+    <text class="label" x="620" y="288">ToolResultGuard <tspan class="v070" dx="4">v0.7.0</tspan></text>
+    <text class="sub" x="620" y="306">scans tool output · classifies attack families · enforces policy</text>
+
+    <!-- Attack family badges — 9 families in a 3x3 grid -->
+    <g transform="translate(420, 322)">
+      <rect class="family-bg" x="0"   y="0"  width="130" height="20" rx="4"/>
+      <text class="family" x="65" y="14">IMPERATIVE_INJECTION</text>
+      <rect class="family-bg" x="135" y="0"  width="130" height="20" rx="4"/>
+      <text class="family" x="200" y="14">EXFILTRATION_COMMAND</text>
+      <rect class="family-bg" x="270" y="0"  width="130" height="20" rx="4"/>
+      <text class="family" x="335" y="14">ROLE_HIJACK</text>
+
+      <rect class="family-bg" x="0"   y="26" width="130" height="20" rx="4"/>
+      <text class="family" x="65" y="40">TOOL_MISUSE</text>
+      <rect class="family-bg" x="135" y="26" width="130" height="20" rx="4"/>
+      <text class="family" x="200" y="40">ENCODED_PAYLOAD</text>
+      <rect class="family-bg" x="270" y="26" width="130" height="20" rx="4"/>
+      <text class="family" x="335" y="40">RENDERED_EXFIL</text>
+
+      <rect class="family-bg" x="0"   y="52" width="130" height="20" rx="4"/>
+      <text class="family" x="65" y="66">DELIMITER_INJECTION</text>
+      <rect class="family-bg" x="135" y="52" width="130" height="20" rx="4"/>
+      <text class="family" x="200" y="66">CONTEXT_TERMINATION</text>
+      <rect class="family-bg" x="270" y="52" width="130" height="20" rx="4"/>
+      <text class="family" x="335" y="66">UNCLASSIFIED</text>
+    </g>
+
+    <text class="mono-mid" x="620" y="418" text-anchor="middle">projection over detector IDs · sync + async · LRU cache · provenance chain</text>
+    <g transform="translate(620, 442)">
+      <text class="action-block" x="-108" y="0" text-anchor="middle">BLOCK</text>
+      <text class="action-flag"  x="-36"  y="0" text-anchor="middle">FLAG (default)</text>
+      <text class="action-log"   x="48"   y="0" text-anchor="middle">LOG</text>
+      <text class="action-pass"  x="108"  y="0" text-anchor="middle">SANITIZE</text>
+    </g>
+  </g>
+
+  <!-- External data feeding tools -->
+  <g>
+    <rect class="card card-external" x="880" y="290" width="240" height="120" rx="10"/>
+    <text class="h2" x="1000" y="313">EXTERNAL DATA</text>
+    <text class="mono" x="1000" y="338" text-anchor="middle">RAG · MCP · web search</text>
+    <text class="mono" x="1000" y="357" text-anchor="middle">APIs · docs · emails</text>
+    <text class="mono-mid" x="1000" y="378" text-anchor="middle">— untrusted content —</text>
+    <text class="sub" x="1000" y="398" text-anchor="middle">indirect-injection surface</text>
+  </g>
+  <path class="arrow-tool" d="M 875 350 L 845 350"/>
+
+  <!-- ============ Attack Vault + Federated Feed ============ -->
+  <g>
+    <rect class="card card-vault" x="200" y="530" width="500" height="180" rx="12"/>
+    <text class="h2" x="450" y="554" style="fill: #8250df;">ATTACK VAULT</text>
+    <text class="label" x="450" y="578">self-learning · auto-tuning</text>
+    <text class="sub" x="450" y="596">every detection strengthens future scans (ChromaDB embeddings)</text>
+
+    <!-- Federated feed inside vault, glowing -->
+    <g id="feed-badge">
+      <rect class="card card-feed" x="240" y="612" width="420" height="80" rx="10"/>
+      <text class="h2" x="450" y="633" style="fill: #1a7f37;">FEDERATED THREAT FEED</text>
+      <text class="mono" x="450" y="653" text-anchor="middle">ed25519-signed · CDN-delivered · pure-Python verification</text>
+      <text class="v070" x="450" y="672" text-anchor="middle">the first open-source community threat feed for LLM prompt injection</text>
+      <text class="mono-mid" x="450" y="686" text-anchor="middle">v0.6.0</text>
+    </g>
+  </g>
+
+  <!-- Detection feed arrows into vault (dashed purple) -->
+  <path class="arrow-vault" d="M 360 170 Q 360 350 360 528"/>
+  <text class="mono-mid" x="368" y="360" text-anchor="start">similarity</text>
+
+  <path class="arrow-vault" d="M 620 460 Q 550 500 500 528"/>
+  <text class="mono-mid" x="580" y="500" text-anchor="start">detections</text>
+
+  <path class="arrow-vault" d="M 880 170 Q 880 350 700 545"/>
+  <text class="mono-mid" x="810" y="360" text-anchor="start">canary leaks</text>
+
+  <!-- ============ Framework Integrations strip ============ -->
+  <g>
+    <rect class="card" x="750" y="530" width="420" height="180" rx="12"/>
+    <text class="h2" x="960" y="554">FRAMEWORK INTEGRATIONS</text>
+    <text class="mono" x="770" y="580">LangChain · LlamaIndex · Haystack · Pydantic AI</text>
+    <text class="mono" x="770" y="600">CrewAI · Anthropic · OpenAI · MCP</text>
+    <text class="mono" x="770" y="620">FastAPI · Flask · Django middleware</text>
+    <text class="sub" x="770" y="642">every integration delegates tool-result scans</text>
+    <text class="sub" x="770" y="658">through ToolResultGuard</text>
+    <g transform="translate(770, 676)">
+      <text class="v070" x="0" y="0">v0.7.0: Anthropic tool_result blocks scanned natively</text>
+      <text class="mono-mid" x="0" y="16" style="font-size:10px;">v0.7.1: pydantic-ai · OpenAI · CrewAI primitives</text>
+    </g>
+  </g>
+
+  <!-- Legend / footer -->
+  <g transform="translate(30, 738)">
+    <text class="mono-mid" x="0" y="0">Legend:</text>
+    <line class="arrow" x1="60" y1="-4" x2="90" y2="-4"/>
+    <text class="mono-mid" x="95" y="0">safe flow</text>
+    <line class="arrow-tool" x1="170" y1="-4" x2="200" y2="-4"/>
+    <text class="mono-mid" x="205" y="0">untrusted content</text>
+    <line class="arrow-vault" x1="330" y1="-4" x2="360" y2="-4"/>
+    <text class="mono-mid" x="365" y="0">learning signal</text>
+    <text class="mono-mid" x="1050" y="0" text-anchor="end">prompt-shield v0.7.0</text>
+  </g>
+</svg>

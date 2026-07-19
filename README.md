@@ -408,7 +408,7 @@ pydantic-ai `scan_tool_result` primitives, OpenAI wrapper `role="tool"` message 
 ## Architecture
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/architecture.png" alt="prompt-shield architecture" width="900" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/blog-covers/architecture.svg" alt="prompt-shield architecture: 33 input detectors, 9 output scanners, ToolResultGuard v0.7.0 with 9 attack families, federated ed25519-signed threat feed, and self-learning attack vault" width="1000" />
 </p>
 
 ## Built-in Detectors
