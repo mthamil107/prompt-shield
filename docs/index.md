@@ -82,8 +82,8 @@ Section 5.6 of the paper reports evaluation on five public datasets:
 | Liu et al. (USENIX Sec 2024) attack strategies | 200 | 64.0% |
 | NVIDIA Garak `promptinject` + `latentinjection` | 5,968 | 55.2% |
 | InjecAgent (ACL Findings 2024) indirect injection | 2,108 | 85.2% |
-| deepset/prompt-injections | 116 | F1 0.378 (with d028), F1 0.161 (without) |
-| leolee99/NotInject (benign) | 339 | 0% false positives |
+| deepset/prompt-injections | 116 | F1 0.378 with d028, 0.033 without (both regex-only, d022 off) — +34.5 pp |
+| leolee99/NotInject (benign) | 339 | 3.8% false positives (13/339) — [breakdown](https://github.com/mthamil107/prompt-shield#benchmark-3-public-dataset----notinject-339-benign-samples) |
 
 ## Framework integrations
 
@@ -92,8 +92,8 @@ Ships with LangChain, LlamaIndex, CrewAI, FastAPI, Flask, Django, OpenAI, Anthro
 ## Compliance
 
 Maps every detector to four frameworks:
-- OWASP LLM Top 10 (2025) — 7/10 categories, all 33 detectors mapped
-- OWASP Agentic Top 10 — 9/10 categories, all 33 detectors mapped
+- OWASP LLM Top 10 (2025) — 8/10 categories (LLM01, LLM02, LLM04–LLM08, LLM10), all 33 detectors mapped
+- OWASP Agentic Top 10 — 10/10 categories (ASI01–ASI10), 41 detector mappings
 - EU AI Act (Aug 2026 deadline) — article-level mapping
 - MITRE ATLAS — 9/9 techniques (T0048, T0049, T0051-T0054, T0057)
 

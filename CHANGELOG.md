@@ -334,7 +334,7 @@ DOI; full evaluation harness in-repo.
   detection, with a 15-group semantic substitution matrix analogous to
   BLOSUM. Catches paraphrased, filler-padded, and synonym-swapped attacks
   that verbatim regex misses. Pure Python, no new deps, <5 ms per scan.
-  ~180 curated attack sequences across 13 categories. Ships with 35
+  187 curated attack sequences across 20 categories. Ships with 35
   unit + fixture tests.
 - **Adversarial fatigue tracker** (`prompt_shield.fatigue.FatigueTracker`).
   EWMA near-miss tracking with per-`(source, detector)` state; lowers the

@@ -9,10 +9,10 @@ Mechanism
 ---------
 
 1. Slide a fixed-size window across the input's token stream.
-2. For each window compute an 8-feature stylometric vector (function-word
+2. For each window compute a 9-feature stylometric vector (function-word
    frequency, average word length, average sentence length, punctuation
    density, hapax legomena ratio, Yule's K, imperative-verb ratio,
-   uppercase ratio).
+   uppercase ratio, all-caps word ratio).
 3. For each adjacent pair of windows, compute the Jensen-Shannon divergence
    between their normalised feature vectors.
 4. The maximum adjacent-window divergence across the input is the

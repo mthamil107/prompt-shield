@@ -69,7 +69,7 @@ A prompt injection attack has two authors in one text: the legitimate user and t
 Given an input of sufficient length (>100 tokens):
 
 1. **Segment** into overlapping windows of 50 tokens with 25-token stride
-2. **Extract 8 features** per window:
+2. **Extract 9 features** per window:
    - Function word frequency (the, is, of, to, a, in, that, it, for, was)
    - Average word length
    - Average sentence length
@@ -78,7 +78,8 @@ Given an input of sufficient length (>100 tokens):
    - [Yule's K](https://en.wikipedia.org/wiki/Yule%27s_K) (vocabulary richness, robust to text length)
    - Imperative verb ratio (ignore, forget, disregard, pretend, act, do, tell, show)
    - Uppercase character ratio
-3. **Measure divergence** between adjacent windows using [KL divergence](https://en.wikipedia.org/wiki/Kullback%E2%80%93Leibler_divergence)
+   - All-caps word ratio (fraction of tokens that are entirely uppercase)
+3. **Measure divergence** between adjacent windows using [Jensen-Shannon divergence](https://en.wikipedia.org/wiki/Jensen%E2%80%93Shannon_divergence) (symmetric and bounded, unlike raw KL)
 4. **Flag** if divergence exceeds a calibrated threshold
 
 ### Why This Works for Indirect Injection

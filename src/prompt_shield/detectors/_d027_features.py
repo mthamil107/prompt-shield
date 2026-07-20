@@ -219,7 +219,7 @@ def uppercase_ratio(text: str) -> float:
 
 
 def extract_features(text: str) -> tuple[float, ...]:
-    """Compute the full 8-feature stylometric vector for ``text``.
+    """Compute the full 9-feature stylometric vector for ``text``.
 
     Order matches :data:`FEATURE_ORDER`. Every component is **scaled into
     a comparable [0, 1] range** so no single feature dominates the
