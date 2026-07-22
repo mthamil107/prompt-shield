@@ -188,6 +188,24 @@ prompt_shield:
       max_input_chars: 200000   # Truncate inputs longer than this
       pivot_boost: 0.10         # Confidence bump if final question is harmful
 
+    # ----- Policy gates (opt-in, NOT attack detectors) -----
+    # d031 and d032 are operator-defined policy gates: enable them only when
+    # your deployment is language-restricted or topic-restricted. Both ship
+    # DISABLED to avoid silently flagging benign content that a general-
+    # purpose deployment would consider valid. Enable + configure per your
+    # deployment's policy. See docs/configuration.md#policy-gates.
+    d031_language_enforcement:
+      enabled: false            # opt-in: turn on only for language-restricted deployments
+      severity: medium
+      allowed_languages: ["en"]  # ISO 639-1 codes; adjust per deployment
+      min_input_chars: 32       # skip very short inputs to reduce false positives
+    d032_topic_enforcement:
+      enabled: false            # opt-in: define denied_topics or allowed_topics first
+      severity: medium
+      denied_topics: []          # e.g. [{name: medical_advice, keywords: [...]}, ...]
+      min_keyword_hits: 2
+      case_sensitive: false
+
   allowlist:
     patterns: []
 

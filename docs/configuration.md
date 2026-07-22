@@ -128,6 +128,49 @@ prompt_shield:
       threshold: 0.6      # Override confidence threshold
 ```
 
+## Policy Gates
+
+Two detectors ship as **opt-in operator policy gates** rather than attack detectors — they enforce operator-defined rules, not universal patterns:
+
+### `d031_language_enforcement` — language allow-list
+
+Blocks inputs whose detected language is not in `allowed_languages`. Uses [langdetect](https://pypi.org/project/langdetect/) plus script-based heuristics. **Ships disabled** (v0.7.1+) because a general-purpose LLM deployment expects multilingual input and the default `allowed_languages: ["en"]` would flag every non-English message of 32+ characters as a security detection.
+
+Enable only when your deployment is genuinely language-restricted:
+
+```yaml
+prompt_shield:
+  detectors:
+    d031_language_enforcement:
+      enabled: true                          # opt-in
+      allowed_languages: ["en", "fr", "de"]  # ISO 639-1 codes
+      min_input_chars: 32                    # inputs shorter than this pass silently
+```
+
+Multilingual *injection* detection (`d024_multilingual_injection`) is a separate attack detector and is **enabled by default** — it catches "ignore previous instructions"-family attacks written in any of 10 languages regardless of `d031`.
+
+### `d032_topic_enforcement` — denied-topic gate
+
+Blocks inputs that match operator-defined denied topics via keyword/phrase matching. **Ships disabled** and requires an explicit `denied_topics` list before it fires — with the default empty list it never triggers even when enabled.
+
+Enable when your deployment must refuse specific topic classes (medical advice, legal advice, financial recommendations, etc.):
+
+```yaml
+prompt_shield:
+  detectors:
+    d032_topic_enforcement:
+      enabled: true
+      denied_topics:
+        - name: medical_advice
+          keywords: ["diagnose", "prescription", "dosage", "symptoms"]
+        - name: legal_advice
+          keywords: ["lawsuit", "attorney", "court", "litigation"]
+      min_keyword_hits: 2   # require ≥2 keyword hits before flagging
+      case_sensitive: false
+```
+
+**Why these are opt-in:** an operator policy is not a security defect. Shipping them enabled by default silently reframes legitimate benign content as a "detection", inflating false-positive rates against operators who never intended to enforce a language or topic policy.
+
 ## Programmatic Configuration
 
 Pass a dict directly:

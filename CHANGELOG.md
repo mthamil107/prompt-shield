@@ -7,6 +7,99 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.1] - 2026-07-22
+
+**Correctness patch release.** Addresses two shipped-behaviour issues
+identified by an independent claim audit (`CLAIM-AUDIT.md`) plus a
+handful of accuracy corrections in the surrounding docs. No new features.
+
+### ⚠️ Behaviour change (default flip)
+
+- **`d031_language_enforcement` now ships `enabled: false`.**
+  In v0.7.0 and earlier, `d031` was enabled by omission from
+  `config/default.yaml` and shipped with `allowed_languages: ["en"]`.
+  On any input of ≥ 32 characters in a non-allowed language it flagged
+  at risk 1.0 — meaning a general-purpose deployment silently
+  reclassified benign French/German/Spanish/Chinese/Japanese/Arabic/Hindi
+  input as a security detection while the README's `languages-10` badge
+  advertised the opposite. `d031` is a *policy gate*, not an attack
+  detector, and should be opt-in.
+- **`d032_topic_enforcement` also now explicitly ships `enabled: false`.**
+  This was effectively already the case (empty `denied_topics` list
+  meant it never fired) but the config is now explicit and documented.
+- **What this means for existing users.** If you rely on the previous
+  `d031` behaviour, set `d031_language_enforcement: enabled: true` in
+  your config. Multilingual *injection* detection (`d024`) is
+  unaffected — it remains enabled by default and catches
+  "ignore previous instructions"-family attacks in 10 languages.
+- **Known limitation not addressed here.** The `d022_semantic_classifier`
+  (DeBERTa) may still classify some non-English benign inputs as
+  injection at high confidence. That is a separate model-training issue
+  tracked for a future release; the v0.7.1 fix only removes the
+  language-policy false-positive contribution.
+
+### Fixed — README and Pages accuracy (11 audit findings)
+
+- **NotInject false-positive rate.** README summary row and Benchmark 3
+  competitor table now report `3.8% (13/339)` — the shipped-default rate
+  — instead of the ablation baseline (`0.9%`) or the placeholder (`0%`).
+  Added a "What the 13 false positives are" breakdown paragraph and a
+  reproducibility note. GitHub Pages site (`docs/index.md`) updated to
+  match.
+- **Liu et al. citation.** Fixed a hyperlink typo that pointed to an
+  unrelated 2025 SQL-injection paper. Corrected to `arXiv:2310.12815`
+  (Liu, Y., Jia, Y., Geng, R., Jia, J., Gong, N. Z. USENIX Security 2024).
+- **OWASP coverage.** Pages site now correctly reports 8/10 LLM Top-10
+  and 10/10 Agentic Top-10 categories (was 7/10 and 9/10).
+- **d022-off vs d022-on mismatch.** Pages deepset with/without cell no
+  longer pairs numbers from different detector configurations.
+- **False-positives badge.** Now scoped to `(benchmark_1)` with alt text
+  disclosing the sample origin (15 self-curated benign inputs).
+- **Divergence terminology.** README and research-post docs now correctly
+  describe the d027 window-boundary metric as Jensen-Shannon divergence
+  (which the code has always used) rather than raw KL divergence.
+- **d027 feature count.** README and research-post updated from 8 to 9
+  stylometric features; the omitted feature (`allcaps_word_ratio`) is
+  the one carrying most of the detector's benchmark contribution.
+- **d028 attack-sequence counts.** README and CHANGELOG updated to
+  reflect the actual database (187 sequences across 20 categories, not
+  "~180 across 13").
+- **CITATION.cff abstract.** Refreshed from v0.4.0 shape (27 detectors,
+  6 output scanners) to v0.7.x shape (33 detectors, 9 output scanners,
+  tool-result injection defense, federated ed25519-signed threat feed).
+- **Quickstart risk score comment.** Corrected from `# 0.95` (never
+  produced by the code path) to `# 1.0`.
+
+### Fixed — benchmark reproducibility
+
+- **`tests/benchmark_public_datasets.py`** now loads NotInject via
+  `huggingface_hub.hf_hub_download` + `pandas.read_parquet` instead of
+  `datasets.load_dataset`. The latter raises `Feature type 'List' not found`
+  under `datasets>=3.x` because NotInject's dataset config declares a
+  `List` feature type that the newer schema resolver renamed to
+  `LargeList`. The direct-parquet path is stable and works on a bare
+  `pip install huggingface_hub pandas pyarrow`.
+
+### Docs
+
+- `docs/configuration.md` gains a new "Policy Gates" section documenting
+  `d031` and `d032` as opt-in operator policy detectors with example
+  configs and rationale for the disabled-by-default choice.
+- README's "Input Protection (33 Detectors)" table adds a call-out note
+  explaining the policy-gate distinction immediately after the table.
+
+### Not addressed here (tracked separately)
+
+- The Dev.to article on d028 Smith-Waterman still mislabels its
+  configuration (labels a d022-off number as "Regex + DeBERTa + d028");
+  the in-repo draft correction is prepared and the live article will be
+  edited as part of Pass 3 of the audit response.
+- arXiv v3 with the corrected NotInject specificity claim and KL→JSD
+  reference is prepared for filing (interactive step).
+- Remaining accuracy cleanup (Benchmark 1 attack count 54→39, d028 smoke
+  example replacement, ablation total, delete of `posts/` promo drafts)
+  is tracked for a subsequent commit — none affect shipped behaviour.
+
 ## [0.7.0] - 2026-07-18
 
 **"Agent-Era Defense" release.** First-class primitive for scanning

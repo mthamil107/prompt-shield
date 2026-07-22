@@ -26,17 +26,28 @@ def load_deepset() -> list[tuple[str, bool]]:
 
 
 def load_notinject() -> list[tuple[str, bool]]:
-    """Load leolee99/NotInject — all benign, tests false positive rate."""
-    from datasets import load_dataset
+    """Load leolee99/NotInject — all benign, tests false positive rate.
 
-    samples = []
+    NotInject's dataset-config uses a `List` feature type that
+    ``datasets>=3.x`` no longer resolves (``Feature type 'List' not found``).
+    We bypass the schema resolver by downloading the parquet files directly
+    via ``huggingface_hub.hf_hub_download`` and reading with pandas.
+    """
+    import pandas as pd
+    from huggingface_hub import hf_hub_download
+
+    samples: list[tuple[str, bool]] = []
     for split in ["NotInject_one", "NotInject_two", "NotInject_three"]:
         try:
-            ds = load_dataset("leolee99/NotInject", split=split)
-            for row in ds:
-                text = row.get("prompt", row.get("text", ""))
-                if text.strip():
-                    samples.append((text, False))
+            path = hf_hub_download(
+                repo_id="leolee99/NotInject",
+                filename=f"data/{split}-00000-of-00001.parquet",
+                repo_type="dataset",
+            )
+            df = pd.read_parquet(path)
+            for prompt in df["prompt"].astype(str):
+                if prompt.strip():
+                    samples.append((prompt, False))
         except Exception:
             continue
     return samples

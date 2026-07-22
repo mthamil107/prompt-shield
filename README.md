@@ -192,6 +192,8 @@ print(report.overall_risk_score)  # 1.0
 | **Language Policy** | d031 | **Language enforcement** — block non-allowed languages (script + langdetect) |
 | **Multi-Turn** | d033 | **Topic drift** detector — slow-jailbreak / cumulative steering across turns |
 
+> **Note on `d031` / `d032`.** These are operator *policy* gates, not attack detectors, and they ship **disabled by default** (v0.7.1+). `d031` with the default `allowed_languages: ["en"]` would flag every non-English input of 32 characters or more — enable it only if your deployment is genuinely language-restricted. `d032` requires operator-defined `denied_topics` before it fires. Multilingual *injection* detection (`d024`) is unaffected and is on by default. See [`docs/configuration.md#policy-gates`](docs/configuration.md#policy-gates).
+
 ### Output Protection (9 Scanners)
 
 | Scanner | What It Catches |
@@ -513,10 +515,14 @@ The [leolee99/NotInject](https://huggingface.co/datasets/leolee99/NotInject) dat
 | Scanner | FP Rate | False Positives |
 |---------|---------|-----------------|
 | **PIGuard** | **0.0%** | 0/339 |
-| **prompt-shield** | **0.9%** | 3/339 |
+| **prompt-shield (shipped default, v0.7.1+)** | **3.8%** | 13/339 |
 | Meta Prompt Guard 2 | 4.4% | 15/339 |
 | ProtectAI DeBERTa v2 | 43.4% | 147/339 |
 | Deepset DeBERTa v3 | 71.4% | 242/339 |
+
+**What the 13 false positives are.** All 10 above the regex-only baseline come from `d028_sequence_alignment` at its default 0.60 threshold; permissive synonym matching is the cost of paraphrase coverage. With `d028` disabled the rate is 0.9% (3/339). We report the shipped default because that is what `pip install prompt-shield-ai` gives you. Tuning `d028` from 0.60 to 0.63 is tracked for a future patch release.
+
+**Reproducibility.** `tests/benchmark_public_datasets.py` now downloads NotInject parquet files directly via `huggingface_hub.hf_hub_download` (bypassing a v0.7.0-era incompatibility with newer `datasets`-library schema resolution — `Feature type 'List' not found`). Run it in any clean venv with `pip install prompt-shield-ai huggingface_hub pandas pyarrow` and it will reproduce the number above.
 
 ### The Takeaway
 
