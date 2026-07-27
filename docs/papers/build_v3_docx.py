@@ -146,7 +146,7 @@ def build_document() -> tuple[Document, dict]:
 
     _add_para(doc, "Thamilvendhan Munirathinam", align="center", bold=True, size=12)
     _add_para(doc, "Independent Researcher  ·  prompt-shield project", align="center", italic=True, size=10)
-    _add_para(doc, "Version 3.0  ·  Revision date: 18 May 2026", align="center", size=10)
+    _add_para(doc, "Version 3.0.1  ·  Revision date: 27 July 2026", align="center", size=10)
     _add_para(doc, "arXiv:2604.18248  (replaces v2.0 of 20 April 2026)", align="center", size=10)
     _add_para(doc, "DOI (v1.0 anchor): 10.5281/zenodo.19644135", align="center", size=10)
     _add_para(doc, "Repository: github.com/mthamil107/prompt-shield", align="center", size=10)
@@ -185,7 +185,7 @@ def build_document() -> tuple[Document, dict]:
         "public benchmarks deepset/prompt-injections, NotInject, LLMail-Inject, AgentHarm, and "
         "AgentDojo, and a synthetic indirect-injection benchmark released alongside this paper. The "
         "local-alignment detector lifts F1 on deepset from 0.033 to 0.378 (a thirty-four-point-six "
-        "percentage-point improvement) with zero additional false positives. The stylometric "
+        "percentage-point improvement) with zero additional false positives on deepset's fifty-six benign samples; the same detector adds ten false positives on the 339-sample NotInject benign set (FPR 0.9% → 3.8%), a specificity regression discussed in Section 5.4. The stylometric "
         "detector adds eleven-point-one percentage points of F1 on the indirect-injection set while "
         "remaining silent on short inputs by design. The fatigue tracker is validated by a "
         "probing-campaign integration test: ten priming scans below the detection threshold cause a "
@@ -650,7 +650,7 @@ def build_techniques(doc: Document) -> None:
     _add_para(
         doc,
         "The d028 detector maintains a curated database of approximately one hundred and "
-        "eighty attack sequences across thirteen attack categories, drawn from the prompt-"
+        "eighty attack sequences across twenty attack categories, drawn from the prompt-"
         "shield regex patterns of detectors d001 through d020. The substitution matrix has "
         "fifteen synonym groups covering the attack-adjacent vocabulary (ignore-family, "
         "instruction-family, reveal-family, system-family, etc.). The scoring function "
@@ -667,7 +667,7 @@ def build_techniques(doc: Document) -> None:
         "attack out of sixty (F1 0.033) because the samples are dominated by paraphrased "
         "attacks that the regex patterns miss verbatim. The d028 detector catches fourteen "
         "of sixty (F1 0.378), a thirty-four-point-six percentage-point F1 improvement, "
-        "with zero additional false positives.",
+        "with zero additional false positives on deepset's fifty-six benign samples. On the 339-sample NotInject benign set, the same detector adds ten false positives (FPR 0.9% → 3.8%); see Section 5.4.",
     )
     _add_para(
         doc,
@@ -842,7 +842,7 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         doc,
         "Local sequence alignment (d028). On deepset the detector lifts recall from "
         "one-in-sixty to fourteen-in-sixty (a 14× improvement), and F1 from 0.033 to "
-        "0.378, with zero additional false positives. This is the strongest single-technique "
+        "0.378, with zero additional false positives on deepset's fifty-six benign samples. This is the strongest single-technique "
         "result in the evaluation and is consistent with the design intent: deepset is "
         "dominated by paraphrased attacks and synonym substitutions that the regex pack "
         "cannot see verbatim but that the substitution matrix recognizes. On NotInject the "
