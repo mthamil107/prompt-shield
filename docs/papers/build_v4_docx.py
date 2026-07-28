@@ -226,14 +226,14 @@ def build_document() -> tuple[Document, dict]:
         doc,
         "The v4.0 revision (July 2026) is substantive rather than corrective. It adds Section 2.4 "
         "mapping thirteen concurrent 2026 preprints and publications addressing overlapping "
-        "problems, and Section 7 formalizing three architectural patterns extracted from "
-        "prompt-shield's implementation in Gang-of-Four format: the Tool-Result Boundary Gate "
-        "(demonstrated as a shared idea by four concurrent 2026 systems — ClawGuard, DualView, "
-        "Prismata, and Token-Flow Firewall — plus one adjacent runtime-enforcement system, "
-        "AgentSpec), Federated Signed Threat Intelligence (a novel application of the "
-        "Abuse.ch / VirusTotal pattern to LLM defense), and Attack-Family Taxonomic Projection "
-        "(a novel formalism, currently a single implementation). The contribution of Section 7 "
-        "is nomenclature and structure, not invention.",
+        "problems; Section 7 formalizing three architectural patterns extracted from "
+        "prompt-shield's implementation in Gang-of-Four format (Tool-Result Boundary Gate, "
+        "Federated Signed Threat Intelligence, Attack-Family Taxonomic Projection); and "
+        "Section 5.7 reporting a preliminary Nasr-style adaptive-attack evaluation against "
+        "d028 in which a matrix-aware second-mover adversary reduces detection from 95.0 "
+        "percent (19/20) to 0.0 percent (0/20). The result formalizes d028's operating "
+        "envelope as a first-mover detector and motivates the composed defense-in-depth "
+        "study scoped for v5.0.",
     )
 
     # ----------------------- 1. INTRODUCTION -------------------
@@ -756,8 +756,8 @@ def build_techniques(doc: Document) -> None:
     )
     _add_para(
         doc,
-        "The d028 detector maintains a curated database of approximately one hundred and "
-        "eighty attack sequences across twenty attack categories, drawn from the prompt-"
+        "The d028 detector maintains a curated database of one hundred and eighty-seven "
+        "attack sequences across twenty attack categories, drawn from the prompt-"
         "shield regex patterns of detectors d001 through d020. The substitution matrix has "
         "fifteen synonym groups covering the attack-adjacent vocabulary (ignore-family, "
         "instruction-family, reveal-family, system-family, etc.). The scoring function "
@@ -1042,13 +1042,16 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
             "concern by reporting performance on three independent academic benchmarks.",
         ),
         (
-            "No adaptive-attack evaluation.",
-            "The Zhan et al. (NAACL 2025 Findings, arXiv:2503.00061) and contemporaneous arXiv:2510.09023 adaptive-"
-            "attack methodologies are not yet applied to the shipped detectors. An adaptive "
-            "adversary with knowledge of d028's substitution matrix could craft payloads "
-            "whose synonyms deliberately fall outside the listed groups; an adversary "
-            "aware of d027's feature set could suppress the uppercase and imperative-verb "
-            "signals. We scope adaptive evaluation for v4.0 of this paper.",
+            "Adaptive-attack evaluation is preliminary.",
+            "Section 5.7 (v4.0 addition) reports a small first-step experiment against "
+            "d028 under a Nasr-style matrix-aware second-mover model: baseline detection "
+            "95.0 percent (19/20) drops to 0.0 percent (0/20) under adaptive attack — a "
+            "95.0 percentage-point ASR reduction, quantifying that d028 is a first-mover "
+            "detector and must be composed with mechanistically independent layers. The "
+            "full adaptive study across d027, the fatigue tracker, d029, and the composed "
+            "detector stack — following the Zhan et al. (NAACL 2025 Findings, "
+            "arXiv:2503.00061) and Nasr et al. (arXiv:2510.09023) methodologies — is "
+            "scoped for v5.0.",
         ),
         (
             "Agent Security Bench not included.",
@@ -1229,6 +1232,145 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "tests/benchmark_injecagent.py.",
     )
 
+    # ----------------------- 5.6.5 WHY NOVEL DETECTORS ARE EXCLUDED (v4) ------
+    doc.add_heading("5.6.5 Why the novel detectors are excluded from Table 2", level=3)
+    _add_para(
+        doc,
+        "A natural reviewer question is why Table 2 reports only the regex baseline when "
+        "the paper's central contribution is a set of novel cross-domain detectors. The "
+        "answer is three technical reasons that jointly motivate the design choice, plus a "
+        "fourth methodological one; we state them explicitly so the exclusion is not read "
+        "as a hidden result.",
+    )
+    _add_para(
+        doc,
+        "First, d022 (the DeBERTa-based semantic classifier) is a stochastic inference "
+        "pipeline whose output varies between runs, between GPUs, and between CPU and GPU "
+        "back-ends. Section 5.6 promises bit-for-bit reproducibility on commodity hardware "
+        "with a four-minute wall-clock budget; including d022 in the cross-benchmark "
+        "configuration would break both properties.",
+    )
+    _add_para(
+        doc,
+        "Second, d027 (stylometric discontinuity) has a hard input-length floor "
+        "(min_input_tokens; default sixty-four) below which the detector returns silently "
+        "because there are not enough tokens for the internal per-block feature vectors "
+        "to be statistically stable. InjecAgent Tool Response fields have a median length "
+        "of roughly twenty tokens, so d027 would return silent on approximately zero of "
+        "the two thousand one hundred and eight cases by design — including it in Table 2 "
+        "would show a zero-lift column that a naive reader would misinterpret as detector "
+        "failure rather than input-scope mismatch.",
+    )
+    _add_para(
+        doc,
+        "Third, d028 (Smith-Waterman sequence alignment) uses a substitution matrix hand-"
+        "curated against approximately eighty override-style attack templates ("
+        "\"ignore previous instructions,\" \"disregard prior directives,\" and their "
+        "documented paraphrases and synonym-swap variants). The matrix explicitly targets "
+        "override, extraction, and role-hijack phrasings. Garak's latentinjection probes "
+        "and InjecAgent's tool-response poisoning both operate through different attack "
+        "shapes — embedded payloads and realistic-looking tool outputs that do not resemble "
+        "override commands. Section 5.7 quantifies the resulting scope mismatch under an "
+        "adaptive-adversary model; the aggregate lift from d028 on Garak and InjecAgent "
+        "is small by design.",
+    )
+    _add_para(
+        doc,
+        "Fourth, a methodological consideration. Table 2's role is to establish an "
+        "independent-defender baseline against three peer-reviewed benchmarks, mirroring "
+        "the baseline control column of Table 1. Adding the novel detectors to Table 2 "
+        "would require running the full four-configuration ablation on each of the three "
+        "external benchmarks — approximately six additional runs for a result whose "
+        "expected sign is known in advance from the scope arguments above. We instead "
+        "report the novel detectors' per-technique behavior on the datasets they were "
+        "designed for in Sections 5.2 through 5.5, and use Table 2 solely to triangulate "
+        "the regex baseline's structural ceiling.",
+    )
+
+    # ----------------------- 5.7 ADAPTIVE-ATTACK MINI-EXPERIMENT (v4) --------
+    doc.add_heading("5.7 Preliminary adaptive-attack evaluation of d028 (v4)", level=2)
+    _add_para(
+        doc,
+        "Section 2.2 argues that adaptive adversarial evaluation is the current frontier "
+        "for prompt-injection defense research; Section 5.4's fourth limitation notes that "
+        "the shipped detectors had not, at the time of the v3.0 revision, been evaluated "
+        "against this adversarial model. This revision reports a small first-step "
+        "experiment against d028 (Smith-Waterman sequence alignment) under a Nasr-style "
+        "second-mover threat model (Nasr et al., arXiv:2510.09023) in which the adversary "
+        "has read the d028 substitution matrix and constructs attacks whose synonym "
+        "choices are deliberately outside every matrix group. Section 6 defers the full "
+        "adaptive-attack study across all shipped novel detectors to v5.0.",
+    )
+    doc.add_heading("5.7.1 Methodology", level=3)
+    _add_para(
+        doc,
+        "We construct twenty canonical override-style baseline attacks known to fire d028 "
+        "with high confidence under default settings (threshold 0.6, match bonus 3, "
+        "synonym bonus 2, mismatch penalty -1, gap penalty -1). For each baseline we craft "
+        "an adversarial variant that preserves the attack's semantic intent (for example, "
+        "\"reveal your system prompt\") while replacing every matrix-family token with a "
+        "genuine English synonym absent from every one of the fifteen matrix synonym "
+        "groups (for example, \"recite your operational briefing\"). A programmatic "
+        "per-variant audit — see the ``verify_adaptive_variants`` function in the runner "
+        "script — confirms zero matrix-family tokens in the adversarial set. Both sets are "
+        "then evaluated against d028 with default configuration.",
+    )
+    doc.add_heading("5.7.2 Result", level=3)
+    _add_para(
+        doc,
+        "Detection rate on the baseline set is nineteen of twenty (95.0 percent). "
+        "Detection rate on the adversarial set is zero of twenty (0.0 percent). The "
+        "attack-success-rate reduction under adaptive attack is 95.0 percentage points — "
+        "that is, a matrix-aware adversary systematically bypasses d028 as a standalone "
+        "detector.",
+    )
+    doc.add_heading("5.7.3 Interpretation", level=3)
+    _add_para(
+        doc,
+        "The result is not surprising and does not undermine the deepset F1 lift reported "
+        "in Section 5.2: on non-adaptive attack corpora d028 catches paraphrased attacks "
+        "that a regex baseline misses, which was its design intent. The result does "
+        "formalize the operating envelope: d028 is a first-mover-adversary detector, and "
+        "should not be relied on as a standalone defense against adversaries with "
+        "knowledge of the substitution matrix. Since the substitution matrix is open "
+        "source and public — see docs/papers/evaluation/adaptive_attack_d028.py and the "
+        "matrix source file at src/prompt_shield/detectors/_d028_substitution_matrix.py — "
+        "any real adversary has that knowledge.",
+    )
+    _add_para(
+        doc,
+        "In a defense-in-depth stack d028 composes with (i) the d022 semantic classifier, "
+        "whose decision boundary is independent of the d028 matrix; (ii) the d027 "
+        "stylometric detector, which flags author-style discontinuities orthogonal to "
+        "lexical content; (iii) the adversarial fatigue tracker, which uses attempt "
+        "frequency itself as signal rather than attempt content; and (iv) at the output "
+        "boundary, the ToolResultGuard primitive introduced in Section 7.1. An adversary "
+        "who evades d028 through matrix-aware substitution has not evaded these other "
+        "layers. Quantifying the composed detection rate under adaptive attack — which "
+        "requires an attack budget that adaptively targets each layer in turn — is the "
+        "central v5.0 experiment noted in Section 6.",
+    )
+    doc.add_heading("5.7.4 Scope caveats", level=3)
+    _add_para(
+        doc,
+        "The experiment is deliberately small. It covers (i) n = 20 attack pairs, not a "
+        "large corpus; (ii) only override-style attacks, not extraction, roleplay, or "
+        "many-shot shapes; (iii) only d028, not d027, the fatigue tracker, d029, or the "
+        "ML classifier; (iv) a single-round substitution attack, not iterative "
+        "gradient-informed or learning-based adversaries; and (v) d028 in isolation, not "
+        "the composed detector stack. Every one of the five extensions is a v5.0 "
+        "commitment.",
+    )
+    doc.add_heading("5.7.5 Reproducibility", level=3)
+    _add_para(
+        doc,
+        "The twenty attack pairs, per-attack detection scores, and the matrix-leak audit "
+        "are released in docs/papers/evaluation/adaptive_attack_d028.py (runner script), "
+        "adaptive_attack_d028.json (machine-readable), and adaptive_attack_d028.md "
+        "(human-readable). Wall-clock runtime is under one second on commodity hardware. "
+        "Reproduce with python docs/papers/evaluation/adaptive_attack_d028.py.",
+    )
+
 
 def build_conclusions_and_refs(doc: Document) -> None:
     """Section 6, References, Appendix — copied from v2 with v3 updates."""
@@ -1273,8 +1415,19 @@ def build_conclusions_and_refs(doc: Document) -> None:
     _add_para(
         doc,
         "The v4.0 revision (this document) folds in a survey of the 2026 concurrent-"
-        "contribution cluster (Section 2.4) and a Gang-of-Four-style formalisation of three "
-        "architectural patterns extracted from prompt-shield's implementation (Section 7). "
+        "contribution cluster (Section 2.4), a Gang-of-Four-style formalization of three "
+        "architectural patterns extracted from prompt-shield's implementation (Section 7), "
+        "and a preliminary adaptive-adversary evaluation against d028 (Section 5.7). We "
+        "note honestly that Section 6 of the v3 revision scoped a full adaptive-attack "
+        "evaluation and a competitor rerun for v4.0. On scope review we prioritized the "
+        "design-pattern formalization (Section 7) — driven by the shipping of ToolResultGuard "
+        "in prompt-shield v0.7.0 and the observation that four concurrent 2026 systems ship "
+        "the same pattern without a shared name — and delivered only the smaller preliminary "
+        "adaptive experiment reported here. The full adaptive-attack evaluation and the "
+        "competitor rerun carry to v5.0 with the specific commitments below.",
+    )
+    _add_para(
+        doc,
         "The v5.0 revision will fold in: a full section-level write-up of the d029 "
         "many-shot structural detector currently shipped in prompt-shield v0.4.1; an "
         "adaptive-attack evaluation per the Nasr et al. (arXiv:2510.09023) methodology "
@@ -1300,7 +1453,7 @@ def build_conclusions_and_refs(doc: Document) -> None:
         "of Uncertainty, Fuzziness and Knowledge-Based Systems 2002, DOI 10.1142/"
         "S0218488502001648) played the analogous role for statistical disclosure control; Dean "
         "and Ghemawat's MapReduce (OSDI 2004) did so for large-scale data processing; and MITRE "
-        "ATT&CK (attack.mitre.org, first released 2013) for adversarial behavior modelling. In "
+        "ATT&CK (attack.mitre.org, first released 2013) for adversarial behavior modeling. In "
         "each case, formalizing a recurring construct that practitioners were already reinventing "
         "gave the field a reference point that outlasted specific implementations.",
     )
@@ -1364,7 +1517,7 @@ def build_conclusions_and_refs(doc: Document) -> None:
          "percent per the authors' abstract. AgentSpec (Wang, Poskitt, and Sun, ICSE 2026, "
          "arXiv:2503.18666), a general runtime-enforcement DSL, subsumes this pattern as a "
          "special case rather than centring on it. prompt-shield ships the pattern as "
-         "ToolResultGuard in v0.7.0 with the naming and Gang-of-Four-style formalisation given "
+         "ToolResultGuard in v0.7.0 with the naming and Gang-of-Four-style formalization given "
          "here. None of the five implementations adopts the others' terminology."),
         ("Related Patterns.",
          "Defense in Depth (the gate is one layer, not the only layer); Reference Monitor "
@@ -1463,11 +1616,11 @@ def build_conclusions_and_refs(doc: Document) -> None:
          "of no other implementation of this specific formalism at the time of writing; we "
          "describe the pattern in the hope that others adopt it. MITRE ATT&CK and ATLAS "
          "(atlas.mitre.org) provide taxonomies at a different level of abstraction — attack "
-         "modelling for threat intelligence and red-teaming — rather than a projection layer "
+         "modeling for threat intelligence and red-teaming — rather than a projection layer "
          "between detection tooling and policy. The two are complementary: one names what an "
          "attacker might do; the other names what a detector saw."),
         ("Related Patterns.",
-         "MITRE ATT&CK / ATLAS taxonomies (adjacent abstraction level, attack-modelling rather "
+         "MITRE ATT&CK / ATLAS taxonomies (adjacent abstraction level, attack-modeling rather "
          "than detection-tooling); Facade (a simpler stable interface over a heterogeneous "
          "detector stack); Anti-Corruption Layer (insulating downstream consumers from "
          "detector-set churn)."),

@@ -1,0 +1,254 @@
+% paper.bib — Citations for arXiv v4 (Beyond Pattern Matching, Section 7 + Related Work 2026)
+%                and JOSS paper.md (Statement of Need + Design Principles).
+%
+% Bibkey convention: authorname-year (or short-name-year for tools / consortium works).
+% All author lists resolved 2026-07-25 via arXiv metadata fetch, Crossref
+% (MDPI DOI), and DBLP. Do not add unresolved TODO markers to shipped entries.
+%
+% Grouping (for readability, no semantic effect on BibTeX):
+%   1. Design-pattern precedents (the K-anonymity play analogues)
+%   2. Concurrent 2026 papers (14 competitors from .braid/01-google-scholar.md)
+%   3. prompt-shield paper + release artifacts
+%   4. Existing v2/v3 references reused by v4 discussion
+%   5. Baseline OSS tools cited by JOSS Statement of Need
+
+% =====================================================================
+% 1. DESIGN PATTERN PRECEDENTS
+% =====================================================================
+
+@online{owasp-llm-top10-2025,
+  author       = {{OWASP Foundation}},
+  title        = {{OWASP Top 10} for Large Language Model Applications, 2025 Edition},
+  year         = {2025},
+  note         = {Accessed 2026-07-25.},
+  howpublished = {\url{https://owasp.org/www-project-top-10-for-large-language-model-applications/}}
+}
+
+% =====================================================================
+% 2. CONCURRENT 2026 PAPERS (competitor cluster from thread 01)
+% =====================================================================
+
+@article{prompt-sentinel-x-2026,
+  author  = {Zhuhadar, Lily Popova},
+  title   = {{PromptSentinel-X}: A Leakage-Aware and Context-Aware Framework for Prompt-Injection Detection in Large Language Model-Powered Web Agents},
+  journal = {Future Internet},
+  volume  = {18},
+  number  = {7},
+  pages   = {376},
+  year    = {2026},
+  doi     = {10.3390/fi18070376},
+  note    = {Sole author verified via Crossref metadata (2026-07-25).}
+}
+
+@misc{data-sentinel-2025,
+  author        = {Liu, Yupei and Jia, Yuqi and Jia, Jinyuan and Song, Dawn and Gong, Neil Zhenqiang},
+  title         = {{DataSentinel}: A Game-Theoretic Detection of Prompt Injection Attacks},
+  year          = {2025},
+  eprint        = {2504.11358},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR},
+  note          = {IEEE S\&P 2025.}
+}
+
+@misc{claw-guard-2026,
+  author        = {Zhao, Wei and Li, Zhe and Zhang, Peixin and Sun, Jun},
+  title         = {{ClawGuard}: A Runtime Security Framework for Tool-Augmented {LLM} Agents Against Indirect Prompt Injection},
+  year          = {2026},
+  eprint        = {2604.11790},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@inproceedings{agent-spec-2026,
+  author    = {Wang, Haoyu and Poskitt, Christopher M. and Sun, Jun},
+  title     = {{AgentSpec}: Customizable Runtime Enforcement for Safe and Reliable {LLM} Agents},
+  booktitle = {Proceedings of the 47th International Conference on Software Engineering (ICSE)},
+  year      = {2026},
+  publisher = {IEEE/ACM},
+  eprint    = {2503.18666},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.SE},
+}
+
+@misc{prismata-2026,
+  author        = {Villa, Corban and Ozdarendeli, Alp Eren and Tan, Sijun and Popa, Raluca Ada},
+  title         = {{Prismata}: Confining Cross-Site Prompt Injection in Web Agents},
+  year          = {2026},
+  eprint        = {2607.08147},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@misc{dual-view-2026,
+  author        = {Kim, Juhee and Choi, Woohyuk and Kang, Taehyun and Kim, Youngmin and Lee, Byoungyoung},
+  title         = {{DualView}: Preventing Indirect Prompt Injection in Personal {AI} Agents},
+  year          = {2026},
+  eprint        = {2607.03821},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@misc{token-flow-firewall-2026,
+  author        = {Wang, Puji and Zhang, Yingchen and Zhang, Ruqing and Guo, Jiafeng and Cheng, Xueqi},
+  title         = {Token-Flow Firewall: Semantic Runtime Auditing for Persistent {AI} Agents},
+  year          = {2026},
+  eprint        = {2607.08395},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@misc{agent-watcher-2026,
+  author        = {Wang, Yanting and Zou, Wei and Geng, Runpeng and Jia, Jinyuan},
+  title         = {{AgentWatcher}: A Rule-based Prompt Injection Monitor},
+  year          = {2026},
+  eprint        = {2604.01194},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+% =====================================================================
+% 3. prompt-shield paper + release artifacts
+% =====================================================================
+
+@misc{prompt-shield-arxiv-2026,
+  author        = {Munirathinam, Thamilvendhan},
+  title         = {Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection},
+  year          = {2026},
+  eprint        = {2604.18248},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR},
+  note          = {arXiv preprint, submitted 2026-04-20; v4 (present revision) adds Section~7 on design patterns and a Related Work update on 2026 concurrent contributions.}
+}
+
+@misc{prompt-shield-zenodo-paper,
+  author       = {Munirathinam, Thamilvendhan},
+  title        = {Beyond Pattern Matching: Seven Cross-Domain Techniques for Prompt Injection Detection (Zenodo archive)},
+  year         = {2026},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.19644135},
+  howpublished = {\url{https://doi.org/10.5281/zenodo.19644135}},
+  note         = {Zenodo-archived companion to arXiv:2604.18248 for citable DOI.}
+}
+
+@misc{prompt-shield-zenodo-designnotes,
+  author       = {Munirathinam, Thamilvendhan},
+  title        = {prompt-shield Design Notes},
+  year         = {2026},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.20809165},
+  howpublished = {\url{https://doi.org/10.5281/zenodo.20809165}},
+  note         = {Companion design-notes document covering detector implementation details and threshold sweeps.}
+}
+
+@misc{prompt-shield-signatures-2026,
+  author       = {Munirathinam, Thamilvendhan},
+  title        = {{prompt-shield-signatures}: Federated ed25519-signed threat feed for {LLM} security},
+  year         = {2026},
+  howpublished = {\url{https://github.com/mthamil107/prompt-shield-signatures}},
+  note         = {Publisher-signed threat-intel feed, v0.6.0 and later; used as canonical Known-Use for the Federated Signed Threat Intelligence pattern (Section~7.2).}
+}
+
+% =====================================================================
+% 4. Existing paper references reused by v4 discussion
+% =====================================================================
+
+@inproceedings{liu-2024,
+  author    = {Liu, Yupei and Jia, Yuqi and Geng, Runpeng and Jia, Jinyuan and Gong, Neil Zhenqiang},
+  title     = {Formalizing and Benchmarking Prompt Injection Attacks and Defenses},
+  booktitle = {Proceedings of the 33rd USENIX Security Symposium},
+  year      = {2024},
+  publisher = {USENIX Association},
+  eprint    = {2310.12815},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@inproceedings{injecagent-2024,
+  author    = {Zhan, Qiusi and Liang, Zhixiang and Ying, Zifan and Kang, Daniel},
+  title     = {{InjecAgent}: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents},
+  booktitle = {Findings of the Association for Computational Linguistics: ACL 2024},
+  year      = {2024},
+  eprint    = {2403.02691},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR}
+}
+
+@misc{harmbench-2024,
+  author        = {Mazeika, Mantas and Phan, Long and Yin, Xuwang and Zou, Andy and Wang, Zifan and Mu, Norman and Sakhaee, Elham and Li, Nathaniel and Basart, Steven and Li, Bo and Forsyth, David and Hendrycks, Dan},
+  title         = {{HarmBench}: A Standardized Evaluation Framework for Automated Red Teaming and Robust Refusal},
+  year          = {2024},
+  eprint        = {2402.04249},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.LG},
+  note          = {Center for AI Safety (CAIS).}
+}
+
+@misc{pint-lakera,
+  author       = {{Lakera AI}},
+  title        = {{PINT}: Prompt Injection Test Benchmark},
+  year         = {2024},
+  howpublished = {\url{https://github.com/lakeraai/pint-benchmark}},
+  note         = {Public benchmark subset; accessed 2026-07-25.}
+}
+
+@misc{nvidia-garak,
+  author       = {Derczynski, Leon and Galinkin, Erick and Martin, Jeffrey and Majumdar, Subho and Inie, Nanna},
+  title        = {{garak}: A Framework for Security Probing Large Language Models},
+  year         = {2024},
+  eprint        = {2406.11036},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.CR},
+  howpublished = {\url{https://github.com/NVIDIA/garak}}
+}
+
+@misc{deepset-injections,
+  author       = {{Deepset}},
+  title        = {{prompt-injections} dataset},
+  year         = {2023},
+  howpublished = {\url{https://huggingface.co/datasets/deepset/prompt-injections}},
+  note         = {Public prompt-injection dataset on Hugging Face; accessed 2026-07-25.}
+}
+
+@misc{notinject-2024,
+  author       = {Lee, Yulin and others},
+  title        = {{NotInject}: A Dataset of Benign Prompts Resembling Injections},
+  year         = {2024},
+  howpublished = {\url{https://huggingface.co/datasets/leolee99/NotInject}},
+  note         = {Benign-adversarial dataset used for over-defense / FPR evaluation.}
+}
+
+% =====================================================================
+% 5. Baseline OSS tools cited by JOSS Statement of Need
+% =====================================================================
+
+@misc{llm-guard-2023,
+  author       = {{Protect AI}},
+  title        = {{LLM Guard}: The Security Toolkit for {LLM} Interactions},
+  year         = {2023},
+  howpublished = {\url{https://github.com/protectai/llm-guard}},
+  note         = {Open-source input/output scanner suite; accessed 2026-07-25.}
+}
+
+@misc{nemo-guardrails-2023,
+  author       = {{NVIDIA}},
+  title        = {{NeMo Guardrails}: An Open-Source Toolkit for Building Programmable Guardrails on {LLM}-Based Conversational Applications},
+  year         = {2023},
+  howpublished = {\url{https://github.com/NVIDIA/NeMo-Guardrails}},
+  note         = {Colang-based programmable guardrails toolkit; accessed 2026-07-25.}
+}
+
+@misc{guardrails-ai-2023,
+  author       = {{Guardrails AI}},
+  title        = {{Guardrails}: An Open-Source Framework for Reliable {AI} Applications},
+  year         = {2023},
+  howpublished = {\url{https://github.com/guardrails-ai/guardrails}},
+  note         = {Validator-based structural + semantic output validation framework; accessed 2026-07-25.}
+}
+
+@misc{rebuff-2023,
+  author       = {{Protect AI}},
+  title        = {{Rebuff}: A Self-Hardening Prompt Injection Detector},
+  year         = {2023},
+  howpublished = {\url{https://github.com/protectai/rebuff}},
+  note         = {Multi-layer prompt-injection detector; repository unmaintained since 2024-08 per last-commit timestamp (verified 2026-07-25).}
+}
