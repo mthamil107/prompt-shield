@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: "If you use prompt-shield in research, please cite the research paper (preferred) or this software repository."
 title: "prompt-shield"
-abstract: "Self-learning prompt injection detection engine for LLM applications. 33 input detectors, 9 output scanners, tool-result injection defense, cross-domain novel techniques, and a federated ed25519-signed threat-intel feed."
+abstract: "Prompt-injection detection engine for LLM applications. 33 input detectors, 9 output scanners, ToolResultGuard tool-result boundary primitive, cross-domain novel techniques, and a federated ed25519-signed threat-intel feed."
 authors:
   - family-names: "Munirathinam"
     given-names: "Thamilvendhan"
@@ -12,6 +12,9 @@ identifiers:
   - type: doi
     value: "10.5281/zenodo.19644135"
     description: "Zenodo v1.0 record for the research paper"
+  - type: doi
+    value: "10.5281/zenodo.20809165"
+    description: "Zenodo record for the companion design notes"
   - type: other
     value: "arXiv:2604.18248"
     description: "arXiv preprint (cs.CR, cs.CL)"

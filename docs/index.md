@@ -15,7 +15,7 @@ Apache 2.0. 33 input detectors, 9 output scanners, first OSS federated threat-in
 
 - 📦 **Install:** `pip install prompt-shield-ai`
 - 💻 **Repo:** [github.com/mthamil107/prompt-shield](https://github.com/mthamil107/prompt-shield)
-- 📄 **Paper:** [arXiv:2604.18248](https://arxiv.org/abs/2604.18248) (CC BY 4.0)
+- 📄 **Paper:** [arXiv:2604.18248](https://arxiv.org/abs/2604.18248) (CC BY 4.0) · [Zenodo DOI 10.5281/zenodo.19644135](https://doi.org/10.5281/zenodo.19644135)
 - 🔖 **Design notes:** [Zenodo DOI 10.5281/zenodo.20809165](https://doi.org/10.5281/zenodo.20809165)
 
 ## What it catches
@@ -35,11 +35,11 @@ Apache 2.0. 33 input detectors, 9 output scanners, first OSS federated threat-in
 
 ## Novel techniques
 
-Seven cross-domain techniques nobody else ships as of 2026:
+Novel techniques shipped in prompt-shield as of 2026. The [paper](https://arxiv.org/abs/2604.18248) §4 proposes seven cross-domain techniques; three of those seven are shipped (`d027` stylometric discontinuity, `d028` Smith-Waterman alignment, and the adversarial fatigue tracker), and four remain as design specifications for future implementation (honeypot tools, prediction-market ensemble, perplexity spectral analysis, runtime taint tracking). The list below is a superset — it adds four post-paper novel infrastructure pieces (`d033` topic drift, the federated threat-intel feed, the multi-encoding preprocessor, and the normalisation pipeline):
 
 ### Smith-Waterman sequence alignment (d028)
 
-Bioinformatics local alignment with a BLOSUM-style semantic substitution matrix. Catches paraphrased attacks where regex fails. **+34.5 pp F1 on the deepset benchmark, 0% false-positive cost.** [Write-up](https://dev.to/mthamil107/how-smith-waterman-from-bioinformatics-catches-prompt-injections-that-regex-misses-1mc2).
+Bioinformatics local alignment with a BLOSUM-style semantic substitution matrix. Catches paraphrased attacks where regex fails. **+34.5 pp F1 on the deepset benchmark (with zero additional false positives on deepset's 56 benign samples); adds 10 false positives on the 339-sample NotInject benign set — see paper §5.4.** [Write-up](https://dev.to/mthamil107/how-smith-waterman-from-bioinformatics-catches-prompt-injections-that-regex-misses-1mc2).
 
 ### Stylometric discontinuity (d027)
 
@@ -87,7 +87,7 @@ Section 5.6 of the paper reports evaluation on five public datasets:
 
 ## Framework integrations
 
-Ships with LangChain, LlamaIndex, CrewAI, FastAPI, Flask, Django, OpenAI, Anthropic, MCP.
+Ships with 13 first-party integrations: LangChain, LlamaIndex, Haystack, Pydantic AI, CrewAI, MCP, the OpenAI and Anthropic SDKs, FastAPI, Flask, Django, n8n, and Dify.
 
 ## Compliance
 

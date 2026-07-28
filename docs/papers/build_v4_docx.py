@@ -1,17 +1,23 @@
-"""Build the v3.0 DOCX of the cross-domain-techniques paper.
+"""Build the v4.0 DOCX of the cross-domain-techniques paper.
 
-Produces ``docs/papers/cross-domain-techniques-v3.docx``. v3 adds:
-- New Section 5.6 with three peer-reviewed academic benchmark evaluations
-  (Liu et al. USENIX Security 2024, Garak / Derczynski et al. 2024,
-  InjecAgent / Zhan et al. ACL Findings 2024).
-- Updated abstract paragraph noting v3 contributions.
-- Updated Section 6 conclusion mentioning the cross-benchmark plateau.
-- Six new references.
-- Title block bumped to v3.0 / 2026-05-18.
+Produces ``docs/papers/cross-domain-techniques-v4.docx``. v4 adds:
+- New Section 2.4 mapping the 2026 concurrent-contribution cluster
+  (thirteen prompt-injection preprints and publications between April
+  and July 2026, grouped by defense pattern).
+- New Section 7 formalizing three design patterns extracted from
+  prompt-shield's implementation, in Gang-of-Four format: Tool-Result
+  Boundary Gate, Federated Signed Threat Intelligence, and
+  Attack-Family Taxonomic Projection.
+- Updated abstract with a v4.0 addendum noting the substantive
+  additions.
+- Approximately eighteen new references covering the concurrent
+  cluster plus the design-pattern precedents (Gamma et al. 1994,
+  Sweeney 2002, Dean and Ghemawat 2004, MITRE ATT&CK / ATLAS).
+- Title block bumped to v4.0 / 2026-07-28.
 
-The prose for the new §5.6 is written directly here. All other content is
-reproduced verbatim from ``build_v2_docx.py`` so v2 and v3 stay in sync
-modulo the additions.
+All Section 5 content and the existing References are inherited from
+``build_v3_docx.py``. The additions here are strictly additive; no v3
+content is edited.
 
 Reproduce any time by running this script; do NOT hand-edit the
 generated DOCX.
@@ -35,7 +41,7 @@ DATA_JSON = REPO_ROOT / "docs" / "papers" / "evaluation" / "v041_public_datasets
 LIU_NOTE = "200 attacks (5 strategies × 8 clean prompts × 5 injection payloads)"
 GARAK_JSON = REPO_ROOT / "docs" / "papers" / "evaluation" / "garak_regex_only.json"
 INJECAGENT_JSON = REPO_ROOT / "docs" / "papers" / "evaluation" / "injecagent_regex_only.json"
-OUT_DOCX = REPO_ROOT / "docs" / "papers" / "cross-domain-techniques-v3.docx"
+OUT_DOCX = REPO_ROOT / "docs" / "papers" / "cross-domain-techniques-v4.docx"
 
 
 # ---------------------------------------------------------------------------
@@ -146,8 +152,8 @@ def build_document() -> tuple[Document, dict]:
 
     _add_para(doc, "Thamilvendhan Munirathinam", align="center", bold=True, size=12)
     _add_para(doc, "Independent Researcher  ·  prompt-shield project", align="center", italic=True, size=10)
-    _add_para(doc, "Version 3.0.2  ·  Revision date: 28 July 2026", align="center", size=10)
-    _add_para(doc, "arXiv:2604.18248  (replaces v2.0 of 20 April 2026)", align="center", size=10)
+    _add_para(doc, "Version 4.0  ·  Revision date: 28 July 2026", align="center", size=10)
+    _add_para(doc, "arXiv:2604.18248  (replaces v3.0.2 of 28 July 2026)", align="center", size=10)
     _add_para(doc, "DOI (v1.0 anchor): 10.5281/zenodo.19644135", align="center", size=10)
     _add_para(doc, "Repository: github.com/mthamil107/prompt-shield", align="center", size=10)
 
@@ -211,9 +217,23 @@ def build_document() -> tuple[Document, dict]:
         "matching the baseline control column in Table 1; the novel detectors are validated separately "
         "in Sections 5.2 through 5.5 and are not included in the cross-benchmark table. Since v2.0, "
         "prompt-shield v0.4.1 has shipped an additional detector — d029 many-shot structural — as a "
-        "preview; its section-level treatment is scheduled for v4.0 and its numbers are not included "
+        "preview; its section-level treatment is scheduled for v5.0 and its numbers are not included "
         "in this revision. All claims, limitations, and reproduction scripts are released together with "
         "the paper.",
+    )
+    # v4 addendum
+    _add_para(
+        doc,
+        "The v4.0 revision (July 2026) is substantive rather than corrective. It adds Section 2.4 "
+        "mapping thirteen concurrent 2026 preprints and publications addressing overlapping "
+        "problems, and Section 7 formalizing three architectural patterns extracted from "
+        "prompt-shield's implementation in Gang-of-Four format: the Tool-Result Boundary Gate "
+        "(demonstrated as a shared idea by four concurrent 2026 systems — ClawGuard, DualView, "
+        "Prismata, and Token-Flow Firewall — plus one adjacent runtime-enforcement system, "
+        "AgentSpec), Federated Signed Threat Intelligence (a novel application of the "
+        "Abuse.ch / VirusTotal pattern to LLM defense), and Attack-Family Taxonomic Projection "
+        "(a novel formalism, currently a single implementation). The contribution of Section 7 "
+        "is nomenclature and structure, not invention.",
     )
 
     # ----------------------- 1. INTRODUCTION -------------------
@@ -253,7 +273,7 @@ def build_document() -> tuple[Document, dict]:
 
     doc.add_heading("1.1 Contributions", level=2)
 
-    _add_para(doc, "The primary contributions of this paper (as of the v3.0 revision) are:")
+    _add_para(doc, "The primary contributions of this paper (as of the v4.0 revision) are:")
 
     contrib = [
         (
@@ -301,7 +321,7 @@ def build_document() -> tuple[Document, dict]:
         p.add_run(body)
 
     # v3 contribution addendum
-    _add_para(doc, "The v3.0 revision adds:")
+    _add_para(doc, "The v3.0 revision added:")
     contrib_v3 = [
         (
             "Independent evaluation against three peer-reviewed academic benchmarks.",
@@ -428,6 +448,85 @@ def build_background_and_threat(doc: Document) -> None:
         "untrusted sources to sensitive sinks. Together these works establish that "
         "architectural-integrity techniques from compiler security are viable in the "
         "large-language-model context, a premise our Section 4.7 proposal builds on.",
+    )
+
+    # ----------------------- 2.4 2026 CONCURRENT CONTRIBUTIONS (v4) --------
+    doc.add_heading("2.4 2026 Concurrent Contributions", level=2)
+    _add_para(
+        doc,
+        "Between April and July 2026, concurrent with the prompt-shield v0.6 and v0.7 releases "
+        "described in this paper, the field produced thirteen preprints and publications "
+        "addressing overlapping problems; we group them by defense pattern.",
+    )
+    _add_para(
+        doc,
+        "Trained classifiers on prompt-injection benchmarks. PromptSentinel-X (Zhuhadar, Future "
+        "Internet 2026, DOI 10.3390/fi18070376) reports 98.49 percent accuracy, 0.5 percent "
+        "false-positive rate, and 0.9971 AUROC on a 465-record test set drawn from the Prompt "
+        "Injection Malignant corpus; this is the strongest in-distribution result in the batch, "
+        "and Section 5 discusses why it is not directly comparable to the out-of-distribution "
+        "NotInject numbers we report. WebSentinel (Wang et al., arXiv:2602.03792) extends the "
+        "classifier approach with a detect-and-localize head specialized for web-agent DOM "
+        "contexts. SnapGuard (Du et al., arXiv:2604.25562) replaces text features with "
+        "screenshot-based visual features for web agents whose attack surface reaches the model "
+        "through rendered pages rather than raw markup. DataSentinel (Liu et al., IEEE S&P 2025, "
+        "arXiv:2504.11358) formulates the classifier training objective as a game between "
+        "attacker and defender to improve robustness to adversarial paraphrasing.",
+    )
+    _add_para(
+        doc,
+        "Runtime enforcement and capability-based confinement. ClawGuard (Zhao et al., "
+        "arXiv:2604.11790) interposes user-confirmed rule sets at the tool-call boundary, "
+        "blocking calls whose arguments violate a per-session policy. AgentSpec (Wang, Poskitt, "
+        "and Sun, ICSE 2026, arXiv:2503.18666) introduces a domain-specific language for "
+        "expressing runtime constraints over agent behavior. Prismata (Villa et al., "
+        "arXiv:2607.08147) derives per-tool trust levels dynamically and enforces mechanical "
+        "confinement of low-trust web-agent actions. DualView (Kim et al., arXiv:2607.03821) "
+        "isolates rendered content from model-visible symbols by maintaining two parallel views "
+        "— an AgentView of tokenised symbols exposed to the model and a HumanView of the "
+        "original surface — so that injected instructions in the rendered content cannot reach "
+        "the model context. Token-Flow Firewall (Wang et al., arXiv:2607.08395) audits token "
+        "flows across agent boundaries with boundary-aware semantic checks that account for "
+        "cross-boundary information carriage.",
+    )
+    _add_para(
+        doc,
+        "Rule-based monitors. AgentWatcher (Wang, Zou, Geng, and Jia, arXiv:2604.01194) couples "
+        "rule-based detection with causal attribution, tracing each violation back to the "
+        "specific tool call or context chunk that triggered it; it is the closest philosophical "
+        "sibling to prompt-shield's regex-based detector family.",
+    )
+    _add_para(
+        doc,
+        "Concurrent benchmarks. NetInjectBench (Shayoni et al., arXiv:2607.10490) proposes an "
+        "indirect-injection benchmark for tool-using LLM agents in network-operations settings; "
+        "we treat it as a candidate for the evaluation extension noted in the future-work "
+        "portion of Section 6.",
+    )
+    _add_para(
+        doc,
+        "Adversarial contributions. AgentSentry (Zhang et al., arXiv:2602.22724) and WARD (Cao "
+        "et al., arXiv:2605.15030) contribute attack techniques against agentic pipelines. Both "
+        "are relevant to the threat model of Section 3; empirical evaluation of prompt-shield's "
+        "coverage against their specific attack corpora is left to future work.",
+    )
+    _add_para(
+        doc,
+        "Position of prompt-shield within this batch. Three observations frame our contribution "
+        "relative to these concurrent works. First, trained classifiers that report sub-one-"
+        "percent false-positive rates on their own held-out sets — PromptSentinel-X at 0.5 "
+        "percent is the batch leader — achieve those numbers by construction: the training and "
+        "test distributions are matched. The numbers we report in Section 5 instead measure "
+        "out-of-distribution generalisation on the NotInject benchmark, which is the regime a "
+        "pip-install deployment encounters on unseen user inputs. Second, prompt-shield and the "
+        "runtime-enforcement papers operate at different layers of the defense stack: the "
+        "runtime-enforcement systems confine what a compromised model can do, while "
+        "prompt-shield classifies whether the incoming context is likely compromised. The two "
+        "layers compose cleanly at the tool-call boundary. Third, no cluster member ships the "
+        "combination of a federated signed threat feed, a stable attack-family taxonomy over "
+        "heterogeneous detectors, and an integrated defense-in-depth stack in a single "
+        "deployable package; this is the deployment-stack positioning we develop in "
+        "Sections 4 and 7.",
     )
 
     # ----------------------- 3. THREAT MODEL --------------------
@@ -987,7 +1086,7 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "v041_public_datasets.md (human-readable). Wall-clock runtime is approximately "
         "four minutes. The fatigue probing-campaign claim in Section 5.3 is reproduced "
         "by pytest tests/fatigue/ which runs in under one second. The full prompt-shield "
-        "test suite comprises 1,173 tests on the current main branch (as of v3.0.2) and passes "
+        "test suite comprises 1,173 tests on the current main branch (as of v4.0) and passes "
         "cleanly across Python 3.10, 3.11, 3.12, and 3.13 in continuous integration.",
     )
 
@@ -1173,7 +1272,10 @@ def build_conclusions_and_refs(doc: Document) -> None:
     )
     _add_para(
         doc,
-        "The v4.0 revision will fold in: a full Section-level write-up of the d029 "
+        "The v4.0 revision (this document) folds in a survey of the 2026 concurrent-"
+        "contribution cluster (Section 2.4) and a Gang-of-Four-style formalisation of three "
+        "architectural patterns extracted from prompt-shield's implementation (Section 7). "
+        "The v5.0 revision will fold in: a full section-level write-up of the d029 "
         "many-shot structural detector currently shipped in prompt-shield v0.4.1; an "
         "adaptive-attack evaluation per the Nasr et al. (arXiv:2510.09023) methodology "
         "with per-detector-family attacks (sequence-alignment-aware, stylometry-aware, "
@@ -1187,39 +1289,269 @@ def build_conclusions_and_refs(doc: Document) -> None:
         "zero-regression opt-in model).",
     )
 
+    # ----------------------- 7. DESIGN PATTERNS (v4) --------------------
+    doc.add_heading("7. Design Patterns for Agent-Era LLM Security", level=1)
+    _add_para(
+        doc,
+        "Design patterns — named, reusable descriptions of problem-solution pairs — compress "
+        "community knowledge and coordinate independent implementers around a shared vocabulary. "
+        "Gamma et al. (Design Patterns, Addison-Wesley 1994) demonstrated the durability of this "
+        "contribution in object-oriented software; Sweeney's k-anonymity (International Journal "
+        "of Uncertainty, Fuzziness and Knowledge-Based Systems 2002, DOI 10.1142/"
+        "S0218488502001648) played the analogous role for statistical disclosure control; Dean "
+        "and Ghemawat's MapReduce (OSDI 2004) did so for large-scale data processing; and MITRE "
+        "ATT&CK (attack.mitre.org, first released 2013) for adversarial behavior modelling. In "
+        "each case, formalizing a recurring construct that practitioners were already reinventing "
+        "gave the field a reference point that outlasted specific implementations.",
+    )
+    _add_para(
+        doc,
+        "We observe a similar convergence in agent-era LLM security. Between April and July "
+        "2026, four independent papers — ClawGuard (Zhao et al., arXiv:2604.11790), DualView "
+        "(Kim et al., arXiv:2607.03821), Prismata (Villa et al., arXiv:2607.08147), and "
+        "Token-Flow Firewall (Wang et al., arXiv:2607.08395) — shipped implementations of the "
+        "same core idea: scan tool output before it re-enters the LLM context. A fifth, "
+        "AgentSpec (Wang, Poskitt, and Sun, ICSE 2026, arXiv:2503.18666), subsumes this as a "
+        "special case of a broader runtime-enforcement DSL. None used a common name. We "
+        "formalize that pattern here, together with two others we have found useful in building "
+        "prompt-shield. Our contribution is nomenclature and structure, not invention.",
+    )
+
+    # 7.1 Tool-Result Boundary Gate
+    doc.add_heading("7.1 Pattern: Tool-Result Boundary Gate", level=2)
+    pattern_71 = [
+        ("Problem.",
+         "Tool-augmented LLM agents invoke external tools — web search, code execution, MCP "
+         "servers, retrieval indexes, file readers — and feed the returned data back into the "
+         "model context as prompt tokens. Because that data is not part of the operator's "
+         "system prompt or the user's turn, it constitutes a third, adversary-controllable "
+         "channel. An attacker who can influence any surface a tool reads (an indexed web page, "
+         "an issue comment, a shared document, a network response) can inject instructions "
+         "that the model will treat with the same authority as legitimate context. The impact "
+         "ranges from silent policy bypass to exfiltration of secrets held elsewhere in the "
+         "session."),
+        ("Context.",
+         "Tool-augmented LLM agents built on frameworks such as MCP, LangChain-style tool "
+         "loops, RAG pipelines, and browser or code-execution back-ends. The pattern applies "
+         "whenever untrusted content re-enters the model's prompt as a result of a tool call."),
+        ("Forces.",
+         "Detection accuracy must be traded against per-call latency, since a gate that adds "
+         "seconds to every tool invocation is unusable in interactive agents. False positives "
+         "are especially costly: they silently break agent utility, which is harder for "
+         "operators to detect than under-blocking. Purely content-based detection cannot "
+         "substitute for capability-based confinement (for example, sandboxing the tool "
+         "itself), but the two compose. Finally, the pattern must be expressible as middleware "
+         "or a wrapper that slots into existing agent frameworks without requiring model "
+         "retraining or protocol changes."),
+        ("Solution.",
+         "Introduce a first-class boundary primitive on the tool-result path. The primitive "
+         "(i) intercepts the raw tool return before it is concatenated into the model context, "
+         "(ii) classifies the content through a stack of heterogeneous detectors — regex, "
+         "statistical, ML, alignment-based — into a stable attack-family taxonomy, and "
+         "(iii) enforces one of a small set of policy modes — block, flag with metadata, or "
+         "sanitize by structural quoting — chosen per family or per tool. The gate is "
+         "deliberately positioned at the boundary rather than integrated into the model, so "
+         "that it composes with capability-based confinement and remains auditable "
+         "independently of the LLM. Operators configure it declaratively."),
+        ("Known Uses.",
+         "Between April and July 2026, four research prototypes shipped this pattern "
+         "independently and without a common name: ClawGuard (Zhao et al., arXiv:2604.11790) "
+         "implements a permission-oriented variant for MCP tools; DualView (Kim et al., "
+         "arXiv:2607.03821) separates operator and tool-content views before scanning; Prismata "
+         "(Villa et al., arXiv:2607.08147) applies the pattern to structured tool outputs; and "
+         "Token-Flow Firewall (Wang et al., arXiv:2607.08395) enforces it at the token-stream "
+         "level, reporting attack success reduced to 12.5 percent and benign pass rate 97.4 "
+         "percent per the authors' abstract. AgentSpec (Wang, Poskitt, and Sun, ICSE 2026, "
+         "arXiv:2503.18666), a general runtime-enforcement DSL, subsumes this pattern as a "
+         "special case rather than centring on it. prompt-shield ships the pattern as "
+         "ToolResultGuard in v0.7.0 with the naming and Gang-of-Four-style formalisation given "
+         "here. None of the five implementations adopts the others' terminology."),
+        ("Related Patterns.",
+         "Defense in Depth (the gate is one layer, not the only layer); Reference Monitor "
+         "(classical mediation of untrusted flows); Sandbox (capability-side complement); "
+         "Capability-based Security (an alternative paradigm that reduces the surface the gate "
+         "must protect)."),
+        ("Novelty note.",
+         "We claim naming, not invention. Four contemporary implementations plus one adjacent "
+         "runtime-enforcement system demonstrate the pattern's convergence; our contribution "
+         "is the shared vocabulary."),
+    ]
+    for head, body in pattern_71:
+        p = doc.add_paragraph()
+        r = p.add_run(head + " ")
+        r.bold = True
+        p.add_run(body)
+
+    # 7.2 Federated Signed Threat Intelligence
+    doc.add_heading("7.2 Pattern: Federated Signed Threat Intelligence for LLM Security", level=2)
+    pattern_72 = [
+        ("Problem.",
+         "No single LLM-security deployment observes enough attack traffic to characterize "
+         "novel patterns quickly. Commercial attack catalogs are proprietary, so open-source "
+         "defenses cannot draw on the pooled attack telemetry that would speed detection of "
+         "novel patterns. Without a trustworthy sharing mechanism, OSS defenses either lag "
+         "commercial ones or must ingest anonymously contributed data whose provenance they "
+         "cannot verify."),
+        ("Context.",
+         "Open-source LLM-security tooling with a distributed installation base — pip install, "
+         "container images, self-hosted deployments — whose operators want to opt in to shared "
+         "intelligence but cannot run a trust broker themselves."),
+        ("Forces.",
+         "Trust: who verifies feed integrity? Freshness against bandwidth and cache load. "
+         "Offline signing (private key never touches the network) against CI-based signing "
+         "(operationally simpler but wider blast radius). Verification cost per client, since "
+         "detection sits on the hot path. Feed diversity against publisher dependency."),
+        ("Solution.",
+         "Publish the feed from a single accountable publisher, sign each release offline with "
+         "an ed25519 key, and distribute over a CDN so that origin compromise does not "
+         "compromise the key. Clients verify signatures with a small pure-code library, with "
+         "the trust anchor pinned in the client release, so that downstream operators pull the "
+         "feed as they would any other dependency, without needing to run a public-key "
+         "infrastructure. Rotation is handled by shipping a new anchor in a new client release, "
+         "keeping revocation cost proportional to normal upgrade cadence rather than to feed "
+         "frequency."),
+        ("Known Uses.",
+         "prompt-shield's federated signed feed (github.com/mthamil107/prompt-shield-"
+         "signatures) is, at the time of writing, the only known use of this pattern applied "
+         "to LLM security. The underlying construct is well-established in adjacent domains — "
+         "Abuse.ch, PhishTank, and VirusTotal in network security, and signed software updates "
+         "more generally. Our contribution is the application, not the primitive."),
+        ("Related Patterns.",
+         "Signed Software Updates; Certificate Transparency (append-only public logs as a "
+         "stronger integrity property); Defense in Depth."),
+        ("Novelty note.",
+         "We describe this as a novel application of an existing pattern rather than a novel "
+         "pattern. Single known LLM-security use at time of writing."),
+    ]
+    for head, body in pattern_72:
+        p = doc.add_paragraph()
+        r = p.add_run(head + " ")
+        r.bold = True
+        p.add_run(body)
+
+    # 7.3 Attack-Family Taxonomic Projection
+    doc.add_heading("7.3 Pattern: Attack-Family Taxonomic Projection", level=2)
+    pattern_73 = [
+        ("Problem.",
+         "A defense-in-depth stack accumulates many concrete detectors with opaque identifiers "
+         "— regex rule IDs, model checkpoint names, alignment-scorer thresholds. Downstream "
+         "consumers — policy engines, dashboards, alert routers, and human triage — need "
+         "semantic categories, not detector IDs, in order to reason about coverage, express "
+         "policy, and communicate risk. But the detector set churns as research advances, so "
+         "any category system tied directly to detector identity becomes brittle."),
+        ("Context.",
+         "Detector stacks that combine heterogeneous mechanisms (regex, statistical anomaly, "
+         "supervised classifier, alignment-based) and that expose their output to policy "
+         "engines or human operators."),
+        ("Forces.",
+         "Taxonomy stability against detector innovation; per-family policy configurability "
+         "against the risk of category proliferation; explainability to non-technical "
+         "stakeholders; the ability to introduce a new detector without renaming or "
+         "reclassifying prior alerts; small gap-filling coverage for attack families with no "
+         "dedicated detector."),
+        ("Solution.",
+         "Define a small, stable attack-family taxonomy chosen from the analyst-facing "
+         "vocabulary rather than the detector-facing one. Implement the taxonomy as a pure "
+         "projection function over (detector_id, evidence) pairs, so that the mapping from "
+         "mechanisms to families is a one-way, auditable, easily unit-tested piece of code. "
+         "Add gap-filling regex only for families that no first-class detector covers, keeping "
+         "the fallback narrow and clearly labeled. Policy engines, dashboards, and metric "
+         "pipelines consume families, not detector IDs; the detector layer is then free to "
+         "evolve without invalidating downstream consumers."),
+        ("Known Uses.",
+         "prompt-shield's ToolResultGuard uses a nine-family taxonomy at v0.7.0. We are aware "
+         "of no other implementation of this specific formalism at the time of writing; we "
+         "describe the pattern in the hope that others adopt it. MITRE ATT&CK and ATLAS "
+         "(atlas.mitre.org) provide taxonomies at a different level of abstraction — attack "
+         "modelling for threat intelligence and red-teaming — rather than a projection layer "
+         "between detection tooling and policy. The two are complementary: one names what an "
+         "attacker might do; the other names what a detector saw."),
+        ("Related Patterns.",
+         "MITRE ATT&CK / ATLAS taxonomies (adjacent abstraction level, attack-modelling rather "
+         "than detection-tooling); Facade (a simpler stable interface over a heterogeneous "
+         "detector stack); Anti-Corruption Layer (insulating downstream consumers from "
+         "detector-set churn)."),
+        ("Novelty note.",
+         "Novel formalism with a single known implementation at the time of writing. We "
+         "describe the pattern in the hope that other detector-stack maintainers adopt it."),
+    ]
+    for head, body in pattern_73:
+        p = doc.add_paragraph()
+        r = p.add_run(head + " ")
+        r.bold = True
+        p.add_run(body)
+
+    # 7.4 What these patterns do not address
+    doc.add_heading("7.4 What these patterns do not address", level=2)
+    _add_para(
+        doc,
+        "These three patterns do not exhaust the design space of agent-era LLM security. They "
+        "deliberately do not address adaptive adversarial evaluation, which requires an "
+        "evaluation methodology as much as an architectural pattern; they do not provide "
+        "provable defense guarantees, which the current empirical detector-stack paradigm "
+        "cannot; and they are not a substitute for capability-based confinement, which reduces "
+        "the surface any content-based defense must protect and remains, in our view, the "
+        "strongest available primitive for tool-augmented agents. A mature deployment will "
+        "combine capability confinement, boundary gating, threat-intelligence sharing, and "
+        "taxonomic projection, along with patterns yet to be named.",
+    )
+    _add_para(
+        doc,
+        "We invite the field to formalize those additional patterns. The value of a shared "
+        "vocabulary comes from its coverage; three patterns is a beginning, not an inventory.",
+    )
+
     doc.add_heading("References", level=1)
 
     refs = [
         "Andriushchenko, M., Souly, A., et al. \"AgentHarm: A Benchmark for Measuring Harmfulness of LLM Agents.\" ICLR 2025. arXiv:2410.09024.",
         "Basquin, O. H. \"The Exponential Law of Endurance Tests.\" Proceedings of the American Society for Testing and Materials 10:625-630, 1910.",
         "Bevendorff, J., et al. \"Overview of PAN 2024: Multi-author Writing Style Analysis, Multilingual Text Detoxification, Oppositional Thinking Analysis, and Generative AI Authorship Verification.\" CLEF 2024. DOI 10.1007/978-3-031-71908-0_11.",
+        "Cao, T., Chen, Y., Cao, H., Li, Y., Le, K., Nguyen, T., Li, Y., He, Y., Liu, Y., Yan, S., Hooi, B. \"WARD: Adversarially Robust Defense of Web Agents Against Prompt Injections.\" arXiv:2605.15030, 2026.",
         "Costa, M., Köpf, B., et al. \"Securing AI Agents with Information-Flow Control.\" Microsoft Research, arXiv:2505.23643, 2025.",
+        "Dean, J., Ghemawat, S. \"MapReduce: Simplified Data Processing on Large Clusters.\" Proceedings of the 6th USENIX Symposium on Operating Systems Design and Implementation (OSDI), pp. 137-150, 2004.",
         "Debenedetti, E., Zhang, J., Balunovic, M., Beurer-Kellner, L., Fischer, M., Tramèr, F. \"AgentDojo: A Dynamic Environment to Evaluate Prompt Injection Attacks and Defenses for LLM Agents.\" NeurIPS 2024 Datasets and Benchmarks. arXiv:2406.13352.",
         "Derczynski, L., Galinkin, E., Martin, J., Majumdar, S., Inie, N. \"garak: A Framework for Security Probing Large Language Models.\" arXiv:2406.11036, 2024.",
+        "Du, M., Fang, H., Ma, H., Chen, J., Xu, K., Yin, Q., Chang, E.-C. \"SnapGuard: Lightweight Prompt Injection Detection for Screenshot-Based Web Agents.\" arXiv:2604.25562, 2026.",
+        "Gamma, E., Helm, R., Johnson, R., Vlissides, J. Design Patterns: Elements of Reusable Object-Oriented Software. Addison-Wesley Professional Computing Series, 1994. ISBN 978-0201633610.",
+        "Hanson, R. \"Logarithmic Market Scoring Rules for Modular Combinatorial Information Aggregation.\" Journal of Prediction Markets 1(1):3-15, 2007.",
         "He, X., Wang, B., Zhao, Y., Hou, X., Liu, J., Zou, H., Wang, H. \"TaintP2X: Detecting Taint-Style Prompt-to-Anything Injection Vulnerabilities in LLM-Integrated Applications.\" ICSE 2026 Research Track.",
         "Henikoff, S., Henikoff, J. G. \"Amino acid substitution matrices from protein blocks.\" Proceedings of the National Academy of Sciences 89(22):10915-10919, 1992. DOI 10.1073/pnas.89.22.10915.",
         "Hines, K., Lopez, G., Hall, M., Zarfati, F., Zunger, Y., Kiciman, E. \"Defending Against Indirect Prompt Injection Attacks With Spotlighting.\" arXiv:2403.14720, 2024.",
-        "Hanson, R. \"Logarithmic Market Scoring Rules for Modular Combinatorial Information Aggregation.\" Journal of Prediction Markets 1(1):3-15, 2007.",
+        "Kim, J., Choi, W., Kang, T., Kim, Y., Lee, B. \"DualView: Preventing Indirect Prompt Injection in Personal AI Agents.\" arXiv:2607.03821, 2026.",
         "Li, H., Liu, Y., Zhang, C., Xiao, Y. \"PIGuard: Prompt Injection Guardrail via Mitigating Overdefense for Free.\" ACL 2025 Long Papers. aclanthology.org/2025.acl-long.1468.",
         "Lin, J. \"Divergence Measures Based on the Shannon Entropy.\" IEEE Transactions on Information Theory 37(1):145-151, 1991. DOI 10.1109/18.61115.",
         "Liu, Y., Jia, Y., Geng, R., Jia, J., Gong, N. Z. \"Formalizing and Benchmarking Prompt Injection Attacks and Defenses.\" USENIX Security 2024. arXiv:2310.12815.",
         "Liu, Y., et al. \"DataSentinel: A Game-Theoretic Detection of Prompt Injection Attacks.\" IEEE S&P 2025. arXiv:2504.11358.",
         "Mindgard / Lancaster. \"Bypassing LLM Guardrails: An Empirical Analysis of Evasion Attacks against Prompt Injection and Jailbreak Detection Systems.\" arXiv:2504.11168, 2025.",
+        "MITRE Corporation. \"MITRE ATLAS: Adversarial Threat Landscape for Artificial-Intelligence Systems.\" atlas.mitre.org, first released 2021; accessed 2026-07-25.",
+        "MITRE Corporation. \"MITRE ATT&CK Framework.\" attack.mitre.org, first released 2013; accessed 2026-07-25.",
+        "Munirathinam, T. \"prompt-shield-signatures: Federated ed25519-signed threat feed for LLM security.\" github.com/mthamil107/prompt-shield-signatures, 2026. Publisher-signed threat-intel feed, v0.6.0 and later.",
         "Nasr, M., Carlini, N., Sitawarin, C., et al. \"The Attacker Moves Second: Stronger Adaptive Attacks Bypass Defenses Against LLM Jailbreaks and Prompt Injections.\" arXiv:2510.09023, 2025. [Submission status pending; OpenReview 7B9mTg7z25.]",
         "Opara, C. \"StyloAI: Distinguishing AI-Generated Content with Stylometric Analysis.\" arXiv:2405.10129, 2024.",
         "Page, E. S. \"Continuous Inspection Schemes.\" Biometrika 41(1/2):100-115, 1954.",
         "Roberts, S. W. \"Control Chart Tests Based on Geometric Moving Averages.\" Technometrics 1(3):239-250, 1959. DOI 10.1080/00401706.1959.10489860.",
         "Pasquini, D., Corti, E., Ateniese, G. \"Hacking Back the AI-Hacker: Prompt Injection as a Defense Against LLM-driven Cyberattacks.\" arXiv:2410.20911, 2024.",
         "Reworr, Volkov, D. \"LLM Agent Honeypot: Monitoring AI Hacking Agents in the Wild.\" Palisade Research, arXiv:2410.13919, 2024.",
+        "Shayoni, R. K., Shoaib, M. F., Hossain, S. M. A., Mridha, M. F. \"NetInjectBench: Benchmarking Indirect Prompt Injection in Tool-Using Large Language Model Agents for Network Operations.\" arXiv:2607.10490, 2026.",
         "Smith, T. F., Waterman, M. S. \"Identification of Common Molecular Subsequences.\" Journal of Molecular Biology 147:195-197, 1981. DOI 10.1016/0022-2836(81)90087-5.",
         "Suresh, S. Fatigue of Materials. Cambridge University Press, second edition, 1998. ISBN 9780521578479.",
+        "Sweeney, L. \"k-anonymity: A Model for Protecting Privacy.\" International Journal of Uncertainty, Fuzziness and Knowledge-Based Systems 10(5):557-570, 2002. DOI 10.1142/S0218488502001648.",
         "Tsai, C.-W., et al. \"Using WPCA and EWMA Control Chart to Construct a Network Intrusion Detection Model.\" IET Information Security, 2024. DOI 10.1049/2024/3948341.",
         "Vial, F., et al. \"Assessing 3 Outbreak Detection Algorithms in an Electronic Syndromic Surveillance System.\" Emerging Infectious Diseases 26(9), US Centers for Disease Control and Prevention, 2020.",
+        "Villa, C., Ozdarendeli, A. E., Tan, S., Popa, R. A. \"Prismata: Confining Cross-Site Prompt Injection in Web Agents.\" arXiv:2607.08147, 2026.",
+        "Wang, H., Poskitt, C. M., Sun, J. \"AgentSpec: Customizable Runtime Enforcement for Safe and Reliable LLM Agents.\" ICSE 2026. arXiv:2503.18666.",
+        "Wang, P., Zhang, Y., Zhang, R., Guo, J., Cheng, X. \"Token-Flow Firewall: Semantic Runtime Auditing for Persistent AI Agents.\" arXiv:2607.08395, 2026.",
+        "Wang, X., Liu, Y., Wang, Z., Song, D., Gong, N. \"WebSentinel: Detecting and Localizing Prompt Injection Attacks for Web Agents.\" arXiv:2602.03792, 2026.",
+        "Wang, Y., Zou, W., Geng, R., Jia, J. \"AgentWatcher: A Rule-based Prompt Injection Monitor.\" arXiv:2604.01194, 2026.",
         "Wu, X., Wang, R., et al. \"SelfDefend: LLMs Can Defend Themselves against Jailbreaking in a Practical Manner.\" arXiv:2406.05498, 2024.",
         "Zhan, Q., Fang, H., Panchal, A., Kang, D. \"Adaptive Attacks Break Defenses Against Indirect Prompt Injection Attacks on LLM Agents.\" NAACL 2025 Findings. arXiv:2503.00061.",
         "Zhan, Q., Liang, Z., Ying, Z., Kang, D. \"InjecAgent: Benchmarking Indirect Prompt Injections in Tool-Integrated Large Language Model Agents.\" ACL Findings 2024. arXiv:2403.02691.",
         "Zhang, J., Yu, R., et al. \"Agent Security Bench (ASB): Formalizing and Benchmarking Attacks and Defenses in LLM-based Agents.\" ICLR 2025. arXiv:2410.02644.",
+        "Zhang, T., Xu, Y., Wang, J., Guo, K., Xu, X., Xiao, B., Guan, Q., Fan, J., Liu, J., Liu, Z., Hu, H. \"AgentSentry: Mitigating Indirect Prompt Injection in LLM Agents via Temporal Causal Diagnostics and Context Purification.\" arXiv:2602.22724, 2026.",
+        "Zhao, W., Li, Z., Zhang, P., Sun, J. \"ClawGuard: A Runtime Security Framework for Tool-Augmented LLM Agents Against Indirect Prompt Injection.\" arXiv:2604.11790, 2026.",
         "Zhu, K., Yang, Y., Wang, R., Guo, Y., Wang, H. \"MELON: Provable Defense Against Indirect Prompt Injection Attacks in AI Agents.\" ICML 2025. arXiv:2502.05174.",
+        "Zhuhadar, L. P. \"PromptSentinel-X: A Leakage-Aware and Context-Aware Framework for Prompt-Injection Detection in Large Language Model-Powered Web Agents.\" Future Internet 18(7):376, 2026. DOI 10.3390/fi18070376.",
     ]
     for ref in refs:
         p = doc.add_paragraph(ref, style="List Number")

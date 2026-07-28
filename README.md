@@ -17,9 +17,9 @@
   <img src="https://img.shields.io/badge/detectors-33-brightgreen" alt="33 detectors" />
   <img src="https://img.shields.io/badge/output_scanners-9-blue" alt="9 output scanners" />
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
-  <img src="https://img.shields.io/badge/F1_(benchmark_1)-96.0%25-success" alt="F1 96% on Benchmark 1: real-world 2025-2026 attacks" />
-  <img src="https://img.shields.io/badge/false_positives_(benchmark_1)-0%25-success" alt="0% FP on Benchmark 1: 15 benign inputs, self-curated" />
-  <img src="https://img.shields.io/badge/tests-1097-blue" alt="1097 tests" />
+  <img src="https://img.shields.io/badge/F1_(self--curated_n%3D54)-96.0%25-success" alt="F1 96% on Benchmark 1: 39 attacks + 15 benign, self-curated - see paper 5.4 for self-eval caveats" />
+  <img src="https://img.shields.io/badge/false_positives_(deepset_n%3D56)-0%25-success" alt="0% FP on deepset benign - NotInject FPR is 3.8%; see benchmark table" />
+  <img src="https://img.shields.io/badge/tests-1173-blue" alt="1173 tests" />
   <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
@@ -771,7 +771,7 @@ See [docs/github-action.md](docs/github-action.md) for advanced configuration.
 ```yaml
 repos:
   - repo: https://github.com/mthamil107/prompt-shield
-    rev: v0.6.1
+    rev: v0.7.1
     hooks:
       - id: prompt-shield-scan
       - id: prompt-shield-pii
@@ -1162,12 +1162,20 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ NFKC + homoglyph normalization pipeline, multi-encoding preprocessor
   - ✅ d022 input-length cap removed (chunking + max-pool)
   - ✅ Prometheus `/metrics`, sliding-window rate limiter
-- **v0.6.0 (current): federated threat-intel feed** —
+- **v0.6.0: federated threat-intel feed** —
   - ✅ `prompt_shield.signatures` module — fetch + verify the public ed25519-signed feed
   - ✅ Pure-Python `verify_minisign` — no `minisign` binary at runtime
   - ✅ Offline cache fallback; verification failure never overwrites cached good data
   - ✅ Companion repo [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures) (56 seed signatures from Garak / OWASP / Anthropic / community / multilingual)
-- **v0.7.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts
+- **v0.7.0: agent-era defense** —
+  - ✅ `ToolResultGuard` first-class primitive for scanning tool-result content before it re-enters the LLM context
+  - ✅ Attack-family taxonomy (9 families) as a stable projection over the concrete detector set
+  - ✅ Anthropic SDK `tool_result` scan, refactored 4 existing framework integrations
+- **v0.7.1 (current): correctness patch** —
+  - ✅ d031 language enforcement flipped to opt-in default (breaking behaviour change; see CHANGELOG)
+  - ✅ NotInject FPR reporting corrected (0.9% → 3.8%) across README, `docs/index.md`, arXiv paper (v3.0.2)
+  - ✅ `tests/benchmark_public_datasets.py` reproducibility fix for `datasets>=3.x`
+- **v0.8.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts, remaining framework integrations (pydantic-ai / OpenAI / CrewAI adapters for `scan_tool_result`)
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
