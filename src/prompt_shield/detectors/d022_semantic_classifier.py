@@ -77,7 +77,12 @@ class SemanticClassifierDetector(BaseDetector):
             self._available = True
             logger.info("Loaded semantic classifier: %s", self._model_name)
         except ImportError:
-            logger.info("transformers not installed; d022 semantic classifier disabled")
+            logger.warning(
+                "d022 semantic classifier disabled: transformers not installed. "
+                "Install with `pip install prompt-shield-ai[ml]` to enable ML-based "
+                "paraphrase detection. Without it, obfuscated attacks may bypass "
+                "regex-only detection."
+            )
             self._available = False
         except Exception as exc:
             logger.warning("Failed to load semantic classifier: %s", exc)

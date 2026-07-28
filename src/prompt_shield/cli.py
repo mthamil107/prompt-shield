@@ -604,6 +604,105 @@ def pii_redact(ctx: click.Context, input_text: str, file_path: str | None) -> No
         click.echo()
 
 
+# --- output ---
+
+
+@main.group()
+def output() -> None:
+    """Scan LLM-generated output for harmful content."""
+
+
+def _split_scanner_names(raw: str | None) -> list[str] | None:
+    """Parse a comma-separated scanner selection into a clean list."""
+    if not raw:
+        return None
+    parts = [s.strip() for s in raw.split(",") if s.strip()]
+    return parts or None
+
+
+@output.command("scan")
+@click.argument("input_text", default="-")
+@click.option("--file", "-f", "file_path", default=None, help="Read input from file")
+@click.option(
+    "--scanners",
+    "scanner_names",
+    default=None,
+    help="Comma-separated scanner names (e.g. 'toxicity,pii'). Runs all if omitted.",
+)
+@click.pass_context
+def output_scan(
+    ctx: click.Context,
+    input_text: str,
+    file_path: str | None,
+    scanner_names: str | None,
+) -> None:
+    """Scan LLM output text for toxicity, PII, code injection, and more."""
+    use_json = ctx.obj.get("json", False)
+    text = _read_input(input_text, file_path)
+
+    if not text.strip():
+        click.echo("Error: No input provided", err=True)
+        sys.exit(1)
+
+    from prompt_shield.output_scanners.engine import OutputScanEngine
+
+    engine = OutputScanEngine()
+    report = engine.scan(text, scanners=_split_scanner_names(scanner_names))
+
+    if use_json:
+        click.echo(report.model_dump_json(indent=2))
+    else:
+        color = "red" if report.flagged else "green"
+        label = "FLAGGED" if report.flagged else "CLEAN"
+        click.echo()
+        click.secho(f"  Output: {label}", fg=color, bold=True)
+        click.echo(f"  Overall risk score: {report.overall_risk_score:.2f}")
+        click.echo(f"  Scanners run: {report.total_scanners_run}")
+        click.echo(f"  Duration: {report.scan_duration_ms:.1f}ms")
+
+        detected = [f for f in report.flags if f.flagged]
+        if detected:
+            click.echo()
+            click.secho("  Flags:", bold=True)
+            for f in detected:
+                cats = ", ".join(f.categories) if f.categories else "-"
+                click.echo(
+                    f"    [{click.style('FLAG', fg='red')}] "
+                    f"{f.scanner_id} (confidence: {f.confidence:.2f}) — {cats}"
+                )
+                if f.explanation:
+                    click.echo(f"      {f.explanation}")
+        else:
+            click.echo()
+            click.secho("  No output issues detected.", fg="green")
+        click.echo()
+
+    if report.flagged:
+        sys.exit(1)
+
+
+@output.command("scanners")
+@click.pass_context
+def output_scanners_list(ctx: click.Context) -> None:
+    """List all available output scanners."""
+    use_json = ctx.obj.get("json", False)
+    from prompt_shield.output_scanners.engine import available_scanners
+
+    catalog = available_scanners()
+
+    if use_json:
+        click.echo(json.dumps(catalog, indent=2))
+    else:
+        click.echo()
+        click.secho(f"  {len(catalog)} output scanners available:", bold=True)
+        click.echo()
+        for entry in catalog:
+            click.echo(
+                f"  {entry['name']:20s} {entry['scanner_id']:32s} {entry['description']}"
+            )
+        click.echo()
+
+
 # --- compliance ---
 
 

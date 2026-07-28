@@ -30,6 +30,7 @@ from prompt_shield.models import (
     Severity,
     ThreatFeed,
 )
+from prompt_shield.normalization import NormalizationPipeline
 from prompt_shield.persistence.database import DatabaseManager
 from prompt_shield.registry import DetectorRegistry
 from prompt_shield.utils import sha256_hash
@@ -138,6 +139,19 @@ class PromptShieldEngine:
             self._ps_config.get("blocklist", {}).get("patterns", [])
         )
 
+        # Initialize normalization pipeline (enabled by default).
+        # The normalizer applies NFKC + zero-width strip + Cyrillic->Latin
+        # homoglyph mapping + whitespace collapse to keyword-detector input.
+        # Detectors that require the raw form (d010, d011, d020) read the
+        # original text back from ctx["original_text"].
+        norm_cfg = self._ps_config.get("normalization", {}) or {}
+        if norm_cfg.get("enabled", True):
+            self._normalizer: NormalizationPipeline | None = (
+                NormalizationPipeline.from_config(norm_cfg)
+            )
+        else:
+            self._normalizer = None
+
         # Track scan count for auto-tune interval
         self._scan_count = 0
         self._tune_interval = feedback_cfg.get("tune_interval", 100)
@@ -241,6 +255,19 @@ class PromptShieldEngine:
                     risk_score=1.0,
                 )
 
+        # Apply text normalization before detector dispatch. Detectors receive
+        # the normalized form so that homoglyph / zero-width evasion is
+        # neutralized for keyword-based detectors. The raw text is preserved
+        # in ctx["original_text"] for detectors (d010, d011, d020) that need
+        # to inspect the pre-normalization characters.
+        ctx.setdefault("original_text", input_text)
+        if self._normalizer is not None:
+            norm_result = self._normalizer.normalize(input_text)
+            ctx["normalization"] = norm_result
+            scan_text = norm_result.text
+        else:
+            scan_text = input_text
+
         # Resolve fatigue source identifier once per scan (when enabled).
         fatigue_source = (
             str(ctx.get(self._fatigue.source_key, "_global_"))
@@ -275,11 +302,11 @@ class PromptShieldEngine:
 
         if self._parallel and total_run > 1:
             detections = self._run_detectors_parallel(
-                detectors_to_run, input_text, ctx, fatigue_source=fatigue_source
+                detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
             )
         else:
             detections = self._run_detectors_sequential(
-                detectors_to_run, input_text, ctx, fatigue_source=fatigue_source
+                detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
             )
 
         # Aggregate risk score with ensemble bonus
@@ -434,11 +461,61 @@ class PromptShieldEngine:
             raise ScanError("Threat feed is not available (vault disabled)")
         return self._threat_feed.import_feed(source_path)
 
-    def sync_threats(self, feed_url: str | None = None) -> dict[str, Any]:
-        """Pull latest threats from community feed URL and merge into vault."""
+    def sync_threats(
+        self,
+        feed_url: str | None = None,
+        *,
+        verify: bool = True,
+        public_key: str | None = None,
+        cache_dir: str | None = None,
+    ) -> dict[str, Any]:
+        """Pull latest threats from a community feed URL and merge them in.
+
+        Parameters
+        ----------
+        feed_url:
+            The URL of the JSON feed. Falls back to ``threat_feed.feed_url``
+            in config.
+        verify:
+            When ``True`` (default), the signed-feed path is used: the feed's
+            detached minisign signature is verified against ``public_key``
+            before any bytes are trusted, and the verified signatures are
+            merged into the engine's d030 custom-rules detector via
+            :func:`prompt_shield.signatures.apply_to_engine`. When ``False``,
+            the legacy unverified :class:`ThreatFeedManager` path is used;
+            a :class:`DeprecationWarning` is emitted.
+        public_key:
+            Base64-encoded minisign public key. Required when ``verify=True``.
+        cache_dir:
+            Optional cache directory for the verified feed.
+        """
+        url = feed_url or self._ps_config.get("threat_feed", {}).get("feed_url", "")
+
+        if verify:
+            if not public_key:
+                raise ValueError(
+                    "sync_threats(verify=True) requires a `public_key` (base64 "
+                    "minisign public key). Pass one, or set verify=False to use "
+                    "the legacy unverified path (deprecated)."
+                )
+            from prompt_shield.signatures.apply_to_engine import apply_to_engine
+
+            return apply_to_engine(
+                self,
+                feed_url=url,
+                public_key=public_key,
+                cache_dir=cache_dir,
+            )
+
+        import warnings
+
+        warnings.warn(
+            "Unverified feed sync is deprecated; pass verify=True with public_key",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         if not self._threat_feed:
             raise ScanError("Threat feed is not available (vault disabled)")
-        url = feed_url or self._ps_config.get("threat_feed", {}).get("feed_url", "")
         return self._threat_feed.sync_feed(url)
 
     def add_canary(self, prompt_template: str) -> tuple[str, str]:

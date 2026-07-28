@@ -40,8 +40,18 @@ class UnicodeHomoglyphDetector(BaseDetector):
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
-        normalized = normalize_text(input_text)
-        original_lower = input_text.lower()
+        # This detector's whole job is to inspect the raw Unicode of the
+        # input. When the engine's normalization pipeline is active, it will
+        # have already stripped Cyrillic homoglyphs from `input_text`, so we
+        # fall back to the pre-normalization text via context.
+        raw = input_text
+        if context is not None:
+            raw_ctx = context.get("original_text")
+            if isinstance(raw_ctx, str):
+                raw = raw_ctx
+
+        normalized = normalize_text(raw)
+        original_lower = raw.lower()
 
         # Check for keywords that appear after normalization but NOT in the
         # original lowercase text -- meaning homoglyphs were hiding them.
@@ -54,8 +64,8 @@ class UnicodeHomoglyphDetector(BaseDetector):
             matches.append(
                 MatchDetail(
                     pattern="homoglyph keyword detection",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
-                    position=(0, len(input_text)),
+                    matched_text=raw[:120] + ("..." if len(raw) > 120 else ""),
+                    position=(0, len(raw)),
                     description=(
                         f"Homoglyph-normalized text reveals hidden keywords: "
                         f"{', '.join(hidden_keywords)}"
@@ -65,12 +75,12 @@ class UnicodeHomoglyphDetector(BaseDetector):
             best_confidence = max(best_confidence, 0.85)
 
         # Check for mixed scripts within the same word (e.g. Latin + Cyrillic).
-        if has_mixed_scripts(input_text):
+        if has_mixed_scripts(raw):
             matches.append(
                 MatchDetail(
                     pattern="mixed_scripts",
-                    matched_text=input_text[:120] + ("..." if len(input_text) > 120 else ""),
-                    position=(0, len(input_text)),
+                    matched_text=raw[:120] + ("..." if len(raw) > 120 else ""),
+                    position=(0, len(raw)),
                     description=(
                         "Text contains mixed Unicode scripts within the same "
                         "word (e.g. Latin mixed with Cyrillic or Greek)"

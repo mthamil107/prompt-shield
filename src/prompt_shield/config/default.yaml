@@ -5,6 +5,17 @@ prompt_shield:
   parallel: true
   max_workers: 4
 
+  # Text normalization applied before detector dispatch. Neutralizes evasion
+  # via zero-width characters, Cyrillic homoglyphs, and whitespace padding so
+  # that keyword-based detectors see the cleaned text. Detectors that need
+  # the raw form (d010, d011, d020) receive the original via context.
+  normalization:
+    enabled: true
+    nfkc: true
+    strip_zero_width: true
+    homoglyph_map: true
+    collapse_whitespace: true
+
   alerting:
     enabled: false
     webhooks:

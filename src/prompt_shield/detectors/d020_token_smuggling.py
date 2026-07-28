@@ -79,6 +79,17 @@ class TokenSmugglingDetector(BaseDetector):
         matches: list[MatchDetail] = []
         best_confidence = 0.0
 
+        # This detector's job is to inspect the raw token layout of the
+        # input (split words, alternating characters, reversed words). If
+        # the engine normalized zero-width chars or homoglyphs away, we must
+        # look at the pre-normalization form.
+        raw = input_text
+        if context is not None:
+            raw_ctx = context.get("original_text")
+            if isinstance(raw_ctx, str):
+                raw = raw_ctx
+        input_text = raw
+
         # Check for split keywords with separators between characters
         for word in self._target_words:
             pat = self._build_split_pattern(word)

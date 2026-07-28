@@ -319,6 +319,90 @@ async def pii_redact(req: PIIRequest):
     )
 
 
+class OutputScanRequest(BaseModel):
+    """Body for the /scan/output endpoint."""
+
+    text: str = Field(
+        ..., min_length=1, max_length=100_000, description="LLM output text to scan"
+    )
+    scanners: list[str] | None = Field(
+        default=None,
+        description=(
+            "Optional list of scanner names to run "
+            "(e.g. ['toxicity', 'pii']). Runs every scanner when omitted."
+        ),
+    )
+    context: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional context dict forwarded to each output scanner",
+    )
+
+
+class OutputScanFlag(BaseModel):
+    """A single output-scanner result."""
+
+    scanner_id: str
+    flagged: bool
+    confidence: float
+    categories: list[str]
+    explanation: str
+
+
+class OutputScanResponse(BaseModel):
+    """Serialised aggregate report returned by /scan/output."""
+
+    text: str
+    flagged: bool
+    overall_risk_score: float
+    total_scanners_run: int
+    scan_duration_ms: float
+    flags: list[OutputScanFlag]
+
+
+@app.post(
+    "/scan/output",
+    response_model=OutputScanResponse,
+    responses={422: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
+    tags=["scanning"],
+    summary="Scan LLM output text for harmful content",
+)
+async def scan_output(req: OutputScanRequest):
+    """Run every bundled output scanner (or a named subset) over *text*.
+
+    Returns per-scanner flags plus an aggregate ``flagged`` / risk score.
+    """
+    from prompt_shield.output_scanners.engine import OutputScanEngine
+
+    engine = _state.get("output_engine")
+    if engine is None:
+        engine = OutputScanEngine()
+        _state["output_engine"] = engine
+
+    try:
+        report = engine.scan(req.text, scanners=req.scanners, context=req.context)
+    except Exception as exc:
+        logger.exception("Output scan failed")
+        raise HTTPException(status_code=500, detail=f"Output scan error: {exc}") from exc
+
+    return OutputScanResponse(
+        text=report.output_text,
+        flagged=report.flagged,
+        overall_risk_score=report.overall_risk_score,
+        total_scanners_run=report.total_scanners_run,
+        scan_duration_ms=report.scan_duration_ms,
+        flags=[
+            OutputScanFlag(
+                scanner_id=f.scanner_id,
+                flagged=f.flagged,
+                confidence=f.confidence,
+                categories=list(f.categories),
+                explanation=f.explanation,
+            )
+            for f in report.flags
+        ],
+    )
+
+
 @app.get(
     "/detectors",
     response_model=list[DetectorInfo],

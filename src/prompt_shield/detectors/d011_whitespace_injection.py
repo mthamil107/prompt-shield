@@ -46,6 +46,18 @@ class WhitespaceInjectionDetector(BaseDetector):
         matches: list[MatchDetail] = []
         has_suspicious_content = False
 
+        # This detector's job is to inspect the raw whitespace / invisible-
+        # character content of the input. When the engine's normalization
+        # pipeline is active it will have already stripped zero-width chars
+        # and collapsed whitespace from `input_text`, so we fall back to the
+        # pre-normalization form via context.
+        raw = input_text
+        if context is not None:
+            raw_ctx = context.get("original_text")
+            if isinstance(raw_ctx, str):
+                raw = raw_ctx
+        input_text = raw
+
         # --- Invisible / zero-width character check ---
         invisible_positions: list[int] = []
         for i, char in enumerate(input_text):
