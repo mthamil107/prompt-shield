@@ -7,6 +7,106 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.2] - 2026-07-29
+
+**Correctness release.** Closes five wiring gaps between README claims and
+actual behaviour that were surfaced by an external code-truth review. No API
+removals; one deprecation signalled via `FutureWarning`. Test suite: 1,184
+passing, 18 skipped (+29 net-new tests vs v0.7.1).
+
+### 🔐 Security
+
+- **Homoglyph-obfuscated attacks now caught by the regex layer.**
+  `PromptShieldEngine.scan()` now applies the built-in
+  `NormalizationPipeline` (NFKC + zero-width strip + Cyrillic→Latin homoglyph
+  map + whitespace collapse) before dispatching to detectors. Previously the
+  pipeline existed and was unit-tested in isolation, but the engine never
+  called it — so attacks like `"ignore рrevious instructions"` (Cyrillic
+  `р`) silently bypassed regex detectors `d001` and `d003` and relied on
+  `d022` (ML) as a lucky catch. After the fix, both `d001` and `d003`
+  fire on the same input.
+  - Detectors that need the raw pre-normalisation form (`d010`, `d011`,
+    `d020`) now read from `context['original_text']` — no regression to
+    their intended behaviour.
+  - Toggled via `normalization.enabled` in config (default `true`).
+- **Signed threat feed now wired to `engine.sync_threats()` by default.**
+  New `prompt_shield.signatures.apply_to_engine` bridge runs ed25519
+  minisign verification against a pinned public key before any bytes are
+  trusted, then loads the verified signatures into the engine's
+  `d030_custom_rules` detector. Previously the signed path
+  (`SignaturesClient.fetch()`) existed and was correct, but the engine's
+  own `sync_threats()` bypassed it entirely — the `apply_to_engine`
+  bridge named in the `signatures` package docstring did not exist.
+
+### ⚠️ Behaviour transition (soft; hard-flip in v0.8.0)
+
+- **`engine.sync_threats(feed_url)` bare call now emits `FutureWarning`.**
+  If you call `sync_threats(url)` without either `verify=` or `public_key=`,
+  v0.7.2 preserves the pre-existing unverified behaviour (calls
+  `ThreatFeedManager.sync_feed`) but emits a `FutureWarning` naming the
+  v0.8.0 hard-flip. To silence the warning **and** opt into verification
+  now, pass `verify=True, public_key=<pinned base64 minisign key>`. To keep
+  the unverified behaviour past v0.8.0, pass `verify=False` explicitly
+  (which also emits a `DeprecationWarning` — that path will not be removed).
+- **Migration cheatsheet.** Existing code that did
+  `engine.sync_threats(url)` will keep working through the v0.7.x line;
+  the same call in v0.8.0 will raise `ValueError`. Update at your
+  convenience during the v0.7.x → v0.8.0 window.
+
+### Added
+
+- **`prompt_shield.output_scanners.OutputScanEngine`.** The aggregator the
+  README documented but did not previously exist. `.scan(text, scanners=None)`
+  runs all 9 output scanners (or a named subset) and returns an
+  `OutputScanReport` with per-scanner results plus aggregate `flagged` and
+  `overall_risk_score`.
+- **CLI: `prompt-shield output scan "text"` and `prompt-shield output scanners`.**
+  Match the shape of the existing input `scan` command; support
+  `--scanners`, `--file`, JSON output, and exit-code-1 on flagged output.
+- **REST: `POST /scan/output`.** Body `{"text": "…", "scanners": [...]}`,
+  returns the `OutputScanReport` as JSON. Mirrors the existing `/scan`
+  route.
+- **`prompt_shield.signatures.apply_to_engine`** (see Security above).
+- **Startup-time missing-dep warning for `d022_semantic_classifier`.**
+  When the `[ml]` extra isn't installed, the classifier's silent-INFO log
+  is promoted to `logger.warning` with an actionable
+  `pip install prompt-shield-ai[ml]` hint. Operators at default log levels
+  now actually see the message.
+
+### Fixed
+
+- **`SECURITY.md` supported-versions table.** Previously said only
+  `0.1.x` was supported; the repo has been at 0.7.x for months. Table
+  now correctly lists `0.7.x` supported and `< 0.7` unsupported.
+  Prevents the "looks abandoned" signal to security-conscious reviewers.
+- **`output_scanners/__init__.py` re-exports.** All 9 scanner classes are
+  now in `__all__` (previously only 5 were exported —
+  `BiasFairnessOutputScanner`, `CodeInjectionScanner`,
+  `HallucinationOutputScanner`, `SentimentOutputScanner` were reachable
+  only by direct module import).
+
+### Test coverage
+
+- +29 new tests (1,155 → 1,184 passing on `main`).
+- `tests/output_scanners/test_engine.py`, `test_cli.py`, `test_api.py`
+  (19 tests) exercise the new aggregator + CLI + REST end-to-end.
+- `tests/normalization/test_engine_integration.py` (4 tests) includes the
+  empirical Cyrillic-homoglyph and zero-width-injection `engine.scan()`
+  cases proving the pipeline is actually wired.
+- `tests/signatures/test_apply_to_engine.py` (6 tests) uses a hermetic
+  minisign fixture that generates a fresh ed25519 keypair per run — no
+  network, no pinned key material in the repo. Includes the transitional
+  `FutureWarning` case for bare `sync_threats(url)` calls.
+
+### Not in this release
+
+- Package version bump only; the v4.0 companion paper's textual claims
+  about normalisation, signed-feed verification, and 9 output scanners are
+  now *more* accurate than they were at the time of writing but the paper
+  itself is unchanged from the v4.0 draft filed alongside this release.
+- No new detectors, no new benchmarks. This is exclusively a
+  wiring-completeness pass.
+
 ## [0.7.1] - 2026-07-22
 
 **Correctness patch release.** Addresses two shipped-behaviour issues

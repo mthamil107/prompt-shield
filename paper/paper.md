@@ -21,7 +21,7 @@ bibliography: paper.bib
 `prompt-shield` is an Apache 2.0-licensed Python package that hardens
 LLM-backed applications against prompt injection at three
 architectural boundaries: user input, tool-call output, and model
-output. Version 0.7.1 ships 33 input detectors (regex families,
+output. Version 0.7.2 ships 33 input detectors (regex families,
 NFKC + homoglyph normalization, a seven-scheme encoding preprocessor,
 a DeBERTa semantic classifier, Smith-Waterman sequence alignment
 against a 187-attack signature database, forensic-linguistic
@@ -32,13 +32,18 @@ jailbreak, sentiment, bias/fairness, and hallucination/grounding), a
 first-class `ToolResultGuard` primitive for scanning tool-result content
 before it re-enters the model's context, and a federated,
 ed25519-signed threat-intelligence feed
-(`prompt-shield-signatures`) that clients verify offline against a
-pinned public key. The library ships with thirteen framework
+(`prompt-shield-signatures`) that the engine's default
+`sync_threats(url, public_key=key)` path verifies against a pinned
+public key before loading. All input is passed through an idempotent
+normalisation pipeline (NFKC, zero-width strip, Cyrillic→Latin
+homoglyph map, whitespace collapse) prior to detector dispatch, so
+regex-based detectors see the cleaned form and homoglyph-obfuscated
+attacks cannot bypass the pattern layer. The library ships with thirteen framework
 integrations (LangChain, LlamaIndex, Haystack, Pydantic AI, CrewAI,
 MCP, the OpenAI and Anthropic SDKs, FastAPI, Flask, Django, n8n,
 Dify), plus a standalone REST/Docker deployment, a Prometheus
 `/metrics` endpoint, per-key sliding-window rate limiting, and a
-1,173-test regression suite. It is evaluated on nine benchmarks
+1,184-test regression suite. It is evaluated on nine benchmarks
 (eight public, one self-curated) totalling approximately 10,300
 samples, including Garak [@nvidia-garak], InjecAgent
 [@injecagent-2024], Liu et al. USENIX 2024 [@liu-2024], deepset

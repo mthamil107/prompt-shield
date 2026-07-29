@@ -29,13 +29,13 @@ FROM python:3.12-slim
 
 # --- OCI / opencontainers labels -------------------------------------------
 LABEL maintainer="prompt-shield contributors" \
-      version="0.3.0" \
-      description="Self-learning prompt injection detection engine for LLM applications" \
+      version="0.7.2" \
+      description="Prompt-injection detection engine for LLM applications" \
       org.opencontainers.image.title="prompt-shield" \
-      org.opencontainers.image.description="Self-learning prompt injection detection engine" \
-      org.opencontainers.image.version="0.3.0" \
-      org.opencontainers.image.url="https://github.com/prompt-shield/prompt-shield" \
-      org.opencontainers.image.source="https://github.com/prompt-shield/prompt-shield" \
+      org.opencontainers.image.description="Prompt-injection detection engine for LLM applications" \
+      org.opencontainers.image.version="0.7.2" \
+      org.opencontainers.image.url="https://github.com/mthamil107/prompt-shield" \
+      org.opencontainers.image.source="https://github.com/mthamil107/prompt-shield" \
       org.opencontainers.image.licenses="Apache-2.0"
 
 # Install curl for the HEALTHCHECK and runtime needs

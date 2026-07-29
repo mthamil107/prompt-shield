@@ -204,10 +204,30 @@ def test_engine_sync_threats_default_verifies(engine, signed_feed, monkeypatch, 
     assert result["signature_count"] == 2
 
 
-def test_engine_sync_threats_default_requires_public_key(engine) -> None:
-    """Default verify=True path must fail loudly when public_key is missing."""
+def test_engine_sync_threats_explicit_verify_requires_public_key(engine) -> None:
+    """Explicit verify=True path must fail loudly when public_key is missing."""
     with pytest.raises(ValueError, match="public_key"):
-        engine.sync_threats("https://example.invalid/v1/signatures.json")
+        engine.sync_threats(
+            "https://example.invalid/v1/signatures.json",
+            verify=True,
+        )
+
+
+def test_engine_sync_threats_no_args_transitional_future_warning(engine) -> None:
+    """v0.7.2 transitional default: bare sync_threats(url) emits FutureWarning
+    but falls back to the legacy unverified path (which itself may fail for
+    other reasons — we only care about the warning being emitted first).
+    v0.8.0 will flip this to a hard ValueError.
+    """
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        try:
+            engine.sync_threats("http://example.invalid/feed.json")
+        except Exception:
+            pass  # legacy path may fail for network / vault reasons — irrelevant here
+        assert any(issubclass(wi.category, FutureWarning) for wi in w), (
+            "Bare sync_threats(url) call must emit FutureWarning naming v0.8.0"
+        )
 
 
 def test_engine_sync_threats_verify_false_deprecation_warning(engine) -> None:

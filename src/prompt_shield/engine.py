@@ -465,7 +465,7 @@ class PromptShieldEngine:
         self,
         feed_url: str | None = None,
         *,
-        verify: bool = True,
+        verify: bool | None = None,
         public_key: str | None = None,
         cache_dir: str | None = None,
     ) -> dict[str, Any]:
@@ -477,19 +477,48 @@ class PromptShieldEngine:
             The URL of the JSON feed. Falls back to ``threat_feed.feed_url``
             in config.
         verify:
-            When ``True`` (default), the signed-feed path is used: the feed's
-            detached minisign signature is verified against ``public_key``
-            before any bytes are trusted, and the verified signatures are
-            merged into the engine's d030 custom-rules detector via
-            :func:`prompt_shield.signatures.apply_to_engine`. When ``False``,
-            the legacy unverified :class:`ThreatFeedManager` path is used;
-            a :class:`DeprecationWarning` is emitted.
+            When ``True``, the signed-feed path is used: the feed's detached
+            minisign signature is verified against ``public_key`` before any
+            bytes are trusted, and the verified signatures are merged into the
+            engine's d030 custom-rules detector via
+            :func:`prompt_shield.signatures.apply_to_engine`.
+            When ``False``, the legacy unverified :class:`ThreatFeedManager`
+            path is used; a :class:`DeprecationWarning` is emitted.
+            When ``None`` (default in v0.7.2), the behaviour depends on
+            whether ``public_key`` is supplied: given a key, verify=True is
+            chosen; otherwise the legacy unverified path is chosen and a
+            :class:`FutureWarning` is emitted noting that v0.8.0 will require
+            ``verify=True`` with a ``public_key``. This transitional default
+            preserves backward compatibility for v0.7.1 callers for one
+            release cycle.
         public_key:
             Base64-encoded minisign public key. Required when ``verify=True``.
         cache_dir:
             Optional cache directory for the verified feed.
         """
         url = feed_url or self._ps_config.get("threat_feed", {}).get("feed_url", "")
+
+        # Transitional default (v0.7.2): choose based on whether a key was
+        # supplied; hard failure moves to v0.8.0 to protect existing PyPI
+        # callers from a surprise ValueError on dependency upgrade.
+        if verify is None:
+            if public_key is None:
+                import warnings
+
+                warnings.warn(
+                    "sync_threats() called without an explicit verify= or "
+                    "public_key= argument. The legacy unverified path is "
+                    "being used for this call, but v0.8.0 will require "
+                    "verify=True with a base64 minisign public_key. To keep "
+                    "the current unverified behaviour past v0.8.0, pass "
+                    "verify=False explicitly; to opt into verification now, "
+                    "pass verify=True and public_key=<pinned key>.",
+                    FutureWarning,
+                    stacklevel=2,
+                )
+                verify = False
+            else:
+                verify = True
 
         if verify:
             if not public_key:
