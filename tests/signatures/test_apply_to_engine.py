@@ -8,22 +8,22 @@ monkey-patch the HTTP call so no network is touched.
 from __future__ import annotations
 
 import base64
+import contextlib
 import hashlib
 import json
 import os
 import warnings
-from pathlib import Path
+from pathlib import Path  # noqa: TC003  (used at runtime in fixtures)
 from typing import Any
 
 import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from prompt_shield.signatures import (
-    SignatureVerificationError,
     SignaturesClient,
+    SignatureVerificationError,
     apply_to_engine,
 )
-
 
 # ---------------------------------------------------------------------------
 # Hermetic minisign helpers (copied from test_client.py to keep the two
@@ -221,10 +221,10 @@ def test_engine_sync_threats_no_args_transitional_future_warning(engine) -> None
     """
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        try:
+        # Legacy path may fail for network / vault reasons — we only care
+        # that the FutureWarning fires first.
+        with contextlib.suppress(Exception):
             engine.sync_threats("http://example.invalid/feed.json")
-        except Exception:
-            pass  # legacy path may fail for network / vault reasons — irrelevant here
         assert any(issubclass(wi.category, FutureWarning) for wi in w), (
             "Bare sync_threats(url) call must emit FutureWarning naming v0.8.0"
         )
@@ -234,15 +234,13 @@ def test_engine_sync_threats_verify_false_deprecation_warning(engine) -> None:
     """verify=False must emit a DeprecationWarning even when the sync itself fails."""
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        try:
+        # The legacy path will fail (no vault, no network) — we only care
+        # that the DeprecationWarning is emitted first.
+        with contextlib.suppress(Exception):
             engine.sync_threats(
                 "http://example.invalid/feed.json",
                 verify=False,
             )
-        except Exception:
-            # The legacy path will fail (no vault, no network) — we only
-            # care about the DeprecationWarning being emitted first.
-            pass
         assert any(issubclass(wi.category, DeprecationWarning) for wi in w), (
             "sync_threats(verify=False) must warn callers that the path is deprecated"
         )

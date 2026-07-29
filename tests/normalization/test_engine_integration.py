@@ -6,6 +6,11 @@ NEED the raw form (d010, d011, d020) still see the pre-normalization text
 via ``context['original_text']``.
 """
 
+# The Cyrillic characters below (р U+0440, о U+043E) are INTENTIONAL —
+# these tests exist to prove the engine catches homoglyph-obfuscated
+# attacks. Suppress ruff's ambiguous-unicode warnings for this file.
+# ruff: noqa: RUF001, RUF002, RUF003
+
 from __future__ import annotations
 
 from typing import Any

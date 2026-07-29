@@ -22,7 +22,9 @@ import logging
 import time
 from typing import Any
 
-from prompt_shield.output_scanners.base import BaseOutputScanner
+from prompt_shield.output_scanners.base import (
+    BaseOutputScanner,  # noqa: TC001  (runtime import: registry dict entries subclass this)
+)
 from prompt_shield.output_scanners.bias_fairness import BiasFairnessOutputScanner
 from prompt_shield.output_scanners.code_injection import CodeInjectionScanner
 from prompt_shield.output_scanners.hallucination import HallucinationOutputScanner

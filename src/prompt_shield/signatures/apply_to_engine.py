@@ -143,7 +143,7 @@ def _install_signatures(engine: PromptShieldEngine, signatures: list[dict[str, A
         )
         return 0
 
-    from prompt_shield.detectors.d030_custom_rules import CustomRule
+    from prompt_shield.detectors.d030_custom_rules import CustomRule  # noqa: TC001
 
     d030 = registry.get("d030_custom_rules")
     if not hasattr(d030, "_rules"):
