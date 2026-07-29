@@ -322,9 +322,7 @@ async def pii_redact(req: PIIRequest):
 class OutputScanRequest(BaseModel):
     """Body for the /scan/output endpoint."""
 
-    text: str = Field(
-        ..., min_length=1, max_length=100_000, description="LLM output text to scan"
-    )
+    text: str = Field(..., min_length=1, max_length=100_000, description="LLM output text to scan")
     scanners: list[str] | None = Field(
         default=None,
         description=(

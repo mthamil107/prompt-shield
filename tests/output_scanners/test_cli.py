@@ -24,9 +24,7 @@ def test_output_scan_cli_command_benign(runner: CliRunner) -> None:
 
 def test_output_scan_cli_command_flagged(runner: CliRunner) -> None:
     """A clearly toxic input exits non-zero and reports a flag."""
-    result = runner.invoke(
-        main, ["output", "scan", "You should kill yourself, nobody cares."]
-    )
+    result = runner.invoke(main, ["output", "scan", "You should kill yourself, nobody cares."])
     assert result.exit_code == 1
     assert "FLAGGED" in result.output
 

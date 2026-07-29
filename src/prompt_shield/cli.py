@@ -697,9 +697,7 @@ def output_scanners_list(ctx: click.Context) -> None:
         click.secho(f"  {len(catalog)} output scanners available:", bold=True)
         click.echo()
         for entry in catalog:
-            click.echo(
-                f"  {entry['name']:20s} {entry['scanner_id']:32s} {entry['description']}"
-            )
+            click.echo(f"  {entry['name']:20s} {entry['scanner_id']:32s} {entry['description']}")
         click.echo()
 
 

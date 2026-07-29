@@ -146,8 +146,8 @@ class PromptShieldEngine:
         # original text back from ctx["original_text"].
         norm_cfg = self._ps_config.get("normalization", {}) or {}
         if norm_cfg.get("enabled", True):
-            self._normalizer: NormalizationPipeline | None = (
-                NormalizationPipeline.from_config(norm_cfg)
+            self._normalizer: NormalizationPipeline | None = NormalizationPipeline.from_config(
+                norm_cfg
             )
         else:
             self._normalizer = None

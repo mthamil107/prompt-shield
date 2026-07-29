@@ -33,10 +33,7 @@ def test_engine_scan_normalizes_cyrillic_homoglyph(engine) -> None:
     assert (
         "d001_system_prompt_extraction" in detector_ids
         or "d003_instruction_override" in detector_ids
-    ), (
-        f"Homoglyph attack bypassed regex detectors after normalization. "
-        f"Got: {detector_ids}"
-    )
+    ), f"Homoglyph attack bypassed regex detectors after normalization. Got: {detector_ids}"
 
 
 def test_engine_scan_normalizes_zero_width(engine) -> None:
