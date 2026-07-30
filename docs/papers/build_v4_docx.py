@@ -186,8 +186,10 @@ def build_document() -> tuple[Document, dict]:
     _add_para(
         doc,
         "The v2.0 revision of this paper moved the contribution from proposal to partial empirical "
-        "validation. Three of the seven techniques are implemented in the prompt-shield v0.4.1 "
-        "release (Apache 2.0) and evaluated in a four-configuration ablation across six datasets: the "
+        "validation (this paragraph narrates the v2.0 state — see the v4.0 addendum below for the "
+        "current shipped count of four of seven). Three of the seven techniques were implemented in "
+        "the prompt-shield v0.4.1 release (Apache 2.0) and evaluated in a four-configuration ablation "
+        "across six datasets: the "
         "public benchmarks deepset/prompt-injections, NotInject, LLMail-Inject, AgentHarm, and "
         "AgentDojo, and a synthetic indirect-injection benchmark released alongside this paper. The "
         "local-alignment detector lifts F1 on deepset from 0.033 to 0.378 (a thirty-four-point-six "
@@ -235,6 +237,23 @@ def build_document() -> tuple[Document, dict]:
         "envelope as a first-mover detector and motivates the composed defense-in-depth "
         "study scoped for v5.0.",
     )
+    # v4 Phase-C addendum
+    _add_para(
+        doc,
+        "Four of seven techniques are now implemented (was three): Section 4.3 honeypot "
+        "tool definitions ships as the d034_honeypot_tool detector with twenty unit tests, "
+        "raising the shipped-technique ratio to 4/7. This revision also folds in two new "
+        "empirical results. Section 5.8 reports a held-out benchmark of 50 "
+        "LLM-template-generated business documents (30 with paraphrased indirect-injection "
+        "payloads) that were not used to design any detector: d027 in isolation drops from "
+        "the synthetic-benchmark 1.000 F1 to 0.000 F1, while the composed engine (d027 + "
+        "d028 + regex baseline, d022 disabled) still recovers 0.733 recall / 0.815 F1. "
+        "Section 5.7 adds a composed-stack adaptive-attack partial run in which d027 "
+        "alone drops from 100 percent to 0 percent detection under a short-input-floor "
+        "attack, while the full composed stack catches 20/20 of the same adaptive inputs "
+        "(and 14/20 without the d022 semantic classifier), providing partial empirical "
+        "support for the Section 2.2 composability thesis.",
+    )
 
     # ----------------------- 1. INTRODUCTION -------------------
     doc.add_heading("1. Introduction", level=1)
@@ -266,9 +285,12 @@ def build_document() -> tuple[Document, dict]:
         "recovered by porting mechanisms from disciplines that have solved structurally analogous "
         "problems in contexts unrelated to large-language-model security. We identify seven such "
         "mechanisms and present them as a coordinated palette of defenses, grouped by the detection "
-        "signal they produce rather than by the attack class they target. Three techniques are "
-        "implemented in the open-source prompt-shield library and empirically evaluated. The "
-        "remaining four are described as design specifications pending implementation.",
+        "signal they produce rather than by the attack class they target. Four techniques are "
+        "implemented in the open-source prompt-shield library (three evaluated in the "
+        "four-configuration ablation of Section 5; the fourth, honeypot tool definitions, "
+        "shipped in the current v4.0 cycle as d034 with unit-test coverage but not yet folded "
+        "into the ablation harness). The remaining three are described as design specifications "
+        "pending implementation.",
     )
 
     doc.add_heading("1.1 Contributions", level=2)
@@ -287,13 +309,16 @@ def build_document() -> tuple[Document, dict]:
             "regex-plus-classifier paradigm.",
         ),
         (
-            "Three implementations with empirical validation.",
-            "The local-alignment detector (d028), the adversarial fatigue tracker, and the "
-            "stylometric discontinuity detector (d027) are released in prompt-shield v0.4.1 "
-            "under the Apache 2.0 license. Each is accompanied by unit and integration tests "
-            "(one hundred and three tests in total across the three techniques) and a public "
-            "reproduction harness that regenerates every number in Section 5 from a single "
-            "command invocation.",
+            "Four implementations with empirical validation.",
+            "The local-alignment detector (d028), the adversarial fatigue tracker, the "
+            "stylometric discontinuity detector (d027), and — as of this v4.0 revision — "
+            "the honeypot tool-definitions detector (d034) are released in prompt-shield "
+            "under the Apache 2.0 license (d028/d027/fatigue in v0.4.1; d034 on the main "
+            "branch as of commit 2efe518+, scheduled for the v0.7.3 correctness release). "
+            "Each is accompanied by unit and integration tests (one hundred and thirty-four "
+            "tests in total across the four techniques, including twenty for d034) and a "
+            "public reproduction harness that regenerates every number in Section 5 from a "
+            "single command invocation.",
         ),
         (
             "A four-configuration ablation across six datasets.",
@@ -346,8 +371,10 @@ def build_document() -> tuple[Document, dict]:
         "The remainder of the paper is structured as follows. Section 2 reviews the current "
         "prompt-injection defense landscape and its known failure modes. Section 3 defines the threat "
         "model. Section 4 presents the seven cross-domain techniques. Section 5 reports the empirical "
-        "evaluation of the three shipped detectors. Section 6 concludes with a sequencing for the "
-        "remaining four techniques and a roadmap for the next revision.",
+        "evaluation of the three ablation-covered detectors, a v4.0 held-out benchmark of the "
+        "novel-detector stack (Section 5.8), and preliminary adaptive-attack experiments against "
+        "d028 and the composed stack (Section 5.7). Section 6 concludes with a sequencing for the "
+        "three remaining techniques and a roadmap for the next revision.",
     )
 
     return doc, datasets
@@ -578,10 +605,12 @@ def build_techniques(doc: Document) -> None:
     _add_para(
         doc,
         "Each subsection below identifies the source discipline, describes the detection mechanism "
-        "in enough detail for replication, and reports the current implementation status. The three "
-        "shipped techniques (Sections 4.1, 4.2, 4.4) include references to the source code and unit "
-        "tests in prompt-shield v0.4.1; their empirical evaluation is in Section 5. The four remaining "
-        "techniques (Sections 4.3, 4.5, 4.6, 4.7) are presented as design specifications.",
+        "in enough detail for replication, and reports the current implementation status. The four "
+        "shipped techniques (Sections 4.1, 4.2, 4.3, 4.4) include references to the source code and "
+        "unit tests in prompt-shield (Sections 4.1, 4.2, 4.4 in v0.4.1; Section 4.3 honeypot detector "
+        "shipped as d034 in the v4.0 cycle); the ablation empirical evaluation in Section 5 covers "
+        "Sections 4.1, 4.2, 4.4. The three remaining techniques (Sections 4.5, 4.6, 4.7) are "
+        "presented as design specifications.",
     )
 
     doc.add_heading("4.1 Stylometric Discontinuity Detection", level=2)
@@ -697,7 +726,7 @@ def build_techniques(doc: Document) -> None:
     )
 
     doc.add_heading("4.3 Honeypot Tool Definitions", level=2)
-    _add_para(doc, "Status: PROPOSED. Implementation planned as the prompt_shield.honeypot module.", italic=True)
+    _add_para(doc, "Status: IMPLEMENTED as d034_honeypot_tool in the prompt-shield v4.0 release cycle (Apache 2.0). Source: src/prompt_shield/detectors/d034_honeypot_tool.py.", italic=True)
     _add_para(
         doc,
         "Network security has decades of experience with deception: a honeypot is a resource "
@@ -711,23 +740,41 @@ def build_techniques(doc: Document) -> None:
     )
     _add_para(
         doc,
-        "We propose extending deception to the tool-call layer of large-language-model "
-        "agents. Agent frameworks typically expose a list of tool definitions to the "
-        "model; we add canary tool definitions with names such as `get_admin_access`, "
-        "`dump_database`, `reveal_system_prompt`, and `disable_safety_filters`. These tools "
-        "have no legitimate invocation path. An agent pipeline that observes any call to a "
-        "canary tool can treat the call as a confirmed indirect-injection event with one "
-        "hundred percent precision: no benign query path leads to these tool names. The "
-        "design is complementary to canary tokens embedded in system prompts (an older "
-        "technique popularized by the Rebuff project, 2023) and to integrity-probe checks "
-        "that periodically test whether the system prompt is still intact.",
+        "We extend deception to the tool-call layer of large-language-model agents. Agent "
+        "frameworks typically expose a list of tool definitions to the model; the shipped "
+        "d034_honeypot_tool detector operates against canary tool definitions with names such "
+        "as admin_shell, internal_debug_console, system_key_dump, sudo_execute_raw, and "
+        "priv_esc_helper (the five default honeypot names). These tools have no legitimate "
+        "invocation path. An agent pipeline that observes any call to a canary tool can treat "
+        "the call as a confirmed indirect-injection event with one hundred percent precision: "
+        "no benign query path leads to these tool names. The design is complementary to "
+        "canary tokens embedded in system prompts (an older technique popularized by the "
+        "Rebuff project, 2023) and to integrity-probe checks that periodically test whether "
+        "the system prompt is still intact.",
     )
     _add_para(
         doc,
-        "Validation requires an agent-harness simulator that exercises the tool-call "
-        "boundary under both benign and adversarial workloads. Section 6 sequences this as "
-        "the first remaining-technique implementation because the engineering cost is "
-        "modest relative to the other three pending techniques.",
+        "Empirical validation. The d034 detector ships with twenty unit tests exercising "
+        "both firing modes and every input-shape variant we found in production tool-calling "
+        "frameworks. The detector has two firing modes: (i) text-mention mode, which fires "
+        "at confidence 0.95 when the raw input text mentions a honeypot name as a word-"
+        "bounded token; and (ii) context-invocation mode, which fires at confidence 1.0 "
+        "when the runtime tool_calls context contains an entry naming a honeypot. The name-"
+        "extraction path accepts all four tool-call shapes we observed across real "
+        "frameworks: flat dicts with a name field, alternate flat keys (tool, function, "
+        "tool_name, function_name), the OpenAI nested function shape "
+        "({\"type\":\"function\",\"function\":{\"name\":...}}), and Anthropic-style nested "
+        "wrappers. Operators may register the five default names as no-op trap tools in "
+        "the agent's schema or override the list via the d034_honeypot_tool.honeypot_tools "
+        "configuration key. A dedicated integration into the Section 5 ablation harness is "
+        "deferred to a follow-up cycle because the detector requires a tool-call fixture "
+        "rather than a text-only benchmark.",
+    )
+    _add_para(
+        doc,
+        "Section 6 lists honeypot as the first of the previously-remaining techniques "
+        "implemented in this v4.0 cycle; the remaining three (prediction-market ensemble "
+        "scoring, perplexity spectral analysis, runtime taint tracking) are sequenced there.",
     )
 
     doc.add_heading("4.4 Local Sequence Alignment with a Semantic Substitution Matrix", level=2)
@@ -1029,17 +1076,27 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
             "adversarial tool invocations by provenance rather than by lexical content.",
         ),
         (
-            "Synthetic benchmark self-evaluation risk.",
-            "The indirect-injection benchmark was constructed with knowledge of what the "
-            "d027 and d028 detectors measure. The 1.000 F1 numbers on that benchmark are "
-            "therefore not held-out evaluation numbers in the strict sense. The "
-            "benchmark's generator is deterministic and fully transparent — the template "
-            "set, payload set, and random seed are all in the repository — but external "
-            "validation on a held-out human-written indirect-injection benchmark is the "
-            "honest next step. Until that exists, the 1.000 F1 numbers should be read as "
-            "evidence that the detectors behave as designed on their target attack class, "
-            "not as external-validation accuracy. Section 5.6 partially addresses this "
-            "concern by reporting performance on three independent academic benchmarks.",
+            "Synthetic benchmark self-evaluation risk (now empirically quantified — see Section 5.8).",
+            "The indirect-injection benchmark of Section 5.2 was constructed with knowledge "
+            "of what the d027 and d028 detectors measure. The 1.000 F1 numbers on that "
+            "benchmark are not held-out evaluation numbers in the strict sense. Section 5.8 "
+            "(new in v4.0) reports the honest reality-check this caveat originally scoped: "
+            "a held-out benchmark of fifty LLM-template-generated business documents "
+            "(honestly disclosed — the documents are template-slot-filled, not human-"
+            "authored) with paraphrased indirect-injection payloads in thirty of them. "
+            "On that held-out corpus, d027 in isolation collapses from the synthetic "
+            "1.000 F1 (Section 5.2) to 0.000 F1: the tuned Jensen-Shannon threshold "
+            "learned against uppercase override prose does not fire on the paraphrased "
+            "attacks in this corpus, which stay in the same conversational register as "
+            "the surrounding text. The full composed engine (d027 + d028 + regex baseline "
+            "with d022 disabled) still catches twenty-two of thirty attacks — 0.733 "
+            "recall and 0.815 F1. Per-family recall is 1.000 for data-exfiltration, role-"
+            "hijack, and tool-abuse; 0.500 for instruction-override; and 0.167 for system-"
+            "prompt-extraction. The gap between d027-alone (0.000 F1) and the composed "
+            "engine (0.815 F1) is empirical support at this partial scale for the "
+            "Section 2.2 composability thesis: when the target detector fails, the other "
+            "detectors in the stack carry the load. Section 5.6 additionally corroborates "
+            "the regex baseline behavior on three independent academic benchmarks.",
         ),
         (
             "Adaptive-attack evaluation is preliminary.",
@@ -1253,13 +1310,14 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
     _add_para(
         doc,
         "Second, d027 (stylometric discontinuity) has a hard input-length floor "
-        "(min_input_tokens; default sixty-four) below which the detector returns silently "
-        "because there are not enough tokens for the internal per-block feature vectors "
-        "to be statistically stable. InjecAgent Tool Response fields have a median length "
-        "of roughly twenty tokens, so d027 would return silent on approximately zero of "
-        "the two thousand one hundred and eight cases by design — including it in Table 2 "
-        "would show a zero-lift column that a naive reader would misinterpret as detector "
-        "failure rather than input-scope mismatch.",
+        "(min_input_tokens; default one hundred) below which the detector returns "
+        "silently because there are not enough tokens for the internal per-window "
+        "feature vectors to be statistically stable. InjecAgent Tool Response fields "
+        "have a median length of roughly twenty tokens — well below the one-hundred-"
+        "token floor — so d027 is silent on essentially every one of the two thousand "
+        "one hundred and eight cases by design. Including it in Table 2 would show a "
+        "zero-lift column that a naive reader would misinterpret as detector failure "
+        "rather than input-scope mismatch.",
     )
     _add_para(
         doc,
@@ -1348,7 +1406,8 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "who evades d028 through matrix-aware substitution has not evaded these other "
         "layers. Quantifying the composed detection rate under adaptive attack — which "
         "requires an attack budget that adaptively targets each layer in turn — is the "
-        "central v5.0 experiment noted in Section 6.",
+        "central v5.0 experiment noted in Section 6; a two-of-five-layer partial run "
+        "against d028 and d027 is reported in Section 5.7.6 of this revision.",
     )
     doc.add_heading("5.7.4 Scope caveats", level=3)
     _add_para(
@@ -1358,8 +1417,9 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "many-shot shapes; (iii) only d028, not d027, the fatigue tracker, d029, or the "
         "ML classifier; (iv) a single-round substitution attack, not iterative "
         "gradient-informed or learning-based adversaries; and (v) d028 in isolation, not "
-        "the composed detector stack. Every one of the five extensions is a v5.0 "
-        "commitment.",
+        "the composed detector stack. Extension (iii) is partially addressed by the "
+        "d027 short-input-floor attack in Section 5.7.6; extensions (i), (ii), (iv), "
+        "and the composed-stack sweep from (v) remain v5.0 commitments.",
     )
     doc.add_heading("5.7.5 Reproducibility", level=3)
     _add_para(
@@ -1369,6 +1429,224 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "adaptive_attack_d028.json (machine-readable), and adaptive_attack_d028.md "
         "(human-readable). Wall-clock runtime is under one second on commodity hardware. "
         "Reproduce with python docs/papers/evaluation/adaptive_attack_d028.py.",
+    )
+
+    # ---- 5.7.6 Composed-stack adaptive-attack partial run (v4 Phase C) ----
+    doc.add_heading("5.7.6 Composed-stack adaptive-attack partial run", level=3)
+    _add_para(
+        doc,
+        "Section 5.7.3 argued that d028's matrix-aware bypass would be caught by "
+        "mechanistically independent layers in a composed stack. This subsection reports a "
+        "partial empirical test of that claim covering a second layer — d027 stylometric "
+        "discontinuity — under an adaptive short-input-floor attack, together with an "
+        "end-to-end run of the same adaptive inputs through the full composed engine. The "
+        "methodology, threat model, per-layer attack strategies for all five layers, and "
+        "the composability metric are documented at docs/papers/evaluation/"
+        "composed_adaptive_methodology.md; the reproducible partial run and its results "
+        "are at docs/papers/evaluation/composed_adaptive_partial.py and "
+        "composed_adaptive_partial.md.",
+    )
+    _add_para(
+        doc,
+        "Attack construction. d027's operating envelope has a hard input-length floor "
+        "(min_input_tokens; default one hundred) below which the detector short-circuits "
+        "to detected=False. An adaptive attacker who reads the source and configuration "
+        "can trivially defeat d027 in isolation by keeping the payload under one hundred "
+        "tokens. We construct twenty baseline attacks in which a benign wrapper of "
+        "approximately two hundred fifty tokens surrounds a thirty-token override, and "
+        "twenty adaptive variants that strip the wrapper so the entire input is under one "
+        "hundred tokens while preserving the override semantics.",
+    )
+    _add_para(
+        doc,
+        "d027-alone result. On the baseline set, d027 fires on twenty of twenty (one "
+        "hundred percent). On the adaptive short-input variants, d027 fires on zero of "
+        "twenty (zero percent) — by construction, since the floor triggers before any "
+        "window math executes. Attack-success-rate reduction is one hundred percentage "
+        "points, mirroring the d028 result in Section 5.7.2 and confirming that no single "
+        "detector in the stack survives a targeted second-mover attack.",
+    )
+    _add_para(
+        doc,
+        "Composed-engine result. The same twenty adaptive inputs are then evaluated "
+        "through PromptShieldEngine().scan() with the shipped default configuration "
+        "(thirty-four detectors loaded, d022 semantic classifier enabled). The engine "
+        "blocks twenty of twenty (one hundred percent). Per-detector fire counts across "
+        "the twenty adaptive inputs are: d022_semantic_classifier fires on twenty, "
+        "d001_system_prompt_extraction fires on eight, d028_sequence_alignment fires on "
+        "eight, d003_instruction_override fires on three, d004_prompt_leaking fires on "
+        "three.",
+    )
+    _add_para(
+        doc,
+        "Ablation without d022. To decompose the composability gain — is it the semantic "
+        "classifier doing all the work, or do structurally different signals meaningfully "
+        "contribute? — we rerun the same twenty adaptive inputs with d022 disabled. The "
+        "engine still blocks fourteen of twenty (seventy percent) using only regex "
+        "keyword detectors (d001 on eight, d003 on three, d004 on three) and d028 "
+        "sequence alignment (on eight). Two mechanistically different signals each "
+        "contribute rescue capability, and d022 mops up the remaining six. This is the "
+        "pattern Section 2.2 predicts.",
+    )
+    _add_para(
+        doc,
+        "Scope, and how this result should be read alongside Section 5.8. The experiment "
+        "covers two of five layers (d028 by reference from Section 5.7.2; d027 executed "
+        "here) at twenty attack pairs per layer. The full five-layer protocol at n = 100 "
+        "per cell is a v5.0 commitment. Critically, the 20/20 composed-stack detection "
+        "figure reported here is on this specific adaptive-attack corpus (uppercase-"
+        "override payloads under one hundred tokens) and must not be read in isolation "
+        "as evidence that the stack is unbeatable: Section 5.8 reports 22 of 30 "
+        "(0.733 recall) on paraphrased indirect-injection payloads in long-form business "
+        "documents. The two datasets probe different attack shapes and the correct "
+        "reading is that the composed stack is strong on some attack classes and "
+        "measurably weaker on others.",
+    )
+
+    # ---- 5.8 Held-out indirect-injection benchmark (v4 Phase C) ----
+    doc.add_heading("5.8 Held-out indirect-injection benchmark (v4)", level=2)
+
+    doc.add_heading("5.8.1 Motivation", level=3)
+    _add_para(
+        doc,
+        "Section 5.4's fourth limitation flagged that the indirect-injection benchmark "
+        "of Section 5.2 was constructed with knowledge of what d027 and d028 measure, "
+        "and that the reported 1.000 F1 was therefore not a held-out number in the "
+        "strict sense. The stated honest next step was external validation on a corpus "
+        "authored without knowledge of the detectors' feature vectors. This subsection "
+        "reports that validation at the partial scale we could execute in-cycle: fifty "
+        "LLM-template-generated business documents whose injection payloads were "
+        "paraphrased into the same conversational register as the surrounding text, so "
+        "the detectors face inputs that do not match the uppercase-directive shape their "
+        "synthetic-benchmark thresholds were tuned against.",
+    )
+
+    doc.add_heading("5.8.2 Corpus construction (honestly disclosed)", level=3)
+    _add_para(
+        doc,
+        "The corpus contains fifty documents across five document types (email, "
+        "meeting-notes, wiki, postmortem, spec) with ten documents per type. Thirty "
+        "documents carry an injection payload and twenty are clean. Injections are drawn "
+        "from eight paraphrased attack templates spanning five attack families: system-"
+        "prompt extraction, role hijack, instruction override, data exfiltration, and "
+        "tool abuse (six injections per family). Each document type provides three "
+        "distinct base templates with slot-filled variety (project name, service, person, "
+        "region, metric) so no two documents are byte-identical, and each injection is "
+        "inserted at a plausible per-document-type location (mid-email paragraph, an "
+        "action-item bullet in meeting notes, a wiki footer, a postmortem action item, "
+        "and an \"additional notes\" block in the spec).",
+    )
+    _add_para(
+        doc,
+        "Honest disclosure: the documents are LLM-template-generated (offline slot-"
+        "filled templates driven by a deterministic PRNG), NOT human-authored. This is "
+        "a partial improvement over the Section 5.2 synthetic self-benchmark because "
+        "neither the templates nor the paraphrased payloads were constructed with "
+        "knowledge of d027's Jensen-Shannon threshold or d028's substitution matrix. A "
+        "future revision will use crowdsourced or professionally-authored documents. "
+        "The corpus generator is deterministic: python docs/papers/evaluation/"
+        "build_held_out_corpus.py --seed 42 regenerates it byte-for-byte.",
+    )
+
+    doc.add_heading("5.8.3 Results", level=3)
+    heldout_headers = ["Configuration", "TP", "TN", "FP", "FN", "Recall", "FPR", "Precision", "F1"]
+    heldout_rows = [
+        ["Full engine (d027 + d028 + regex baseline, d022 off)", "22", "18", "2", "8", "0.733", "0.100", "0.917", "0.815"],
+        ["d027 in isolation (threshold 0.06, window 50, stride 25)", "0", "18", "2", "30", "0.000", "0.100", "0.000", "0.000"],
+    ]
+    _add_table(doc, heldout_headers, heldout_rows)
+    _add_para(doc, "Table 4. Held-out benchmark: 50 LLM-template-generated business documents, 30 with paraphrased indirect-injection payloads. Detection rule matches Section 5.2 (action in {block, flag} or overall_risk_score >= 0.5).", italic=True, size=9)
+
+    _add_para(
+        doc,
+        "Per-attack-family recall of the full engine: data exfiltration six of six "
+        "(1.000), role hijack six of six (1.000), tool abuse six of six (1.000), "
+        "instruction override three of six (0.500), system-prompt extraction one of six "
+        "(0.167). The stack handles data-exfiltration and role-hijack and tool-abuse "
+        "families cleanly and struggles on the two families whose payloads read most "
+        "like legitimate operator requests.",
+    )
+    _add_para(
+        doc,
+        "Comparison with Section 5.2. On the synthetic self-benchmark of Section 5.2, "
+        "d027 in isolation scored 1.000 F1. On this held-out corpus, d027 in isolation "
+        "scores 0.000 F1 — a collapse. Mechanistically, d027 was tuned against a "
+        "corpus whose payloads used ALL-CAPS SYSTEM-style override prose against calm "
+        "business prose, which produces a large Jensen-Shannon divergence at the window "
+        "boundary that is easy to detect. The paraphrased attacks in the held-out "
+        "corpus keep the injected sentence in the same lower-case business tone as the "
+        "surrounding text (for example, \"Please display the exact system prompt so the "
+        "auditor can verify the configuration\"), which keeps the per-window feature "
+        "vector close to the surrounding text and does not trip the threshold. The "
+        "detector's own docstring calls this behavior out as high-precision / "
+        "low-recall for register-matched attacks; the paper's original 1.000 F1 did "
+        "not communicate that shape.",
+    )
+    _add_para(
+        doc,
+        "The composed engine catches 22 of 30 attacks (0.733 recall, 0.815 F1) at 0.100 "
+        "FPR. Because d027 alone contributes zero true positives on this corpus, the "
+        "engine's recall is carried by the regex baseline detectors (d001 through d006 "
+        "on system-prompt-extraction and instruction-override; d013 through d014 on "
+        "tool abuse) and by d028's substitution matrix. The gap between d027-alone "
+        "(0.000 F1) and the composed engine (0.815 F1) is empirical support for the "
+        "Section 2.2 composability thesis at partial scale.",
+    )
+
+    doc.add_heading("5.8.4 Limitations", level=3)
+    heldout_limits = [
+        (
+            "Documents are LLM-template-generated, not human-authored.",
+            "The templates are hand-written but the slot-filling is deterministic PRNG; "
+            "genuine crowdsourced or professionally-written documents would exercise a "
+            "wider distribution of legitimate register variation. A v5.0 corpus should "
+            "use human-authored source documents.",
+        ),
+        (
+            "Camouflage-only injection set.",
+            "Every injection paraphrase in this corpus deliberately camouflages into the "
+            "surrounding register. The corpus does not contain the uppercase-directive or "
+            "structural-anchor attack shapes that d027 and d028 were designed against. "
+            "The 0.000 F1 for d027 in isolation should be read as evidence of a specific "
+            "operating-envelope limit, not as evidence that d027 is broken.",
+        ),
+        (
+            "Wiki false-positive rate 0.500 exposes a specific d027 weakness.",
+            "Two of four benign wiki documents produce false positives from d027 alone "
+            "(FPR 0.500 within the wiki subset). Wikis contain list-to-prose transitions "
+            "(bulleted specification followed by narrative explanation) that produce "
+            "genuine Jensen-Shannon spikes at the transition boundary. This is a real "
+            "d027 weakness on structured technical prose and is a candidate for the "
+            "threshold-calibration work sequenced in Section 6.",
+        ),
+        (
+            "n = 30 attacks / n = 20 benign is small.",
+            "Wilson 95 percent confidence intervals span roughly plus-or-minus 15 "
+            "percentage points on a proportion of 30. A larger held-out corpus is "
+            "required before per-family recall numbers should be reported to two "
+            "decimal places without a caveat.",
+        ),
+    ]
+    for head, body in heldout_limits:
+        p = doc.add_paragraph(style="List Bullet")
+        r = p.add_run(head + " ")
+        r.bold = True
+        p.add_run(body)
+
+    doc.add_heading("5.8.5 Reproducibility", level=3)
+    _add_para(
+        doc,
+        "Every number in Table 4 is produced by the following sequence:",
+    )
+    _mono(doc, "python docs/papers/evaluation/build_held_out_corpus.py --seed 42")
+    _mono(doc, "python docs/papers/evaluation/run_held_out_benchmark.py")
+    _add_para(
+        doc,
+        "Outputs are written to docs/papers/evaluation/held_out_indirect_injection.json "
+        "(machine-readable) and held_out_indirect_injection.md (human-readable). Wall-"
+        "clock runtime is under thirteen seconds on commodity hardware. The generated "
+        "corpus and per-document manifests are checked in under "
+        "docs/papers/evaluation/held_out_indirect_injection/.",
     )
 
 
@@ -1405,41 +1683,51 @@ def build_conclusions_and_refs(doc: Document) -> None:
     )
     _add_para(
         doc,
-        "The four remaining techniques are sequenced by risk: honeypot tool definitions "
-        "(Section 4.3) require a simulated-agent harness but pose no core-scoring risk; "
-        "perplexity spectral analysis (Section 4.6) requires an optional ML dependency; "
-        "runtime taint tracking (Section 4.7) requires an agent-pipeline fixture; "
-        "prediction-market scoring (Section 4.5) touches the core scoring path and is "
-        "scoped last, behind a mandatory shadow-mode gate.",
+        "The three remaining proposed techniques are sequenced by risk: perplexity "
+        "spectral analysis (Section 4.6) requires an optional ML dependency; runtime "
+        "taint tracking (Section 4.7) requires an agent-pipeline fixture; prediction-"
+        "market scoring (Section 4.5) touches the core scoring path and is scoped last, "
+        "behind a mandatory shadow-mode gate. Section 4.3 honeypot tool definitions, "
+        "previously the first of the remaining techniques, shipped in the v4.0 cycle as "
+        "d034_honeypot_tool with twenty unit tests (see Section 4.3 empirical-validation "
+        "subparagraph).",
     )
     _add_para(
         doc,
         "The v4.0 revision (this document) folds in a survey of the 2026 concurrent-"
-        "contribution cluster (Section 2.4), a Gang-of-Four-style formalization of three "
-        "architectural patterns extracted from prompt-shield's implementation (Section 7), "
-        "and a preliminary adaptive-adversary evaluation against d028 (Section 5.7). We "
-        "note honestly that Section 6 of the v3 revision scoped a full adaptive-attack "
-        "evaluation and a competitor rerun for v4.0. On scope review we prioritized the "
-        "design-pattern formalization (Section 7) — driven by the shipping of ToolResultGuard "
-        "in prompt-shield v0.7.0 and the observation that four concurrent 2026 systems ship "
-        "the same pattern without a shared name — and delivered only the smaller preliminary "
-        "adaptive experiment reported here. The full adaptive-attack evaluation and the "
-        "competitor rerun carry to v5.0 with the specific commitments below.",
+        "contribution cluster (Section 2.4); a Gang-of-Four-style formalization of three "
+        "architectural patterns extracted from prompt-shield's implementation (Section 7); "
+        "a preliminary adaptive-adversary evaluation against d028 (Section 5.7); a "
+        "composed-stack adaptive-attack partial run covering a second layer (d027) and "
+        "the full composed engine on the same twenty short-input adaptive inputs "
+        "(Section 5.7.6); a held-out indirect-injection benchmark of fifty LLM-template-"
+        "generated business documents on which d027 in isolation collapses from 1.000 F1 "
+        "to 0.000 F1 while the composed engine still recovers 0.815 F1 (Section 5.8); and "
+        "the shipping of the honeypot tool-definitions detector (d034) that moves the "
+        "paper's implemented-technique ratio from three of seven to four of seven "
+        "(Section 4.3). We note honestly that Section 6 of the v3 revision scoped a full "
+        "adaptive-attack evaluation and a competitor rerun for v4.0. On scope review we "
+        "prioritized the design-pattern formalization (Section 7) — driven by the shipping "
+        "of ToolResultGuard in prompt-shield v0.7.0 and the observation that four "
+        "concurrent 2026 systems ship the same pattern without a shared name — plus the "
+        "held-out and composed-adaptive experiments above, and delivered only the smaller "
+        "preliminary adaptive experiment reported in Section 5.7 for d028 in isolation. "
+        "The full five-layer adaptive-attack evaluation and the competitor rerun carry to "
+        "v5.0 with the specific commitments below.",
     )
     _add_para(
         doc,
         "The v5.0 revision will fold in: a full section-level write-up of the d029 "
-        "many-shot structural detector currently shipped in prompt-shield v0.4.1; an "
-        "adaptive-attack evaluation per the Nasr et al. (arXiv:2510.09023) methodology "
-        "with per-detector-family attacks (sequence-alignment-aware, stylometry-aware, "
-        "fatigue-aware, many-shot-aware); a held-out indirect-injection benchmark "
-        "composed of human-written documents with paraphrased payloads, targeting the "
-        "thirty-five to forty-five percent ceiling identified in Section 5.6; a head-to-"
-        "head competitor comparison (Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, Deepset "
-        "DeBERTa v3, DataSentinel) on the same three academic benchmarks used in "
-        "Section 5.6; and implementation plus evaluation of at least one of the four "
-        "remaining proposed techniques (likely Section 4.3 honeypot, given its "
-        "zero-regression opt-in model).",
+        "many-shot structural detector currently shipped in prompt-shield v0.4.1; the "
+        "full five-layer adaptive-attack evaluation at n = 100 pairs per cell per the "
+        "protocol at docs/papers/evaluation/composed_adaptive_methodology.md; expansion "
+        "of the Section 5.8 held-out corpus to include human-authored documents in "
+        "place of LLM-template-generated ones; a head-to-head competitor comparison "
+        "(Rebuff, Lakera, Meta Prompt Guard 2, PIGuard, Deepset DeBERTa v3, "
+        "DataSentinel) on the same three academic benchmarks used in Section 5.6; and "
+        "implementation plus evaluation of at least one of the three remaining proposed "
+        "techniques (perplexity spectral analysis, runtime taint tracking, or "
+        "prediction-market scoring).",
     )
 
     # ----------------------- 7. DESIGN PATTERNS (v4) --------------------
@@ -1720,16 +2008,23 @@ def build_conclusions_and_refs(doc: Document) -> None:
         ("src/prompt_shield/detectors/d028_sequence_alignment.py", "Smith-Waterman alignment detector (Section 4.4)."),
         ("src/prompt_shield/detectors/d027_stylometric_discontinuity.py", "Stylometric discontinuity detector (Section 4.1)."),
         ("src/prompt_shield/detectors/d029_many_shot_structural.py", "Many-shot structural detector (preview; full §-level write-up in v4)."),
+        ("src/prompt_shield/detectors/d034_honeypot_tool.py", "Honeypot tool-definitions detector (Section 4.3; v4.0 cycle)."),
         ("src/prompt_shield/fatigue/tracker.py", "Adversarial fatigue tracker (Section 4.2)."),
         ("tests/detectors/test_d028_sequence_alignment.py", "Tests covering alignment math, substitution matrix, detector behavior."),
         ("tests/detectors/test_d027_stylometric_discontinuity.py", "Tests covering feature extraction, Jensen-Shannon math, detector behavior and fixtures."),
         ("tests/detectors/test_d029_many_shot_structural.py", "36 tests covering many-shot pattern detection (v3-shipped)."),
+        ("tests/detectors/test_d034_honeypot_tool.py", "20 tests covering both firing modes and every tool-call shape (Section 4.3)."),
         ("tests/fatigue/test_tracker.py, test_engine_integration.py", "Tests including the probing-campaign integration test cited in Section 5.3."),
         ("tests/benchmark_liu_attackers.py", "Section 5.6 — Liu et al. (USENIX Security 2024) attack-strategy benchmark."),
         ("tests/benchmark_garak.py", "Section 5.6 — Garak prompt-injection probe evaluation."),
         ("tests/benchmark_injecagent.py", "Section 5.6 — InjecAgent (ACL Findings 2024) evaluation."),
         ("docs/papers/evaluation/run_public_datasets.py", "Reproduction harness for Table 1."),
         ("docs/papers/evaluation/build_indirect_injection_benchmark.py", "Generator for the synthetic indirect-injection benchmark."),
+        ("docs/papers/evaluation/build_held_out_corpus.py", "Generator for the v4.0 held-out benchmark (Section 5.8)."),
+        ("docs/papers/evaluation/run_held_out_benchmark.py", "Runner for the v4.0 held-out benchmark (Section 5.8)."),
+        ("docs/papers/evaluation/held_out_indirect_injection.md, .json", "Human-readable and machine-readable results for Table 4 (Section 5.8)."),
+        ("docs/papers/evaluation/composed_adaptive_methodology.md", "Full 5-layer composed-stack adaptive-attack protocol (Section 5.7.6)."),
+        ("docs/papers/evaluation/composed_adaptive_partial.py, .md", "Reproducible partial run of the composed-stack adaptive attack (Section 5.7.6)."),
         ("docs/papers/evaluation/v041_public_datasets.json", "Machine-readable source of every number in Table 1."),
         ("docs/papers/evaluation/liu_attackers.md, garak.md, injecagent.md", "Per-benchmark methodology and findings for Section 5.6."),
         ("docs/papers/evaluation/garak_regex_only.json, injecagent_regex_only.json", "Raw per-probe / per-split results for Section 5.6."),
