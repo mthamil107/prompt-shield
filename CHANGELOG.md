@@ -22,40 +22,56 @@ refactor of the core `scan()` path. Test suite: 1,184 -> 1,232 passing,
 - **`d034_honeypot_tool` detector — the fourth shipped cross-domain
   technique.** Deception-technology-inspired detector that ships with
   five default honeypot tool names
-  (`admin_shell`, `debug_execute`, `system_override`, `root_access`,
-  `bypass_filter`) and supports two operating modes
-  (`text_mention` for prose references and `nested_invocation` for
-  actual tool-call structures). Understands four tool-call container
-  shapes: raw OpenAI `tool_calls`, Anthropic `content` blocks with
-  `tool_use`, MCP-style `function.name`, and bare `{"name": ...}`
-  dictionaries. Nested-invocation matches fire at confidence 1.0
-  regardless of surrounding text. Emits `MatchDetail` records with
-  `honeypot_name` and `mode` metadata for downstream analysis.
-  Compliance mappings: OWASP LLM06 (Excessive Agency) and MITRE ATLAS
-  T0051.010 (LLM Meta Prompt Extraction — Honeytoken).
-  - 20 unit tests covering all four container shapes plus mixed
-    prose/nested inputs.
-  - Bumps `paper/paper.md`'s "three of seven techniques implemented"
-    line to "four of seven" (paper.md refresh scheduled for the JOSS
-    submission window in the same release cycle).
+  (`admin_shell`, `internal_debug_console`, `system_key_dump`,
+  `sudo_execute_raw`, `priv_esc_helper`) and supports two operating
+  modes (`text_mention` for prose references, confidence 0.95; and
+  `context_invocation` for structured tool-call context, confidence
+  1.0). Understands four tool-call container shapes: flat
+  `{"name": "..."}`, alternate-key flat (`tool_name`, `function_name`),
+  OpenAI-nested `{"type": "function", "function": {"name": "..."}}`,
+  and nested-wrapper `{"tool": {"name": "..."}}`. Emits `MatchDetail`
+  records naming the specific honeypot(s) hit, and populates
+  `result.metadata['mode']` and `mentioned_honeypots` /
+  `invoked_honeypots` for downstream analysis. Compliance mappings:
+  OWASP LLM Top-10 (2025) LLM01 + LLM06; OWASP Agentic ASI02 + ASI07
+  + ASI10; MITRE ATLAS AML.T0053 + AML.T0051.
+  - 20 unit tests covering all four container shapes, word-boundary
+    edge cases (`admin_shellish` no-fire), text-vs-context precedence,
+    malformed-context tolerance, and a realistic indirect-injection
+    scenario.
+  - Additive helper `prompt_shield.tool_guard._honeypot`
+    (`check_tool_calls_for_honeypot(...)`) for callers holding an
+    already-collected tool-call list. Deep `ToolResultGuard` auto-check
+    on every scan intentionally deferred; the primitive is available
+    today, the wiring is a v0.8.0 follow-up.
+  - `paper/paper.md` (the JOSS submission) is **not** touched by this
+    release; a refresh (33 → 34 detectors, 1,184 → 1,232 tests,
+    version 0.7.2 → 0.7.3, sentence naming d034) is scheduled as
+    part of the JOSS submission window on/around 2026-08-12.
 
 ### Changed
 
 - **`d028_sequence_alignment` threshold raised 0.60 -> 0.63.** In v0.7.2
   the detector flagged at similarity >= 0.60 against the 187-entry
   signature database. The tuned floor reduces borderline noise on
-  paraphrased benign inputs that shared reveal-family lexical overlap
+  paraphrased benign inputs that share reveal-family lexical overlap
   without carrying reveal-family intent. Documented as *forward
-  hardening* — the aggregate NotInject false-positive count
-  (`13/339`, 3.8%) is dominated by unrelated code-fragment matches in
-  `d005/d022`, not by d028's slack, and is unchanged by this tune.
-  The full NotInject FP fix is tracked for v0.8.0 in the roadmap.
-- **d028 reveal-family dampening.** Signature entries tagged with the
-  `reveal_family` label now contribute a dampened similarity score
-  when the incoming text lacks any reveal-family lexical anchors
-  (`show`, `print`, `reveal`, `display`, etc.), further reducing the
-  paraphrase-collision surface on benign business text. Implemented
-  as an internal score adjustment; no config surface change.
+  hardening* — the empirical NotInject false-positive count is
+  **unchanged at 11/339** (independently reproduced during Phase B
+  review). The actual FP drivers are role-hijack (`pretend to be ...`)
+  and data-exfiltration (`system settings`) needle alignments, not
+  reveal-family synonym slippage. The full NotInject FP fix requires
+  needle-level work and is tracked for v0.8.0 in the roadmap. The
+  paper §5.4 wording was corrected in the v4.0 PDF rebuild to reflect
+  this reality (not the earlier promise).
+- **d028 reveal-family dampening.** The reveal-family synonym group in
+  `_d028_substitution_matrix.py` now carries `dampening_factor: 0.5`
+  (all other 14 groups keep 1.0); multi-group words use `max`
+  dampening so genuine attack vocabulary that overlaps the reveal
+  family is not double-punished. Implemented via a per-group tuple
+  in `SYNONYM_GROUPS`; the `score_pair()` public signature is
+  unchanged. Effect on NotInject is nil (see above); the guard is
+  a **forward** protection against reveal-family regressions.
 - **`sync_threats()` FutureWarning message names a specific v0.8.0
   target date.** The transitional-default warning added in v0.7.2 now
   reads "v0.8.0 (targeted no later than 2026-10-01) will require
