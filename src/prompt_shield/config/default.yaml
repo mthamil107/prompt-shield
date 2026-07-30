@@ -191,7 +191,15 @@ prompt_shield:
     d028_sequence_alignment:
       enabled: true
       severity: high
-      threshold: 0.6
+      # Threshold raised 0.60 -> 0.63 (v0.7.3): precautionary hardening
+      # against the reveal-family FP mode that paper §5.4 called out.
+      # Empirical NotInject count is UNCHANGED at 11 FPs — the actual
+      # driver is role_hijack ("pretend to be ...") and data_exfiltration
+      # ("system settings") needles, not reveal-family synonym slippage.
+      # Reveal-family dampening_factor=0.5 in _d028_substitution_matrix.py
+      # is a forward guard against reveal-family regressions; the NotInject
+      # fix still requires needle-level work, tracked for v0.8.0.
+      threshold: 0.63
       match_bonus: 3
       synonym_bonus: 2
       mismatch_penalty: -1

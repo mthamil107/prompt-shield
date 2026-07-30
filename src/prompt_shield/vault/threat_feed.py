@@ -125,17 +125,50 @@ class ThreatFeedManager:
     # Remote sync
     # ------------------------------------------------------------------
 
+    # Connect + read timeouts for the remote-fetch path. Kept as
+    # module-level constants (rather than plain magic numbers) so tests
+    # can monkeypatch them if they need to simulate a slow feed server.
+    # ``urllib.request.urlopen`` accepts a single ``timeout`` kwarg that
+    # applies to both connect and read on modern CPython, so we pass the
+    # larger of the two (read) here — five seconds is not enough for a
+    # ~10 MB signed feed on a residential uplink.
+    _SYNC_FEED_TIMEOUT_SECONDS: float = 30.0
+
     def sync_feed(self, feed_url: str) -> dict:
         """Download a remote threat feed and import it.
 
         The feed is saved to ``<data_dir>/threats/`` before importing so that
         a local copy is available for auditing.
 
+        Only ``https://`` URLs are accepted. Bare ``http://``, ``file://``,
+        and ``ftp://`` schemes are rejected up front because this method
+        auto-imports whatever bytes it receives — a caller who accidentally
+        passes ``file:///etc/passwd`` should get a loud error, not silent
+        garbage in the vault. This is the ``sync_threats()`` legacy path;
+        the signed-feed path (``apply_to_engine``) has its own trust chain
+        via detached signatures.
+
         Returns
         -------
         dict
             Same keys as :meth:`import_feed` plus ``"feed_url"``.
+
+        Raises
+        ------
+        ValueError
+            If ``feed_url`` does not use the ``https://`` scheme.
+        ThreatFeedError
+            If the download or import fails, including on connect / read
+            timeout (see ``_SYNC_FEED_TIMEOUT_SECONDS``).
         """
+        if not feed_url.startswith("https://"):
+            raise ValueError(
+                f"sync_feed() requires an https:// URL, got {feed_url!r}. "
+                f"Non-HTTPS schemes (http, file, ftp, …) are rejected because "
+                f"this method auto-imports the response body into the vault. "
+                f"For local files use import_feed() instead."
+            )
+
         threats_dir = os.path.join(self._data_dir, "threats")
         os.makedirs(threats_dir, exist_ok=True)
 
@@ -148,7 +181,10 @@ class ThreatFeedManager:
 
         try:
             req = urllib.request.Request(feed_url, method="GET")
-            with urllib.request.urlopen(req) as resp:
+            # Explicit timeout: without it urlopen inherits socket.getdefaulttimeout()
+            # which is usually None (block forever). A hung feed server would
+            # otherwise wedge the sync worker indefinitely.
+            with urllib.request.urlopen(req, timeout=self._SYNC_FEED_TIMEOUT_SECONDS) as resp:
                 data = resp.read()
 
             with open(local_path, "wb") as fh:
