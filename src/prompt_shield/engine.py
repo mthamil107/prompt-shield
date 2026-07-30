@@ -112,6 +112,14 @@ class PromptShieldEngine:
         self._parallel = self._ps_config.get("parallel", True)
         self._max_workers = self._ps_config.get("max_workers", 4)
 
+        # Fail-closed switch. When True, detector-side exceptions and
+        # scan-path bookkeeping failures propagate to the caller instead
+        # of being silently absorbed by the same "log a warning and
+        # continue" handlers that would otherwise let a broken detector
+        # look like a clean scan. Default False preserves v0.7.x
+        # behaviour; see tests/test_engine_strict_mode.py.
+        self._strict_mode = bool(self._ps_config.get("strict_mode", False))
+
         # Initialize webhook alerter (if enabled)
         self._alerter = None
         alerting_cfg = self._ps_config.get("alerting", {})
@@ -225,91 +233,34 @@ class PromptShieldEngine:
         return compiled
 
     def scan(self, input_text: str, context: dict[str, object] | None = None) -> ScanReport:
-        """Run all enabled detectors against input. Returns aggregated report."""
+        """Run all enabled detectors against input. Returns aggregated report.
+
+        The method is a top-to-bottom pipeline; each stage is extracted
+        into a private helper so the flow reads at a glance. Zero
+        behavioural changes vs. v0.7.2 — see tests/test_engine.py.
+        """
         start = time.perf_counter()
         scan_id = str(uuid.uuid4())
         ctx = dict(context) if context else {}
 
-        # Check allowlist
-        for pattern in self._allowlist_patterns:
-            if pattern.search(input_text):
-                return self._build_report(
-                    scan_id=scan_id,
-                    input_text=input_text,
-                    action=Action.PASS,
-                    detections=[],
-                    total_run=0,
-                    start_time=start,
-                )
+        # Stage 1: short-circuit on allow/block list matches.
+        early = self._check_allowlist_blocklist(input_text, scan_id, start)
+        if early is not None:
+            return early
 
-        # Check blocklist
-        for pattern in self._blocklist_patterns:
-            if pattern.search(input_text):
-                return self._build_report(
-                    scan_id=scan_id,
-                    input_text=input_text,
-                    action=Action.BLOCK,
-                    detections=[],
-                    total_run=0,
-                    start_time=start,
-                    risk_score=1.0,
-                )
+        # Stage 2: normalize input for keyword detectors (raw kept in ctx).
+        scan_text = self._normalize_input(input_text, ctx)
 
-        # Apply text normalization before detector dispatch. Detectors receive
-        # the normalized form so that homoglyph / zero-width evasion is
-        # neutralized for keyword-based detectors. The raw text is preserved
-        # in ctx["original_text"] for detectors (d010, d011, d020) that need
-        # to inspect the pre-normalization characters.
-        ctx.setdefault("original_text", input_text)
-        if self._normalizer is not None:
-            norm_result = self._normalizer.normalize(input_text)
-            ctx["normalization"] = norm_result
-            scan_text = norm_result.text
-        else:
-            scan_text = input_text
+        # Stage 3: build dispatch plan (per-detector thresholds + fatigue key).
+        detectors_to_run, fatigue_source = self._build_dispatch_plan(ctx)
+        total_run = len(detectors_to_run)
 
-        # Resolve fatigue source identifier once per scan (when enabled).
-        fatigue_source = (
-            str(ctx.get(self._fatigue.source_key, "_global_"))
-            if self._fatigue is not None
-            else None
+        # Stage 4: run detectors, sequentially or via ThreadPoolExecutor.
+        detections = self._dispatch_detectors(
+            detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
         )
 
-        # Build list of detectors to run with their configs/thresholds.
-        # The tuple now carries the *base* threshold too, so the runner can
-        # record that base value to the fatigue tracker (which classifies
-        # near-misses against the un-hardened threshold).
-        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float, float]] = []
-        for detector in self._registry.list_all():
-            det_cfg = get_detector_config(self._config, detector.detector_id)
-            if not det_cfg.get("enabled", True):
-                continue
-
-            base_threshold = det_cfg.get("threshold", self._ps_config.get("threshold", 0.7))
-            threshold = base_threshold
-            if self._auto_tuner:
-                threshold = self._auto_tuner.get_effective_threshold(
-                    detector.detector_id, threshold
-                )
-            if self._fatigue is not None and fatigue_source is not None:
-                threshold = self._fatigue.get_effective_threshold(
-                    fatigue_source, detector.detector_id, threshold
-                )
-            detectors_to_run.append((detector, det_cfg, threshold, base_threshold))
-
-        total_run = len(detectors_to_run)
-        detections: list[DetectionResult] = []
-
-        if self._parallel and total_run > 1:
-            detections = self._run_detectors_parallel(
-                detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
-            )
-        else:
-            detections = self._run_detectors_sequential(
-                detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
-            )
-
-        # Aggregate risk score with ensemble bonus
+        # Stage 5: aggregate risk score with ensemble bonus.
         if detections:
             max_conf = max(d.confidence for d in detections)
             bonus = self._ps_config.get("scoring", {}).get("ensemble_bonus", 0.05)
@@ -317,10 +268,7 @@ class PromptShieldEngine:
         else:
             risk_score = 0.0
 
-        # Determine action based on highest severity detection
         action = self._determine_action(detections, risk_score)
-
-        # Check vault match
         vault_matched = any(d.detector_id == "d021_vault_similarity" for d in detections)
 
         report = self._build_report(
@@ -334,6 +282,110 @@ class PromptShieldEngine:
             vault_matched=vault_matched,
         )
 
+        # Stage 6: history log, vault auto-store, webhook alert, auto-tune.
+        self._postprocess_report(report, detections, input_text, risk_score)
+        return report
+
+    def _check_allowlist_blocklist(
+        self, input_text: str, scan_id: str, start: float
+    ) -> ScanReport | None:
+        """Short-circuit on allowlist or blocklist match; else return None."""
+        for pattern in self._allowlist_patterns:
+            if pattern.search(input_text):
+                return self._build_report(
+                    scan_id=scan_id,
+                    input_text=input_text,
+                    action=Action.PASS,
+                    detections=[],
+                    total_run=0,
+                    start_time=start,
+                )
+        for pattern in self._blocklist_patterns:
+            if pattern.search(input_text):
+                return self._build_report(
+                    scan_id=scan_id,
+                    input_text=input_text,
+                    action=Action.BLOCK,
+                    detections=[],
+                    total_run=0,
+                    start_time=start,
+                    risk_score=1.0,
+                )
+        return None
+
+    def _normalize_input(self, input_text: str, ctx: dict[str, object]) -> str:
+        """Apply NFKC / homoglyph normalization; mutate ctx and return scan text.
+
+        Detectors receive the normalized form so homoglyph / zero-width
+        evasion is neutralised for keyword detectors. The raw text is
+        preserved in ``ctx["original_text"]`` for detectors (d010, d011,
+        d020) that inspect pre-normalization characters.
+        """
+        ctx.setdefault("original_text", input_text)
+        if self._normalizer is None:
+            return input_text
+        norm_result = self._normalizer.normalize(input_text)
+        ctx["normalization"] = norm_result
+        return norm_result.text
+
+    def _build_dispatch_plan(
+        self, ctx: dict[str, object]
+    ) -> tuple[list[tuple[BaseDetector, dict[str, Any], float, float]], str | None]:
+        """Resolve fatigue source + build the ``(detector, cfg, thr, base_thr)`` list.
+
+        The tuple carries the *base* threshold too, so the runner can
+        record that value to the fatigue tracker (which classifies
+        near-misses against the un-hardened threshold).
+        """
+        fatigue_source = (
+            str(ctx.get(self._fatigue.source_key, "_global_"))
+            if self._fatigue is not None
+            else None
+        )
+
+        plan: list[tuple[BaseDetector, dict[str, Any], float, float]] = []
+        for detector in self._registry.list_all():
+            det_cfg = get_detector_config(self._config, detector.detector_id)
+            if not det_cfg.get("enabled", True):
+                continue
+            base_threshold = det_cfg.get("threshold", self._ps_config.get("threshold", 0.7))
+            threshold = base_threshold
+            if self._auto_tuner:
+                threshold = self._auto_tuner.get_effective_threshold(
+                    detector.detector_id, threshold
+                )
+            if self._fatigue is not None and fatigue_source is not None:
+                threshold = self._fatigue.get_effective_threshold(
+                    fatigue_source, detector.detector_id, threshold
+                )
+            plan.append((detector, det_cfg, threshold, base_threshold))
+        return plan, fatigue_source
+
+    def _dispatch_detectors(
+        self,
+        detectors_to_run: list[tuple[BaseDetector, dict[str, Any], float, float]],
+        scan_text: str,
+        ctx: dict[str, object],
+        *,
+        fatigue_source: str | None,
+    ) -> list[DetectionResult]:
+        """Choose parallel vs. sequential path and return the surviving detections."""
+        if self._parallel and len(detectors_to_run) > 1:
+            return self._run_detectors_parallel(
+                detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
+            )
+        return self._run_detectors_sequential(
+            detectors_to_run, scan_text, ctx, fatigue_source=fatigue_source
+        )
+
+    def _postprocess_report(
+        self,
+        report: ScanReport,
+        detections: list[DetectionResult],
+        input_text: str,
+        risk_score: float,
+    ) -> None:
+        """History log, vault auto-store, webhook alert, periodic auto-tune."""
         # Store in history
         self._log_scan(report)
 
@@ -356,6 +408,8 @@ class PromptShieldEngine:
                             },
                         )
                     except Exception as exc:
+                        if self._strict_mode:
+                            raise
                         logger.warning("Failed to store detection in vault: %s", exc)
 
         # Fire webhook alerts (non-blocking)
@@ -369,9 +423,9 @@ class PromptShieldEngine:
             try:
                 self._auto_tuner.tune()
             except Exception as exc:
+                if self._strict_mode:
+                    raise
                 logger.warning("Auto-tune failed: %s", exc)
-
-        return report
 
     def scan_batch(self, inputs: list[str]) -> list[ScanReport]:
         """Scan multiple inputs."""
@@ -622,6 +676,8 @@ class PromptShieldEngine:
                 if result.detected and result.confidence >= threshold:
                     detections.append(result)
             except Exception as exc:
+                if self._strict_mode:
+                    raise
                 logger.warning("Detector %s failed: %s", detector.detector_id, exc)
         return detections
 
@@ -673,6 +729,8 @@ class PromptShieldEngine:
                     if result is not None:
                         detections.append(result)
                 except Exception as exc:
+                    if self._strict_mode:
+                        raise
                     logger.warning("Detector %s failed: %s", detector.detector_id, exc)
 
         return detections
@@ -771,9 +829,15 @@ class PromptShieldEngine:
                 )
                 conn.commit()
         except Exception as exc:
+            # strict_mode: audit-log failure is scan-path bookkeeping and the
+            # engine.__init__ docstring promises it propagates when strict.
+            # Silent-fail here means a strict operator sees clean scans with
+            # an empty audit trail — the worst possible failure for compliance.
+            if self._strict_mode:
+                raise
             logger.warning("Failed to log scan: %s", exc)
 
-        # Auto-prune
+        # Auto-prune (housekeeping, never strict — pruning is best-effort).
         retention = history_cfg.get("retention_days", 90)
         with contextlib.suppress(Exception):
             self._db.prune_scan_history(retention)

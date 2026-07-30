@@ -285,6 +285,7 @@ print(report.scan_context.mitigation)            # "block; do NOT let this conte
 ### Reusable primitive (async + LRU cache built in)
 
 ```python
+# doctest: +SKIP  (illustrative: `text` undefined and `await` needs an async caller)
 from prompt_shield.tool_guard import ToolResultGuard
 
 guard = ToolResultGuard(mode="flag", cache_size=256)
@@ -319,6 +320,7 @@ Every listed integration delegates to `ToolResultGuard` under the hood — you g
 <summary><b>Anthropic — scans <code>tool_result</code> blocks natively</b></summary>
 
 ```python
+# doctest: +SKIP  (needs live Anthropic API key + real message list)
 from anthropic import Anthropic
 from prompt_shield.integrations.anthropic_wrapper import PromptShieldAnthropic
 
@@ -349,6 +351,7 @@ cb = PromptShieldCallback(scan_tool_results=True, tool_result_mode="block")
 <summary><b>LlamaIndex — <code>scan_retrieved_nodes</code></b></summary>
 
 ```python
+# doctest: +SKIP  (illustrative: `retriever` and `query` are unset placeholders)
 from prompt_shield.integrations.llamaindex_handler import PromptShieldHandler
 
 handler = PromptShieldHandler(scan_retrieved=True)
@@ -360,6 +363,7 @@ safe_nodes = handler.scan_retrieved_nodes(retriever.retrieve(query))
 <summary><b>Haystack — pipeline component (retrieved-doc gate)</b></summary>
 
 ```python
+# doctest: +SKIP  (illustrative: `pipeline` is an unset placeholder)
 from prompt_shield.integrations.haystack_component import PromptShieldGuard
 
 pipeline.add_component("doc_shield", PromptShieldGuard(mode="block"))
@@ -373,6 +377,7 @@ Note: gate string normalized in v0.7.0 from `"retrieved_document"` → `"tool_re
 <summary><b>MCP — transparent tool-server proxy</b></summary>
 
 ```python
+# doctest: +SKIP  (illustrative: `real_mcp_server`, `engine` unset + `await` needs an async caller)
 from prompt_shield.integrations.mcp import PromptShieldMCPFilter
 
 proxy = PromptShieldMCPFilter(server=real_mcp_server, engine=engine, mode="sanitize")
@@ -386,6 +391,7 @@ result = await proxy.call_tool("web_search", {"q": "..."})
 Backward-compatible: `scan_tool_result` still returns `GateResult`. New attack-family metadata is exposed via `GateResult.metadata["attack_families"]` and `GateResult.metadata["scan_context"]`.
 
 ```python
+# doctest: +SKIP  (illustrative: `tool_output` is an unset placeholder)
 from prompt_shield.integrations.agent_guard import AgentGuard
 from prompt_shield.engine import PromptShieldEngine
 
@@ -690,6 +696,7 @@ prompt-shield redteam run --category multilingual         # Specific category
 ```
 
 ```python
+# doctest: +SKIP  (needs live OpenAI API key + 30-minute network run)
 from prompt_shield.redteam import RedTeamRunner
 
 runner = RedTeamRunner(provider="openai", api_key="sk-...", model="gpt-4o")
@@ -702,6 +709,7 @@ print(f"Bypass rate: {report.bypass_rate:.1%}")
 ## Protecting Agentic Apps (3-Gate Model)
 
 ```python
+# doctest: +SKIP  (illustrative handler body: `user_message`/`tool_output`/`llm_response` unset and `return` needs a wrapping function)
 from prompt_shield import PromptShieldEngine
 from prompt_shield.integrations.agent_guard import AgentGuard
 
@@ -727,6 +735,7 @@ if result.canary_leaked:
 ## Integrations
 
 ```python
+# doctest: +SKIP  (illustrative snippet: `OpenAI`, `app`, `LLMChain`, `llm`, `prompt`, `mcp_server`, `engine` are unset placeholders)
 # OpenAI / Anthropic wrappers
 from prompt_shield.integrations.openai_wrapper import PromptShieldOpenAI
 shield = PromptShieldOpenAI(client=OpenAI(), mode="block")
@@ -839,6 +848,7 @@ prompt-shield compliance report --framework all            # All frameworks
 ## Self-Learning
 
 ```python
+# doctest: +SKIP  (illustrative: `engine` and `report` are unset placeholders)
 engine.feedback(report.scan_id, is_correct=True)                              # Confirmed attack
 engine.feedback(report.scan_id, is_correct=False, notes="internal codename")  # FP + reason (optional)
 
@@ -912,6 +922,7 @@ prompt_shield:
 ## Writing Custom Detectors
 
 ```python
+# doctest: +SKIP  (illustrative template: `detect()` body is elided and `engine` is unset)
 from prompt_shield.detectors.base import BaseDetector
 from prompt_shield.models import DetectionResult, Severity
 

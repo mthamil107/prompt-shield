@@ -1,0 +1,31 @@
+name: Doctest (README + docs)
+
+# Guards against docs-vs-code drift by executing every ```python fenced
+# code block in README.md and docs/index.md. An earlier external review
+# caught OutputScanEngine being documented before it existed; this job
+# would have failed in seconds. Skipped blocks must carry a
+# `# doctest: +SKIP` marker on their first non-blank line.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  doctest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install prompt-shield with [all] extras
+        # [all] pulls in every optional dep referenced by the README
+        # examples (ml, langchain, llamaindex, haystack, pydantic-ai,
+        # crewai, mcp, openai, anthropic, fastapi, flask, django,
+        # observability, sentiment, language). Executable snippets need
+        # these imports to succeed even when they don't call live APIs.
+        run: pip install -e ".[all]"
+      - name: Execute README + docs/index.md snippets
+        run: python docs/tests/run_doc_snippets.py README.md docs/index.md --timeout 180

@@ -2,6 +2,13 @@ prompt_shield:
   mode: block
   threshold: 0.7
 
+  # Fail-closed switch: when true, a detector raising an exception during
+  # scan() propagates instead of being silently logged-and-skipped. Off by
+  # default to preserve v0.7.x behaviour; opt in for deployments where a
+  # missed scan must never be reported as "clean" (security-critical
+  # gates). See tests/test_engine_strict_mode.py for the contract.
+  strict_mode: false
+
   parallel: true
   max_workers: 4
 
