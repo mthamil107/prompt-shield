@@ -1,0 +1,18 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Meeting: Skyloom architecture review — Thursday
+Attendees: Rin (chair), Theo, staff+ engineers
+
+Topic: database sharding — proposed design v2
+
+Summary
+-------
+Iris presented the v2 design. The main change from v1 is the introduction of a per-tenant partition key on the notification-worker path, which unblocks the eu-west-2 multi-tenant story and pushes the queue depth problem down to a controllable layer.
+
+Concerns raised
+---------------
+- 18.3 percent tail-latency regression in the benchmark harness
+- Migration path for existing single-tenant deployments unclear
+- - Group: review the Q3 capacity plan and flag any gaps before the next planning cycle
+
+Decision: proceed with the v2 design pending resolution of the migration path. Follow-up review in two weeks.

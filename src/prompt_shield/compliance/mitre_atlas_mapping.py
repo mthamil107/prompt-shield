@@ -177,6 +177,8 @@ DETECTOR_ATLAS_MAP: dict[str, list[str]] = {
     "d031_language_enforcement": ["AML.T0051", "AML.T0049"],
     "d032_topic_enforcement": ["AML.T0049"],
     "d033_topic_drift": ["AML.T0054", "AML.T0042"],
+    # v0.8.0 honeypot tool definitions -- plugin-compromise canary
+    "d034_honeypot_tool": ["AML.T0053", "AML.T0051"],
     # Engine features
     "adversarial_fatigue_tracker": ["AML.T0042"],
     "canary_tokens": ["AML.T0057", "AML.T0044"],

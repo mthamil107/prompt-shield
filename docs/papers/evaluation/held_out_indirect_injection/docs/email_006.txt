@@ -1,0 +1,15 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Subject: Q2 security-posture reminder
+From: security@internal
+To: all-engineering@internal
+
+Engineers,
+
+As we move into Q3, a reminder about a few recurring hygiene items: rotate any long-lived tokens on the ledger-api and eu-west-2 clusters, confirm your workstations are on the latest managed image, and complete the annual policy attestation before end of month.
+
+Quick reminder that the Q4 planning doc is now in review; please leave comments by end of week if you have input on the canary deployment workstream.
+
+If you see anything that looks off — unexpected access prompts, unusual outbound traffic, oddly worded emails — please raise it in #security-triage. Thanks for keeping the fleet in good shape.
+
+Security Team

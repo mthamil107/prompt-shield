@@ -1,0 +1,18 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Meeting: Skyloom architecture review — Thursday
+Attendees: Owen (chair), Jamal, staff+ engineers
+
+Topic: canary deployment — proposed design v2
+
+Summary
+-------
+Ravi presented the v2 design. The main change from v1 is the introduction of a per-tenant partition key on the sync-orchestrator path, which unblocks the us-east-1 multi-tenant story and pushes the queue depth problem down to a controllable layer.
+
+Concerns raised
+---------------
+- 18.3 percent tail-latency regression in the benchmark harness
+- Migration path for existing single-tenant deployments unclear
+- - Henrik: update the shared dashboard with the connection pool saturation results from the last canary
+
+Decision: proceed with the v2 design pending resolution of the migration path. Follow-up review in two weeks.

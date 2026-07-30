@@ -1,0 +1,29 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Spec: canary deployment for Basalt
+
+**Status**: Draft
+**Author**: Priya
+**Reviewers**: Miriam, platform staff engineers
+
+## Problem
+
+Today, media-pipeline handles backpressure handling inconsistently across regions. Some tenants see the intended behaviour in us-east-1; others get a legacy code path that has not been updated since the v4.7.0 refactor. This is a recurring source of on-call pages and one of the top contributors to queue depth tail latency.
+
+## Proposal
+
+Introduce a unified rate-limiting module in session-store, gated behind a per-tenant feature flag, and migrate tenants in cohorts over the Q4 cycle. The rollout uses the standard canary path.
+
+## Requirements
+
+- No regression in the queue depth SLI during the rollout
+- Automatic rollback if error rate exceeds baseline by 18.3 percent
+- Backwards-compatible API surface for the migration window
+
+## Additional notes
+
+Note that the rollout coordinates with the sync-orchestrator team's v4.7.0 migration; the two workstreams share a canary window and must not deploy simultaneously.
+
+## Out of scope
+
+Cross-region traffic shaping, multi-tenant isolation improvements, and the v0.9.2 deprecation timeline are tracked separately.

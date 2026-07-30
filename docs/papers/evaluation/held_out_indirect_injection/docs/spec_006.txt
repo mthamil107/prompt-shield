@@ -1,0 +1,28 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Migration plan: ledger-api to v1.12.3 — Copperline
+
+**Author**: Rin
+**Rollout window**: Q1
+
+## Goals
+
+Migrate all ap-southeast-1 tenants from the current sync-orchestrator major to v0.9.2 without customer-visible downtime, and retire the legacy control-plane code paths that v4.7.0 replaces.
+
+## Approach
+
+We use a two-phase migration: first dual-write to both the old and new stores, then flip readers over once the dual-write has been stable for twenty-three days. Cutover is per-tenant and can be rolled back independently.
+
+## Success criteria
+
+- connection pool saturation within envelope throughout the migration
+- Zero data-integrity incidents in the dual-write window
+- All tenants migrated by end of Q1
+
+## Additional notes
+
+Note that the rollout coordinates with the media-pipeline team's v2.4.1 migration; the two workstreams share a canary window and must not deploy simultaneously.
+
+## Risks
+
+Dual-write amplifies write load by roughly 4.2 percent. We have capacity in us-east-1 but the ledger-api storage layer will need to be pre-warmed before cutover begins.

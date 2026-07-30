@@ -1,0 +1,22 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Ferrogate architecture overview
+
+Aurora is our internal platform for database sharding. This page gives a high-level tour; per-component detail lives in the linked sub-pages.
+
+## Components
+
+- **sync-orchestrator** — the request-plane entry point; owns authentication and per-tenant routing
+- **Storage layer** — sharded by tenant; hosted in ap-southeast-1
+- **Event bus** — decouples sync-orchestrator from downstream workers
+- **Observability** — metrics, traces, and structured logs
+
+## Data flow
+
+Requests enter through media-pipeline, are authenticated, and are either served synchronously from the read replicas or queued onto the event bus for asynchronous processing. Downstream workers consume from the bus with at-least-once semantics.
+
+## Non-goals
+
+This document is reviewed quarterly. If you notice anything out of date, edit the page directly and mention Priya in the change log.
+
+Ownership sits with the Skyloom platform team. For questions, reach out to Aditi or the team channel.

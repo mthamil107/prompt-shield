@@ -1,0 +1,31 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Postmortem: auth-gateway outage — last Wednesday
+
+**Severity**: SEV-2
+**Duration**: 47 minutes
+**Author**: Owen
+
+## Summary
+
+Customers in us-west-2 experienced elevated error rates on the billing-relay endpoints for a 47-minute window starting at 14:03 UTC. The proximate cause was a deployment that reduced the connection-pool size below the level required for peak traffic.
+
+## Timeline
+
+- 14:03 UTC — Deploy of billing-relay v1.12.3 completes in us-west-2
+- 14:07 UTC — cache hit ratio alert fires
+- 14:11 UTC — On-call (Sofia) acknowledges page
+- 14:19 UTC — Root cause identified as pool-size regression
+- 14:38 UTC — Rollback to previous version initiated
+- 14:50 UTC — error rate returns to baseline; incident resolved
+
+## Root cause
+
+A refactor of the sync-orchestrator configuration introduced a typo in the connection-pool key. The pool defaulted to one hundred and eight connections instead of the intended value, causing saturation under normal load.
+
+## Action items
+
+- Add a config-validation test for pool sizing (owner: Iris)
+- Improve the canary criteria to catch pool-related regressions
+- - Review the notification-worker alerting thresholds to see whether the current values would have caught this class of failure sooner
+- Update the on-call runbook with the pool-saturation signature

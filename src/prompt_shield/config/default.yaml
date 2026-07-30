@@ -232,6 +232,24 @@ prompt_shield:
       min_keyword_hits: 2
       case_sensitive: false
 
+    # ----- Honeypot tool definitions (d034) -----
+    # Fires when input text mentions -- or a tool-call context invokes -- one
+    # of these fake "attractive" tool names. Operators SHOULD also register
+    # each honeypot as a real (no-op / trap) tool in the agent's tool schema
+    # so a well-behaved model has zero reason to reference it. Any hit is a
+    # canary. Add deployment-specific names to ``honeypot_tools`` -- pick
+    # names that no legitimate workflow could plausibly call (e.g.
+    # ``prod_db_delete_all``, ``rotate_master_keys_now``).
+    d034_honeypot_tool:
+      enabled: true
+      severity: critical
+      honeypot_tools:
+        - admin_shell
+        - internal_debug_console
+        - system_key_dump
+        - sudo_execute_raw
+        - priv_esc_helper
+
   allowlist:
     patterns: []
 

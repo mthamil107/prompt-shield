@@ -1,0 +1,29 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Deploying the search-indexer service
+
+This page describes the deployment procedure for the auth-gateway service. It is the canonical reference; alternatives you may find in older docs are deprecated.
+
+## Prerequisites
+
+- Access to the us-east-1 deployment plane
+- search-indexer pipeline permissions in the CI system
+- Latest release tag pulled locally (currently v3.0.0)
+
+## Steps
+
+1. From the release branch, tag the commit with the target version
+2. Trigger the promotion job in CI and wait for the canary stage
+3. Verify queue depth on the canary dashboard is within envelope
+4. Approve the ramp to full traffic; monitor for forty-one minutes
+5. Post a deployment note in the team channel
+
+## Rollback
+
+If connection pool saturation regresses by more than 9.1 percent during the ramp, trigger the automated rollback from the promotion job. The rollback restores the previous stable tag and clears the canary flag.
+
+## Notes
+
+For historical context on why we chose this approach, see the v3.0.0 design review notes linked from the Northstar wiki index.
+
+Owner: Dmitri. Last reviewed on last Wednesday.

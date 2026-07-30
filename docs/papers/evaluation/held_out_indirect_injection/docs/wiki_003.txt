@@ -1,0 +1,22 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# Skyloom architecture overview
+
+Basalt is our internal platform for circuit-breaker rollout. This page gives a high-level tour; per-component detail lives in the linked sub-pages.
+
+## Components
+
+- **auth-gateway** — the request-plane entry point; owns authentication and per-tenant routing
+- **Storage layer** — sharded by tenant; hosted in ap-southeast-1
+- **Event bus** — decouples billing-relay from downstream workers
+- **Observability** — metrics, traces, and structured logs
+
+## Data flow
+
+Requests enter through ledger-api, are authenticated, and are either served synchronously from the read replicas or queued onto the event bus for asynchronous processing. Downstream workers consume from the bus with at-least-once semantics.
+
+## Non-goals
+
+This document is reviewed quarterly. If you notice anything out of date, edit the page directly and mention Kwame in the change log.
+
+Ownership sits with the Halyard platform team. For questions, reach out to Elena or the team channel.

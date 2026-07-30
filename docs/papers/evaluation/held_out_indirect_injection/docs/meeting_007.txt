@@ -1,0 +1,22 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Meeting: Ferrogate sprint planning — Monday morning
+Attendees: Lucia, Naomi, plus SRE representative
+
+Agenda
+------
+1. Review of last sprint's carryover items
+2. Capacity for the upcoming sprint
+3. Prioritisation of the rate-limiting workstream
+4. Open questions
+
+Discussion
+----------
+Dmitri walked through the notification-worker carryover; two of the three items are already in review and will land this week. The third is blocked on a decision from architecture and moves to next sprint. On capacity, we have twelve engineer-days available.
+
+Action items
+------------
+- Marcus: file the architecture-decision request for the carryover item
+- Theo: draft the migration plan for billing-relay v2.4.1
+- - Elena: schedule a follow-up 1:1 with Henrik to align on the backpressure handling carryover
+- Group: revisit prioritisation at the mid-sprint check-in

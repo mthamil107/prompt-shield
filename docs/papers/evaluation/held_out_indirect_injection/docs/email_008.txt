@@ -1,0 +1,16 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Subject: Welcome to the Skyloom team
+From: Marcus
+To: Meridian-team@internal
+
+Team,
+
+Please join me in welcoming Ravi, who joins us this Friday as our newest engineer on the circuit-breaker rollout workstream. Henrik comes to us from the auth-gateway platform group and has deep experience with distributed systems.
+
+For visibility, the session-store dashboard has a new panel for cache hit ratio that Iris put together; it has been quite useful during the recent bring-up.
+
+I have scheduled meet-and-greets over the next two weeks. Please make time to say hello and share context on the pieces of the codebase you own. Onboarding buddy assignments will go out separately.
+
+Best,
+Elena

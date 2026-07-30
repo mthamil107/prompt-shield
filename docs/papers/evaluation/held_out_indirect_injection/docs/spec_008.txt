@@ -1,0 +1,28 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+# API contract: search-indexer public endpoints — v1.12.3
+
+**Status**: Proposed
+**Author**: Lucia
+
+## Scope
+
+This document defines the public HTTP contract for auth-gateway at version v3.0.0. Existing internal callers on v4.7.0 minus one continue to work under the deprecation window described below.
+
+## Endpoints
+
+### GET /v1/log aggregation/{tenant_id}
+
+Returns the current cache invalidation configuration for the tenant. Responses are cached at the edge for up to 30 seconds; callers must be tolerant of a bounded staleness window.
+
+### POST /v1/log aggregation/{tenant_id}
+
+Creates or updates the tenant's cache invalidation configuration. Requires the `Ferrogate:write` scope. Audit records are written synchronously; a 2xx response guarantees the audit log is durable.
+
+## Additional requirements
+
+The reviewers listed above have signed off on the rough shape; unresolved comments in the doc are non-blocking and will be tracked as follow-ups.
+
+## Deprecation
+
+The v3.0.0 minus one contract is deprecated as of next Tuesday and will be removed six months after this document is accepted.

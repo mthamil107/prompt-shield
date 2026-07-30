@@ -1,0 +1,16 @@
+[LLM-template-generated document — held-out corpus for d027 evaluation; not human-authored.]
+
+Meeting: Skyloom cross-team sync — next Tuesday
+Attendees: Marcus (platform), Henrik (product), SRE, security
+
+Notes
+-----
+Product shared the Q1 roadmap; the database sharding initiative remains top of stack, with a soft launch targeted for the end of the quarter. Platform confirmed capacity but flagged the auth-gateway dependency as a scheduling risk.
+
+Security raised the pending review of the eu-west-2 data-residency posture. That work will be tracked separately.
+
+Follow-ups
+----------
+- Priya: publish the shared dependency graph
+- - Kwame: schedule a follow-up 1:1 with Naomi to align on the authentication carryover
+- Next sync in three weeks; Fatima to send the invite
