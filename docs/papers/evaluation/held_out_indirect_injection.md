@@ -21,7 +21,7 @@ Section 5.4 of the paper acknowledges that d027 (stylometric discontinuity) was 
 
 | Configuration | TP | TN | FP | FN | Recall | FPR | Precision | F1 | Accuracy | Elapsed |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| Full engine (d027+d028, d022 off) | 22 | 18 | 2 | 8 | **0.733** | 0.100 | 0.917 | **0.815** | 0.800 | 12.31s |
+| Full engine (d027+d028, d022 off) | 22 | 18 | 2 | 8 | **0.733** | 0.100 | 0.917 | **0.815** | 0.800 | 12.72s |
 | d027 in isolation | 0 | 18 | 2 | 30 | **0.000** | 0.100 | 0.000 | **0.000** | 0.360 | 0.11s |
 
 ### Per-attack-family recall (full engine)

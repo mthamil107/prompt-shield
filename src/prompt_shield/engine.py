@@ -562,11 +562,12 @@ class PromptShieldEngine:
                 warnings.warn(
                     "sync_threats() called without an explicit verify= or "
                     "public_key= argument. The legacy unverified path is "
-                    "being used for this call, but v0.8.0 will require "
-                    "verify=True with a base64 minisign public_key. To keep "
-                    "the current unverified behaviour past v0.8.0, pass "
-                    "verify=False explicitly; to opt into verification now, "
-                    "pass verify=True and public_key=<pinned key>.",
+                    "being used for this call, but v0.8.0 (targeted no "
+                    "later than 2026-10-01) will require verify=True with "
+                    "a base64 minisign public_key. To keep the current "
+                    "unverified behaviour past v0.8.0, pass verify=False "
+                    "explicitly; to opt into verification now, pass "
+                    "verify=True and public_key=<pinned key>.",
                     FutureWarning,
                     stacklevel=2,
                 )

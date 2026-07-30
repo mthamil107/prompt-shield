@@ -7,6 +7,146 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.3] - 2026-08-TBD
+
+**Hardening + new detector release.** Ships the fourth of seven
+cross-domain techniques as a first-class detector (d034 honeypot tool
+definitions), tightens two threshold behaviours, closes two security
+gaps in the threat-feed HTTP surface, and lands a sizeable engineering
+refactor of the core `scan()` path. Test suite: 1,184 -> 1,232 passing,
+18 skipped (+48 net-new tests vs v0.7.2). No API removals; one existing
+`FutureWarning` message updated to name a specific v0.8.0 target date.
+
+### Added
+
+- **`d034_honeypot_tool` detector — the fourth shipped cross-domain
+  technique.** Deception-technology-inspired detector that ships with
+  five default honeypot tool names
+  (`admin_shell`, `debug_execute`, `system_override`, `root_access`,
+  `bypass_filter`) and supports two operating modes
+  (`text_mention` for prose references and `nested_invocation` for
+  actual tool-call structures). Understands four tool-call container
+  shapes: raw OpenAI `tool_calls`, Anthropic `content` blocks with
+  `tool_use`, MCP-style `function.name`, and bare `{"name": ...}`
+  dictionaries. Nested-invocation matches fire at confidence 1.0
+  regardless of surrounding text. Emits `MatchDetail` records with
+  `honeypot_name` and `mode` metadata for downstream analysis.
+  Compliance mappings: OWASP LLM06 (Excessive Agency) and MITRE ATLAS
+  T0051.010 (LLM Meta Prompt Extraction — Honeytoken).
+  - 20 unit tests covering all four container shapes plus mixed
+    prose/nested inputs.
+  - Bumps `paper/paper.md`'s "three of seven techniques implemented"
+    line to "four of seven" (paper.md refresh scheduled for the JOSS
+    submission window in the same release cycle).
+
+### Changed
+
+- **`d028_sequence_alignment` threshold raised 0.60 -> 0.63.** In v0.7.2
+  the detector flagged at similarity >= 0.60 against the 187-entry
+  signature database. The tuned floor reduces borderline noise on
+  paraphrased benign inputs that shared reveal-family lexical overlap
+  without carrying reveal-family intent. Documented as *forward
+  hardening* — the aggregate NotInject false-positive count
+  (`13/339`, 3.8%) is dominated by unrelated code-fragment matches in
+  `d005/d022`, not by d028's slack, and is unchanged by this tune.
+  The full NotInject FP fix is tracked for v0.8.0 in the roadmap.
+- **d028 reveal-family dampening.** Signature entries tagged with the
+  `reveal_family` label now contribute a dampened similarity score
+  when the incoming text lacks any reveal-family lexical anchors
+  (`show`, `print`, `reveal`, `display`, etc.), further reducing the
+  paraphrase-collision surface on benign business text. Implemented
+  as an internal score adjustment; no config surface change.
+- **`sync_threats()` FutureWarning message names a specific v0.8.0
+  target date.** The transitional-default warning added in v0.7.2 now
+  reads "v0.8.0 (targeted no later than 2026-10-01) will require
+  verify=True with a base64 minisign public_key ..." — giving callers
+  a concrete window instead of an unbounded "in v0.8.0" reference.
+  Behaviour is unchanged; text-only edit in
+  `src/prompt_shield/engine.py`.
+
+### Added — opt-in behaviour flag
+
+- **`strict_mode` config flag on `PromptShieldEngine`.** When set to
+  `True` (default `False`), the engine escalates borderline detections
+  to `Action.BLOCK` and disables the "single low-confidence detection
+  is downgraded to `ALLOW`" heuristic. Use case: threat-hunting and
+  red-team deployments where operators want the raw detector union
+  without the production-tuned aggregator's leniency. Off by default
+  so existing PyPI callers see no behaviour change on upgrade.
+
+### 🔐 Security
+
+- **`prompt_shield/vault/threat_feed.py` now enforces `https://` for
+  remote feeds.** Previous behaviour accepted any URL scheme. HTTP
+  and file-scheme URLs now raise `ValueError` at fetch time, matching
+  the guarantees `sync_threats()` already provided for the signed
+  path. `file://` remains blocked because indirect-injection payloads
+  embedded on the local filesystem can pivot through the trusted
+  detector-signature import path — feeds must come from an
+  authenticated remote origin.
+- **`threat_feed.py` HTTP GET now uses a 30-second timeout.**
+  Previously a slow-loris or hung feed origin could stall
+  `sync_threats()` indefinitely and hold the engine's `_lock`.
+
+### Engineering
+
+- **`PromptShieldEngine.scan()` refactored from 150 lines to 53.**
+  The dispatch path is now decomposed into four helpers
+  (`_normalize_input`, `_run_detectors`, `_aggregate_detections`,
+  `_apply_policy`) that are each independently unit-testable. No
+  behaviour change; the pre-existing scan-path integration tests
+  cover the aggregate.
+- **New CI job: doctest.** All `>>>` blocks in the public docs and
+  detector docstrings are executed on every PR, ensuring code snippets
+  in `README.md`, `docs/quickstart.md`, and `docs/writing-detectors.md`
+  do not silently drift out of sync with the API. `make doctest`
+  runs the same suite locally.
+
+### Test coverage
+
+- +48 new tests (1,184 -> 1,232 passing on `main`, 18 skipped).
+- `tests/detectors/test_d034_honeypot_tool.py` (20 tests) exercises
+  every container shape and both operating modes.
+- `tests/vault/test_threat_feed_https_only.py` and
+  `tests/vault/test_threat_feed_timeout.py` cover the two security
+  hardenings on the vault HTTP surface.
+- `tests/engine/test_strict_mode.py` covers the new opt-in aggregator
+  flag.
+- New doctest job adds ~20 executed snippet tests across the docs
+  tree; the remainder are refactor-driven aggregator, dampening, and
+  helper-decomposition tests.
+
+### Docs
+
+- **Companion paper (`docs/papers/cross-domain-techniques-v4.pdf`)
+  now 31 pages, up from 27** (v3.0.2 was the last live arXiv upload).
+  - New §5.8 reports a 50-document held-out benchmark of
+    LLM-template-generated business documents with paraphrased
+    indirect-injection payloads: d027 in isolation drops from
+    synthetic-benchmark 1.000 F1 to 0.000 F1 on the held-out corpus,
+    while the composed engine (d027 + d028 + regex baseline, d022
+    disabled) still recovers 0.733 recall / 0.815 F1.
+  - New §5.7.6 adds a two-layer composed-stack adaptive-attack
+    partial run: d027 alone drops from 100% to 0% detection under a
+    short-input-floor attack, while the composed stack catches 20/20
+    with d022 on and 14/20 without — partial empirical support for
+    the §2.2 composability thesis.
+  - §4.3 (honeypot tool definitions) is now marked IMPLEMENTED,
+    shipping ratio 4/7 up from 3/7.
+- README `tests` badge and roadmap block will be updated at tag time
+  as part of the release checklist (`docs/drafts/v0.7.3-release-checklist.md`).
+
+### Not in this release
+
+- No breaking API changes. Existing PyPI callers upgrade without code
+  edits; only `strict_mode` is a new surface, and it defaults to off.
+- The NotInject false-positive root-cause fix (drivers in `d005` and
+  `d022`, not d028) is not in this release. It is scoped for v0.8.0
+  alongside the hard flip of `sync_threats()` verification default.
+- The `verify=True` default flip for `sync_threats()` is still a
+  proposal only (`.braid/proposal-verify-default-flip.md`). This
+  release only refines the transitional warning text to name a date.
+
 ## [0.7.2] - 2026-07-29
 
 **Correctness release.** Closes five wiring gaps between README claims and

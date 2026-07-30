@@ -17,7 +17,7 @@
       "f1": 0.8148,
       "accuracy": 0.8,
       "fpr": 0.1,
-      "elapsed_s": 12.306,
+      "elapsed_s": 12.723,
       "per_family_recall": {
         "data-exfiltration": {
           "detected": 6,
@@ -128,7 +128,7 @@
       "f1": 0.0,
       "accuracy": 0.36,
       "fpr": 0.1,
-      "elapsed_s": 0.114,
+      "elapsed_s": 0.112,
       "per_family_recall": {
         "data-exfiltration": {
           "detected": 0,
