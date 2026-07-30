@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.7.3] - 2026-08-TBD
+## [0.7.3] - 2026-07-30
 
 **Hardening + new detector release.** Ships the fourth of seven
 cross-domain techniques as a first-class detector (d034 honeypot tool
@@ -44,10 +44,12 @@ refactor of the core `scan()` path. Test suite: 1,184 -> 1,232 passing,
     already-collected tool-call list. Deep `ToolResultGuard` auto-check
     on every scan intentionally deferred; the primitive is available
     today, the wiring is a v0.8.0 follow-up.
-  - `paper/paper.md` (the JOSS submission) is **not** touched by this
-    release; a refresh (33 → 34 detectors, 1,184 → 1,232 tests,
-    version 0.7.2 → 0.7.3, sentence naming d034) is scheduled as
-    part of the JOSS submission window on/around 2026-08-12.
+  - `paper/paper.md` (the JOSS submission) is **refreshed in this
+    release**: 33 → 34 detectors, 1,184 → 1,232 tests, version
+    0.7.2 → 0.7.3, and a new sentence naming d034 as the fourth of
+    seven cross-domain techniques. The refresh brings paper.md into
+    alignment with the repo state that JOSS reviewers will clone on
+    or after 2026-08-12 when the submission window opens.
 
 ### Changed
 

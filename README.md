@@ -14,12 +14,12 @@
   <a href="https://github.com/mthamil107/prompt-shield/stargazers"><img src="https://img.shields.io/github/stars/mthamil107/prompt-shield?style=flat&logo=github&color=yellow" alt="GitHub stars" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License" /></a>
   <a href="https://www.npmjs.com/package/n8n-nodes-prompt-shield"><img src="https://img.shields.io/npm/v/n8n-nodes-prompt-shield.svg?label=n8n" alt="npm" /></a>
-  <img src="https://img.shields.io/badge/detectors-33-brightgreen" alt="33 detectors" />
+  <img src="https://img.shields.io/badge/detectors-34-brightgreen" alt="34 detectors" />
   <img src="https://img.shields.io/badge/output_scanners-9-blue" alt="9 output scanners" />
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_(self--curated_n%3D54)-96.0%25-success" alt="F1 96% on Benchmark 1: 39 attacks + 15 benign, self-curated - see paper 5.4 for self-eval caveats" />
   <img src="https://img.shields.io/badge/false_positives_(deepset_n%3D56)-0%25-success" alt="0% FP on deepset benign - NotInject FPR is 3.8%; see benchmark table" />
-  <img src="https://img.shields.io/badge/tests-1184-blue" alt="1184 tests" />
+  <img src="https://img.shields.io/badge/tests-1232-blue" alt="1232 tests" />
   <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
@@ -40,7 +40,7 @@
 
 ---
 
-The most comprehensive open-source prompt injection firewall for LLM applications. Combines **33 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
+The most comprehensive open-source prompt injection firewall for LLM applications. Combines **34 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
 > **New in v0.6.0 — [federated threat-intel feed](#federated-threat-intel-feed-v060).** Fetch and verify a public ed25519-signed catalog of known prompt-injection attack patterns from [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures). First OSS feed we're aware of; Lakera / ProtectAI / Cisco keep their threat intel proprietary because it *is* their business model. CC0 data, Apache 2.0 code, offline-signed.
 
@@ -247,7 +247,7 @@ print(report.overall_risk_score)  # 1.0
 | Feature | Description |
 |---------|-------------|
 | **Red Team Self-Testing** | `prompt-shield attackme` uses Claude/GPT to attack itself across 12 categories |
-| **OWASP LLM Top 10** | All 33 detectors mapped; 8/10 categories covered |
+| **OWASP LLM Top 10** | All 34 detectors mapped; 8/10 categories covered |
 | **OWASP Agentic Top 10** | 2026 agentic risks mapped (10/10 covered) |
 | **MITRE ATLAS** | 9/9 techniques covered |
 | **EU AI Act** | Article-level compliance mapping (Aug 2026 deadline) |
@@ -298,7 +298,7 @@ Default mode is `flag` (not `block`) — because sanitizing a tool result can si
 
 ### Attack-family taxonomy
 
-Families project over the existing 33 input detectors — classifier F1 tracks detector F1, no separate regex layer to maintain.
+Families project over the existing 34 input detectors — classifier F1 tracks detector F1, no separate regex layer to maintain.
 
 | Family | What it catches | Sourced from |
 |---|---|---|
@@ -417,7 +417,7 @@ pydantic-ai `scan_tool_result` primitives, OpenAI wrapper `role="tool"` message 
 ## Architecture
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/blog-covers/architecture.svg" alt="prompt-shield architecture: 33 input detectors, 9 output scanners, ToolResultGuard v0.7.0 with 9 attack families, federated ed25519-signed threat feed, and self-learning attack vault" width="1000" />
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/blog-covers/architecture.svg" alt="prompt-shield architecture: 34 input detectors, 9 output scanners, ToolResultGuard v0.7.0 with 9 attack families, federated ed25519-signed threat feed, and self-learning attack vault" width="1000" />
 </p>
 
 ## Built-in Detectors
@@ -780,7 +780,7 @@ See [docs/github-action.md](docs/github-action.md) for advanced configuration.
 ```yaml
 repos:
   - repo: https://github.com/mthamil107/prompt-shield
-    rev: v0.7.2
+    rev: v0.7.3
     hooks:
       - id: prompt-shield-scan
       - id: prompt-shield-pii
@@ -838,8 +838,8 @@ prompt-shield compliance report --framework all            # All frameworks
 
 | Framework | Coverage | Details |
 |-----------|----------|---------|
-| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 33 detectors mapped; 26 detectors map to LLM01 alone |
-| **OWASP Agentic Top 10 (2026)** | **10/10 categories** | All 33 detectors + AgentGuard gates + 4 output scanners |
+| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 34 detectors mapped; 26 detectors map to LLM01 alone |
+| **OWASP Agentic Top 10 (2026)** | **10/10 categories** | All 34 detectors + AgentGuard gates + 4 output scanners |
 | **MITRE ATLAS** *(new)* | **9/9 techniques (100%)** | T0051 LLM Prompt Injection: 22 detectors. T0054 LLM Jailbreak: 11. T0057 LLM Data Leakage: 7. |
 | **EU AI Act** | 7 articles | Art.9, 10, 13, 14, 15, 50, 52 |
 
@@ -1186,13 +1186,20 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ d031 language enforcement flipped to opt-in default (breaking behaviour change; see CHANGELOG)
   - ✅ NotInject FPR reporting corrected (0.9% → 3.8%) across README, `docs/index.md`, arXiv paper (v3.0.2)
   - ✅ `tests/benchmark_public_datasets.py` reproducibility fix for `datasets>=3.x`
-- **v0.7.2 (current): wiring-completeness release** —
+- **v0.7.2: wiring-completeness release** —
   - ✅ Normalization pipeline (NFKC + zero-width strip + Cyrillic→Latin homoglyphs + whitespace collapse) now applied by `engine.scan()` before detector dispatch — homoglyph-obfuscated attacks no longer bypass the regex layer
   - ✅ `engine.sync_threats(url, public_key=key)` now runs ed25519 minisign verification by default via the new `signatures.apply_to_engine` bridge
   - ✅ New `OutputScanEngine` aggregator + `prompt-shield output scan` CLI + `POST /scan/output` REST endpoint (README examples for output scanning now actually work)
   - ✅ `d022` semantic-classifier missing-`[ml]` warning promoted from INFO to WARNING with actionable install hint
   - ✅ SECURITY.md supported-versions table corrected (0.7.x, not 0.1.x)
-  - ✅ +28 tests (1155 → 1183 passing) — see CHANGELOG for the FutureWarning migration path on `sync_threats`
+  - ✅ +29 tests (1,155 → 1,184 passing) — see CHANGELOG for the FutureWarning migration path on `sync_threats`
+- **v0.7.3 (current): hardening + new-detector release** —
+  - ✅ `d034_honeypot_tool` detector shipped — the **fourth of seven** cross-domain techniques from the companion paper (deception-technology-inspired; five default honeypot names, text-mention + context-invocation modes, four tool-call container shapes)
+  - ✅ New opt-in `strict_mode` config flag on `PromptShieldEngine` escalates borderline detections to `BLOCK` (off by default; no upgrade-time behaviour change)
+  - ✅ Forward-hardening on `d028_sequence_alignment`: threshold raised 0.60 → 0.63 and reveal-family synonym group carries `dampening_factor: 0.5` (NotInject FP count empirically unchanged; guard against reveal-family regressions)
+  - ✅ Security: `vault/threat_feed.py` now enforces `https://` for remote feeds (HTTP + `file://` raise `ValueError`) and applies a 30-second HTTP timeout
+  - ✅ Engineering: `PromptShieldEngine.scan()` refactored 150 → 53 lines (four helper methods, no behaviour change); new CI `doctest` job executes every `>>>` block in the public docs and detector docstrings
+  - ✅ +48 tests (1,184 → 1,232 passing, 18 skipped)
 - **v0.8.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts, remaining framework integrations (pydantic-ai / OpenAI / CrewAI adapters for `scan_tool_result`), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`
 
 See [ROADMAP.md](ROADMAP.md) for details.

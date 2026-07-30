@@ -21,12 +21,14 @@ bibliography: paper.bib
 `prompt-shield` is an Apache 2.0-licensed Python package that hardens
 LLM-backed applications against prompt injection at three
 architectural boundaries: user input, tool-call output, and model
-output. Version 0.7.2 ships 33 input detectors (regex families,
+output. Version 0.7.3 ships 34 input detectors (regex families,
 NFKC + homoglyph normalization, a seven-scheme encoding preprocessor,
 a DeBERTa semantic classifier, Smith-Waterman sequence alignment
 against a 187-attack signature database, forensic-linguistic
 stylometric discontinuity scoring, structural many-shot detection,
-and multilingual coverage across ten languages), 9 output scanners
+a honeypot-tool detector (the fourth of seven cross-domain
+techniques), and multilingual coverage across ten languages),
+9 output scanners
 (toxicity, code injection, prompt leakage, PII, schema validation,
 jailbreak, sentiment, bias/fairness, and hallucination/grounding), a
 first-class `ToolResultGuard` primitive for scanning tool-result content
@@ -43,7 +45,7 @@ integrations (LangChain, LlamaIndex, Haystack, Pydantic AI, CrewAI,
 MCP, the OpenAI and Anthropic SDKs, FastAPI, Flask, Django, n8n,
 Dify), plus a standalone REST/Docker deployment, a Prometheus
 `/metrics` endpoint, per-key sliding-window rate limiting, and a
-1,184-test regression suite. It is evaluated on nine benchmarks
+1,232-test regression suite. It is evaluated on nine benchmarks
 (eight public, one self-curated) totalling approximately 10,300
 samples, including Garak [@nvidia-garak], InjecAgent
 [@injecagent-2024], Liu et al. USENIX 2024 [@liu-2024], deepset
