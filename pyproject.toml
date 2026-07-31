@@ -1,6 +1,6 @@
 [project]
 name = "prompt-shield-ai"
-version = "0.7.3"
+version = "0.7.4"
 description = "Self-learning prompt injection detection engine for LLM applications"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -39,6 +39,11 @@ dependencies = [
     "regex>=2023.0",
     "sentence-transformers>=2.0",
     "chromadb>=0.5",
+    # ed25519 minisign verification for the federated threat-intel feed
+    # (SignaturesClient in prompt_shield.signatures). Added in v0.7.4:
+    # was previously a transitively-missing dep, causing a documented-but-
+    # broken import for anyone doing a base `pip install prompt-shield-ai`.
+    "cryptography>=41",
 ]
 
 [project.optional-dependencies]

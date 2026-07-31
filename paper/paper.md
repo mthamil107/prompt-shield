@@ -21,7 +21,7 @@ bibliography: paper.bib
 `prompt-shield` is an Apache 2.0-licensed Python package that hardens
 LLM-backed applications against prompt injection at three
 architectural boundaries: user input, tool-call output, and model
-output. Version 0.7.3 ships 34 input detectors (regex families,
+output. Version 0.7.4 ships 34 input detectors (regex families,
 NFKC + homoglyph normalization, a seven-scheme encoding preprocessor,
 a DeBERTa semantic classifier, Smith-Waterman sequence alignment
 against a 187-attack signature database, forensic-linguistic

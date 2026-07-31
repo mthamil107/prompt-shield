@@ -7,6 +7,58 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4] - 2026-07-31
+
+**Correctness patch.** Closes two documentation-vs-code gaps surfaced
+by a JOSS pre-submission audit. No API changes; no test-count change
+(still 1,232 passing / 18 skipped). Safe drop-in upgrade from v0.7.3.
+
+### Fixed
+
+- **`cryptography>=41` added to `[project.dependencies]`.** The v0.7.3
+  README claimed the federated threat-intel feed's ed25519 minisign
+  verification was "already pulled in transitively" — this was
+  factually false. A fresh `pip install prompt-shield-ai==0.7.3`
+  followed by `from prompt_shield.signatures import SignaturesClient`
+  raised `ModuleNotFoundError: cryptography` for every user who did
+  not also install one of the heavy extras. v0.7.4 adds `cryptography`
+  to the base dependencies so `SignaturesClient` works out-of-box.
+  Install-size impact is negligible (`cryptography` is ~10 MB and
+  ships prebuilt wheels for every supported platform).
+- **TaintP2X citation correction (README + research post).** The v0.7.3
+  README and `docs/research-post-cross-domain-techniques.md` linked
+  the TaintP2X ICSE 2026 paper (He et al.) to an arXiv URL that
+  actually resolves to FIDES (Costa et al., a different Microsoft
+  Research paper). The dead-link fix in the JOSS pre-submission pass
+  had swapped a 404 for a mis-attribution. Corrected to plain
+  author-list-plus-venue citation ("He et al., ICSE 2026 Research
+  Track") since no verified arXiv ID exists for TaintP2X. The
+  canonical bibliography entry in `docs/papers/build_v4_docx.py` was
+  already correct and remains unchanged.
+
+### Docs
+
+- README federated-feed section trimmed: the v0.7.3 install-note
+  paragraph ("If you see `ModuleNotFoundError: cryptography`, run
+  `pip install cryptography>=41` ...") is removed now that the fix
+  is upstream. The code block runs cleanly on a base install; the
+  `# doctest: +SKIP` marker that guarded it in v0.7.3 is removed.
+- README roadmap: v0.7.3 demoted to historical; v0.7.4 added as
+  "(current): correctness patch — federated-feed base install".
+- `paper/paper.md` Summary opens with "Version 0.7.4 ships 34 input
+  detectors" (was 0.7.3). Every other paper-side number is unchanged
+  (34 detectors, 1,232 tests, 4/7 techniques shipped).
+
+### Not in this release
+
+- No new features. No new detectors. No new benchmarks.
+- No behaviour change for any of the 1,232 tests — v0.7.4 is purely
+  a dependency-graph and citation-accuracy fix.
+- The `[signatures]` extra floated in the v0.7.3 README is NOT
+  created — cryptography is a base dep instead. Simpler for callers,
+  smaller documentation surface. If a future release needs to move
+  cryptography out of base deps, that's a v0.8.0+ scope decision.
+
 ## [0.7.3] - 2026-07-30
 
 **Hardening + new detector release.** Ships the fourth of seven

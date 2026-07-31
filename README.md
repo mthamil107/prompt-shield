@@ -868,10 +868,7 @@ engine.import_threats("community-threats.json")
 
 A public, ed25519-signed, CC0-licensed catalog of known prompt-injection attack patterns. Fetched daily, verified locally, and merged into your engine's detection stack. Think AV signature updates, but for LLMs.
 
-> **Install note (v0.7.3):** `SignaturesClient` uses ed25519 minisign verification and requires the [`cryptography`](https://cryptography.io/) package. If you installed `prompt-shield-ai` without any extras and see `ModuleNotFoundError: cryptography` on import, run `pip install cryptography>=41` (or `pip install prompt-shield-ai[signatures]` once v0.7.4 ships). Base-install inclusion of `cryptography` is tracked as a v0.7.4 correctness item.
-
 ```python
-# doctest: +SKIP  (requires `cryptography` — see install note above)
 from prompt_shield.signatures import SignaturesClient
 
 client = SignaturesClient()
@@ -1126,7 +1123,7 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 
 **The problem:** In agentic LLM apps, untrusted user input gets concatenated with trusted system prompts, mixed with semi-trusted RAG results, and flows to sensitive tool calls. No existing tool tracks data provenance through this pipeline.
 
-**The insight:** In compiler security, [taint analysis](https://en.wikipedia.org/wiki/Taint_checking) tracks data from untrusted sources through program execution to sensitive sinks. We apply the same principle to prompt assembly pipelines. Inspired by [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) and [TaintP2X (ICSE 2026 — arXiv:2505.23643)](https://arxiv.org/pdf/2505.23643).
+**The insight:** In compiler security, [taint analysis](https://en.wikipedia.org/wiki/Taint_checking) tracks data from untrusted sources through program execution to sensitive sinks. We apply the same principle to prompt assembly pipelines. Inspired by [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) and TaintP2X (He et al., ICSE 2026 Research Track).
 
 **How it works:**
 - `TaintedString` wraps `str` with provenance metadata: `source` (system/user/rag/tool), `trust_level` (trusted/semi-trusted/untrusted)
@@ -1134,7 +1131,7 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 - Sensitive sinks (tool calls, code execution) validate that input meets minimum trust requirements
 - A `TaintViolation` is raised if untrusted data flows to a privileged sink without passing through the detection engine
 
-**Why it's novel:** [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents and [TaintP2X (ICSE 2026 — arXiv:2505.23643)](https://arxiv.org/pdf/2505.23643) formalized taint-style vulnerability detection. [agent-audit](https://github.com/HeadyZhang/agent-audit) already ships *static* taint analysis for LangChain / CrewAI / AutoGen pipelines. Our contribution is the first **runtime** taint-propagation scanner — trust levels propagate through live string operations rather than being computed by code analysis — which is an **architectural defense** that prevents indirect injection by design, not by pattern matching.
+**Why it's novel:** [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents and TaintP2X (He et al., ICSE 2026 Research Track) formalized taint-style vulnerability detection. [agent-audit](https://github.com/HeadyZhang/agent-audit) already ships *static* taint analysis for LangChain / CrewAI / AutoGen pipelines. Our contribution is the first **runtime** taint-propagation scanner — trust levels propagate through live string operations rather than being computed by code analysis — which is an **architectural defense** that prevents indirect injection by design, not by pattern matching.
 
 **Properties:** Zero latency overhead (metadata propagation only). Opt-in: regular `str` inputs bypass the taint system entirely. Drop-in compatible via `TaintedString(str)`.
 
@@ -1199,13 +1196,18 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ `d022` semantic-classifier missing-`[ml]` warning promoted from INFO to WARNING with actionable install hint
   - ✅ SECURITY.md supported-versions table corrected (0.7.x, not 0.1.x)
   - ✅ +29 tests (1,155 → 1,184 passing) — see CHANGELOG for the FutureWarning migration path on `sync_threats`
-- **v0.7.3 (current): hardening + new-detector release** —
+- **v0.7.3: hardening + new-detector release** —
   - ✅ `d034_honeypot_tool` detector shipped — the **fourth of seven** cross-domain techniques from the companion paper (deception-technology-inspired; five default honeypot names, text-mention + context-invocation modes, four tool-call container shapes)
   - ✅ New opt-in `strict_mode` config flag on `PromptShieldEngine` escalates borderline detections to `BLOCK` (off by default; no upgrade-time behaviour change)
   - ✅ Forward-hardening on `d028_sequence_alignment`: threshold raised 0.60 → 0.63 and reveal-family synonym group carries `dampening_factor: 0.5` (NotInject FP count empirically unchanged; guard against reveal-family regressions)
   - ✅ Security: `vault/threat_feed.py` now enforces `https://` for remote feeds (HTTP + `file://` raise `ValueError`) and applies a 30-second HTTP timeout
   - ✅ Engineering: `PromptShieldEngine.scan()` refactored 150 → 53 lines (four helper methods, no behaviour change); new CI `doctest` job executes every `>>>` block in the public docs and detector docstrings
   - ✅ +48 tests (1,184 → 1,232 passing, 18 skipped)
+- **v0.7.4 (current): correctness patch — federated-feed base install** —
+  - ✅ `cryptography>=41` now in `[project.dependencies]`, so `SignaturesClient` (the federated ed25519-signed threat-intel feed) works out-of-box on `pip install prompt-shield-ai` without any extras. Fixes a false-transitive-dep claim in the v0.7.3 README that caused `ModuleNotFoundError` for fresh-install users of the federated-feed feature.
+  - ✅ TaintP2X citation correction: the ICSE 2026 Research Track paper is no longer mis-linked to the (unrelated) FIDES arXiv preprint. Now cited by canonical author-list only.
+  - ✅ SignaturesClient README block runs without a `# doctest: +SKIP` marker again — the block is now honestly executable on a base install.
+  - ✅ No API changes; upgrade is safe. Tests unchanged at 1,232 passing / 18 skipped. This is the pre-JOSS-submission version.
 - **v0.8.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts, remaining framework integrations (pydantic-ai / OpenAI / CrewAI adapters for `scan_tool_result`), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`
 
 See [ROADMAP.md](ROADMAP.md) for details.

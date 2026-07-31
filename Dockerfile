@@ -29,11 +29,11 @@ FROM python:3.12-slim
 
 # --- OCI / opencontainers labels -------------------------------------------
 LABEL maintainer="prompt-shield contributors" \
-      version="0.7.3" \
+      version="0.7.4" \
       description="Prompt-injection detection engine for LLM applications" \
       org.opencontainers.image.title="prompt-shield" \
       org.opencontainers.image.description="Prompt-injection detection engine for LLM applications" \
-      org.opencontainers.image.version="0.7.3" \
+      org.opencontainers.image.version="0.7.4" \
       org.opencontainers.image.url="https://github.com/mthamil107/prompt-shield" \
       org.opencontainers.image.source="https://github.com/mthamil107/prompt-shield" \
       org.opencontainers.image.licenses="Apache-2.0"

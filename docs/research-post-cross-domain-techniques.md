@@ -414,7 +414,7 @@ Every other technique in this post is a detector: it analyzes content and produc
 
 ### Prior Art
 
-[FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents. [TaintP2X (ICSE 2026)](https://arxiv.org/pdf/2505.23643) formalized taint-style vulnerability detection in LLM integrations. [agent-audit](https://github.com/HeadyZhang/agent-audit) ships static taint analysis for LangChain, CrewAI, and AutoGen agent pipelines. This is, to our knowledge, the first *runtime* taint-propagation scanner for agent pipelines -- propagating trust levels through live string operations rather than analyzing code statically, which complements the static-analysis approaches above.
+[FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents. TaintP2X (He et al., ICSE 2026 Research Track) formalized taint-style vulnerability detection in LLM integrations. [agent-audit](https://github.com/HeadyZhang/agent-audit) ships static taint analysis for LangChain, CrewAI, and AutoGen agent pipelines. This is, to our knowledge, the first *runtime* taint-propagation scanner for agent pipelines -- propagating trust levels through live string operations rather than analyzing code statically, which complements the static-analysis approaches above.
 
 ---
 
@@ -641,7 +641,7 @@ We believe the future of prompt injection defense is cross-disciplinary. The bes
 16. Mindgard / Lancaster. "Bypassing LLM Guardrails: An Empirical Analysis of Evasion Attacks against Prompt Injection and Jailbreak Detection Systems." [arXiv:2504.11168](https://arxiv.org/abs/2504.11168) (2025).
 11. Hanson, R. "Logarithmic Market Scoring Rules for Modular Combinatorial Information Aggregation." J. Prediction Markets, 2007. [Link](https://mason.gmu.edu/~rhanson/mktscore.pdf)
 12. FIDES. "Securing AI Agents with Information Flow Control." Microsoft Research, 2025. [Link](https://arxiv.org/pdf/2505.23643)
-13. TaintP2X. "Detecting Taint-Style Prompt-to-Anything Injection Vulnerabilities." ICSE 2026. [Link](https://arxiv.org/pdf/2505.23643)
+13. He, X., Wang, B., Zhao, Y., Hou, X., Liu, J., Zou, H., Wang, H. "TaintP2X: Detecting Taint-Style Prompt-to-Anything Injection Vulnerabilities in LLM-Integrated Applications." ICSE 2026 Research Track.
 14. Peng et al. "Multi-layer immune tolerance for network intrusion detection." Scientific Reports, 2025. [Link](https://www.nature.com/articles/s41598-025-20516-6)
 15. Stylometry for LLM Text. "Stylometry Recognizes Human and LLM Text." 2025. [Link](https://arxiv.org/html/2507.00838v1)
 16. agent-audit. "Static Taint Analysis for LangChain/CrewAI/AutoGen Agent Pipelines." GitHub, 2025. [Link](https://github.com/HeadyZhang/agent-audit)
