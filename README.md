@@ -138,14 +138,14 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
 ## Table of Contents
 
 - [Quick Install](#quick-install) | [Quickstart](#30-second-quickstart) | [Features](#features) | [Architecture](#architecture)
-- [Detectors (33)](#built-in-detectors) | [Output Scanners (9)](#output-scanners-9) | [Benchmarks](#benchmark-results)
+- [Detectors (34)](#built-in-detectors) | [Output Scanners (9)](#output-scanners-9) | [Benchmarks](#benchmark-results)
 - [Research: Novel Techniques (v0.4.0)](#research-novel-cross-domain-techniques-v040) -- **NEW**
 - [PII Redaction](#pii-detection--redaction) | [Output Scanning](#output-scanning) | [Red Team](#adversarial-self-testing-red-team)
 - [3-Gate Agent Protection](#protecting-agentic-apps-3-gate-model) | [Integrations](#integrations)
 - [GitHub Action](#github-action) | [Pre-commit](#pre-commit-hooks) | [Docker + API](#docker--rest-api)
 - [Compliance](#compliance) | [Webhook Alerting](#webhook-alerting) | [Self-Learning](#self-learning)
 - [**Federated Threat-Intel Feed (v0.6.0)**](#federated-threat-intel-feed-v060) -- **NEW**
-- [Configuration](#configuration) | [Custom Detectors](#writing-custom-detectors) | [CLI](#cli-reference) | [Roadmap](#roadmap)
+- [Configuration](#configuration) | [Custom Detectors](#writing-custom-detectors) | [CLI](#cli-reference) | [Roadmap](#roadmap) | [Getting Help](#getting-help)
 
 ---
 
@@ -340,6 +340,7 @@ response = shield.create(model="claude-opus-4-7", max_tokens=1024, messages=[...
 <summary><b>LangChain — <code>on_tool_end</code> callback</b></summary>
 
 ```python
+# doctest: +SKIP  (requires `pip install prompt-shield-ai[langchain]`)
 from prompt_shield.integrations.langchain_callback import PromptShieldCallback
 
 cb = PromptShieldCallback(scan_tool_results=True, tool_result_mode="block")
@@ -790,6 +791,8 @@ See [docs/pre-commit.md](docs/pre-commit.md) for options.
 
 ## Docker + REST API
 
+> **Python-only install note:** the REST API is bundled in the Docker image but is an *optional* extra for the PyPI wheel. If you want to `from prompt_shield.api import app` from your own Python code (e.g. to mount the FastAPI app into an existing service), install with `pip install prompt-shield-ai[fastapi]`. The Docker image below pulls it in automatically.
+
 ```bash
 docker build -t prompt-shield .
 docker run -p 8000:8000 prompt-shield    # API server
@@ -865,7 +868,10 @@ engine.import_threats("community-threats.json")
 
 A public, ed25519-signed, CC0-licensed catalog of known prompt-injection attack patterns. Fetched daily, verified locally, and merged into your engine's detection stack. Think AV signature updates, but for LLMs.
 
+> **Install note (v0.7.3):** `SignaturesClient` uses ed25519 minisign verification and requires the [`cryptography`](https://cryptography.io/) package. If you installed `prompt-shield-ai` without any extras and see `ModuleNotFoundError: cryptography` on import, run `pip install cryptography>=41` (or `pip install prompt-shield-ai[signatures]` once v0.7.4 ships). Base-install inclusion of `cryptography` is tracked as a v0.7.4 correctness item.
+
 ```python
+# doctest: +SKIP  (requires `cryptography` — see install note above)
 from prompt_shield.signatures import SignaturesClient
 
 client = SignaturesClient()
@@ -1120,7 +1126,7 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 
 **The problem:** In agentic LLM apps, untrusted user input gets concatenated with trusted system prompts, mixed with semi-trusted RAG results, and flows to sensitive tool calls. No existing tool tracks data provenance through this pipeline.
 
-**The insight:** In compiler security, [taint analysis](https://en.wikipedia.org/wiki/Taint_checking) tracks data from untrusted sources through program execution to sensitive sinks. We apply the same principle to prompt assembly pipelines. Inspired by [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) and [TaintP2X (ICSE 2026)](https://conf.researchr.org/details/icse-2026/icse-2026-research-track/157/).
+**The insight:** In compiler security, [taint analysis](https://en.wikipedia.org/wiki/Taint_checking) tracks data from untrusted sources through program execution to sensitive sinks. We apply the same principle to prompt assembly pipelines. Inspired by [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) and [TaintP2X (ICSE 2026 — arXiv:2505.23643)](https://arxiv.org/pdf/2505.23643).
 
 **How it works:**
 - `TaintedString` wraps `str` with provenance metadata: `source` (system/user/rag/tool), `trust_level` (trusted/semi-trusted/untrusted)
@@ -1128,7 +1134,7 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 - Sensitive sinks (tool calls, code execution) validate that input meets minimum trust requirements
 - A `TaintViolation` is raised if untrusted data flows to a privileged sink without passing through the detection engine
 
-**Why it's novel:** [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents and [TaintP2X (ICSE 2026)](https://conf.researchr.org/details/icse-2026/icse-2026-research-track/157/) formalized taint-style vulnerability detection. [agent-audit](https://github.com/HeadyZhang/agent-audit) already ships *static* taint analysis for LangChain / CrewAI / AutoGen pipelines. Our contribution is the first **runtime** taint-propagation scanner — trust levels propagate through live string operations rather than being computed by code analysis — which is an **architectural defense** that prevents indirect injection by design, not by pattern matching.
+**Why it's novel:** [FIDES (Microsoft Research, 2025)](https://arxiv.org/pdf/2505.23643) proposed information flow control for AI agents and [TaintP2X (ICSE 2026 — arXiv:2505.23643)](https://arxiv.org/pdf/2505.23643) formalized taint-style vulnerability detection. [agent-audit](https://github.com/HeadyZhang/agent-audit) already ships *static* taint analysis for LangChain / CrewAI / AutoGen pipelines. Our contribution is the first **runtime** taint-propagation scanner — trust levels propagate through live string operations rather than being computed by code analysis — which is an **architectural defense** that prevents indirect injection by design, not by pattern matching.
 
 **Properties:** Zero latency overhead (metadata propagation only). Opt-in: regular `str` inputs bypass the taint system entirely. Drop-in compatible via `TaintedString(str)`.
 
@@ -1203,6 +1209,18 @@ These notes are published as a dated public disclosure. The author makes no clai
 - **v0.8.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts, remaining framework integrations (pydantic-ai / OpenAI / CrewAI adapters for `scan_tool_result`), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`
 
 See [ROADMAP.md](ROADMAP.md) for details.
+
+## Getting Help
+
+Choose the right channel by question type:
+
+- **Usage questions** — how do I configure X, why does Y behave this way, is Z the right pattern for my use case: open a **GitHub Discussion** at [github.com/mthamil107/prompt-shield/discussions](https://github.com/mthamil107/prompt-shield/discussions) (if the Discussions tab isn't yet enabled on the repo, use a `question`-labeled issue instead).
+- **Bug reports** — something is broken: open a **bug-report issue** using the template at [github.com/mthamil107/prompt-shield/issues/new/choose](https://github.com/mthamil107/prompt-shield/issues/new/choose). Include the smallest failing example, your Python version, and the output of `prompt-shield --version`.
+- **Feature requests / new detector proposals** — same issue templates, pick "Feature request" or "New detector proposal".
+- **Security vulnerabilities** — do **not** open a public issue. Follow the private-disclosure path in [SECURITY.md](SECURITY.md) (GitHub's private vulnerability reporting on this repository).
+- **Research / citation questions** — email via the address on my GitHub profile, or open a Discussion tagged `research`. See [CITATION.cff](CITATION.cff) for how to cite the paper.
+
+Response times: this is a solo-maintained OSS project. Best-effort within a week for questions and non-critical bugs; within 48 hours for security reports.
 
 ## Contributing
 

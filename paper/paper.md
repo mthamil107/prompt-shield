@@ -49,9 +49,9 @@ Dify), plus a standalone REST/Docker deployment, a Prometheus
 (eight public, one self-curated) totalling approximately 10,300
 samples, including Garak [@nvidia-garak], InjecAgent
 [@injecagent-2024], Liu et al. USENIX 2024 [@liu-2024], deepset
-[@deepset-injections], NotInject [@notinject-2024], LLMail-Inject,
-AgentHarm, and AgentDojo; the full paper
-[@prompt-shield-arxiv-2026] reports per-dataset results. The three architectural patterns that
+[@deepset-injections], NotInject [@notinject-2024], and — via the
+companion paper [@prompt-shield-arxiv-2026] — LLMail-Inject,
+AgentHarm, and AgentDojo, with per-dataset results reported there. The three architectural patterns that
 organize the software — the tool-result boundary gate, a federated
 signed threat feed, and a detector-agnostic attack-family taxonomy
 — are described in Section 7 of that companion paper.
@@ -96,7 +96,7 @@ records 166 total views (154 unique) and 87 total downloads (59
 unique) on Zenodo [@prompt-shield-zenodo-paper] in the three months
 since publication, and the design-notes preprint
 [@prompt-shield-zenodo-designnotes] records 47 total views (source:
-https://zenodo.org/records/19644135 and /20809165 stats pages,
+https://zenodo.org/records/19644135 and https://zenodo.org/records/20809165 stats pages,
 snapshot 2026-07-28). The federated feed repository
 [@prompt-shield-signatures-2026] shows 38 CDN requests over the
 trailing 30 days (source: jsDelivr public stats API for
