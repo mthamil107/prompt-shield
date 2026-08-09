@@ -162,4 +162,20 @@ it legible as a pattern worth naming. We also thank the
 independent reviewer whose `CLAIM-AUDIT.md` corrections informed
 the v0.7.1 accuracy release.
 
+# AI usage disclosure
+
+Portions of `prompt-shield`'s development and this paper's drafting
+were assisted by AI tools, primarily Anthropic Claude Code (for
+code generation, refactoring, documentation, and iterative paper
+editing) and Anthropic Fable 5 (as an independent-review agent
+across multiple review passes on both the software and the
+paper). All final decisions on architecture, detection algorithms,
+threshold tuning, evaluation methodology, and research claims are
+the author's own. AI-generated code was reviewed and tested before
+commit; AI-suggested paper text was verified against the actual
+implementation and empirical measurements before inclusion. All
+empirical numbers reported in this paper and the companion arXiv
+preprint were produced by scripts in the repository (paths cited in
+each subsection) and are independently reproducible.
+
 # References
