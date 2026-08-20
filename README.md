@@ -1100,22 +1100,23 @@ The core insight behind v0.4.0 is that prompt injection detection has converged 
 
 ---
 
-### 6. Perplexity Spectral Analysis (Signal Processing)
+### 6. Perplexity Spectral Analysis (Signal Processing) — shipped v0.7.5 as `d035`, opt-in
 
 **The problem:** "Sandwich" attacks wrap malicious instructions inside benign text: `[friendly greeting] [IGNORE INSTRUCTIONS] [friendly closing]`. Static classifiers see mostly benign text and miss the injection.
 
-**The insight:** In signal processing, the [Discrete Fourier Transform](https://en.wikipedia.org/wiki/Discrete_Fourier_transform) decomposes a signal into frequency components. A benign prompt has smooth, low-frequency perplexity variations. An embedded injection creates a sharp, high-frequency spike. Inspired by [SpecDetect (2025)](https://arxiv.org/html/2508.11343v1) which applied spectral analysis to AI-text detection -- we apply it to injection detection.
+**The insight:** Encoded or obfuscated payloads and register-shift imperatives both produce sudden departures in per-token language-model perplexity — a drop for repetitive high-probability sub-tokens, a spike for out-of-register imperatives. Either edge is a change-point in the perplexity sequence, exactly the signal that [Page (1954) CUSUM](https://en.wikipedia.org/wiki/CUSUM) was designed to detect. Inspired by [SpecDetect (2025)](https://arxiv.org/html/2508.11343v1) which applied spectral analysis to AI-text detection — we apply the change-point half of the toolkit to injection detection.
 
-**How it works:**
-- Compute per-token perplexity using a reference language model (GPT-2 small, 124M params)
-- Treat the perplexity sequence as a time-series signal
-- Apply DFT and compute the high-frequency energy ratio (HFR)
-- Apply [CUSUM change-point detection](https://en.wikipedia.org/wiki/CUSUM) to find abrupt perplexity shifts
-- High HFR or multiple change-points = embedded injection detected
+**How it works (shipped in v0.7.5):**
+- Compute per-token perplexity using a reference language model (`distilgpt2` by default, ~82M params via the `[ml]` extra; soft-dep same as `d022`)
+- Convert each per-token log-probability to `p_i = exp(-log p_i)`
+- Apply Page (1954) CUSUM in **σ-normalised units**: `S_i = max(0, S_{i-1} + ((p_i − mean) / std − k))`. Raw perplexity is heavy-tailed (values in the hundreds to millions on benign text); un-normalised CUSUM against a small threshold fires on every long benign input.
+- Fire when `max(S_i)` exceeds a σ-units threshold (Page's classic control-chart range `h ≈ 4–5`; default `5.0`, allowance `cusum_k = 0.5`)
 
-**Why it's novel:** SpecDetect applied spectral analysis to AI-text detection but **nobody has applied it to prompt injection detection**. The "perplexity as a signal" framing for injection boundary detection is entirely new.
+**Ships disabled by default.** The threshold has not been empirically calibrated against the paper's benchmark corpora. Fable-review empirical testing found the untuned `threshold=5.0` default fires on 4/4 tested long-form benign business inputs at low confidence (0.11–0.18). Set `d035_perplexity_spectral.enabled: true` in your config only after tuning `threshold` against your own benign corpus. Same opt-in-until-tuned pattern as `d031` / `d032`. Full FPR calibration is scoped for v6.0.
 
-**Properties:** Detects the *boundary* of an injection, not just its presence. Effective against sandwich attacks and RAG poisoning.
+**Why it's novel:** SpecDetect applied spectral analysis to AI-text detection but **nobody has applied Page-CUSUM change-point detection on LM perplexity to prompt injection**. The "perplexity as a change-point signal" framing for injection boundary detection is entirely new.
+
+**Properties:** Detects the *boundary* of an injection, not just its presence. Effective against embedded / sandwich attacks and RAG poisoning where the payload is surrounded by benign cover text.
 
 ---
 
@@ -1169,7 +1170,8 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ **d027 Stylometric discontinuity** (phase 1)
   - ✅ **d028 Smith-Waterman alignment** (phase 4) — +34.5 pp F1 on deepset with 0 FP cost
   - ✅ **Adversarial fatigue tracker** (phase 2) — EWMA near-miss detection + per-source threshold hardening
-  - ⬜ Honeypot tools, prediction market ensemble, perplexity spectral analysis, runtime taint tracking — remain in development
+  - ⬜ Prediction market ensemble, runtime taint tracking — remain in development
+  - (Honeypot tools later shipped as d034; perplexity spectral shipped as d035 in v0.7.5.)
 - **v0.5.x**: 33 input detectors + 9 output scanners —
   - ✅ d030 custom YAML rules, d031 language enforcement, d032 denied topics, d033 multi-turn topic drift
   - ✅ Sentiment / bias-fairness / hallucination output scanners

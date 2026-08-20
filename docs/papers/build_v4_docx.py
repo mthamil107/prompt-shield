@@ -876,11 +876,15 @@ def build_techniques(doc: Document) -> None:
         "noisy sequences. A benign document produces a smooth, low-frequency perplexity "
         "signal when scored token-by-token by a reference language model. An injected "
         "payload with different vocabulary, syntax, and intent creates a high-frequency "
-        "spike. We propose computing the discrete Fourier transform of the per-token "
-        "perplexity series and flagging inputs with abnormally high high-frequency energy "
-        "ratio, complemented by cumulative-sum change-point detection "
-        "(Page, Biometrika 1954; Vial et al., CDC Emerging Infectious Diseases 2020) to "
-        "localize the boundary between benign prose and injected payload.",
+        "spike. The full proposal in earlier drafts of this note was to compute the "
+        "discrete Fourier transform of the per-token perplexity series and flag inputs "
+        "with abnormally high high-frequency energy ratio, complemented by cumulative-sum "
+        "change-point detection (Page, Biometrika 1954; Vial et al., CDC Emerging "
+        "Infectious Diseases 2020) to localise the boundary between benign prose and "
+        "injected payload. The v0.7.5 shipped implementation retains only the CUSUM half "
+        "of that proposal (see below); the DFT+HFR half remains proposed-but-not-shipped, "
+        "pending a benchmark study of whether it adds measurable signal on top of the "
+        "change-point statistic alone.",
     )
     _add_para(
         doc,
