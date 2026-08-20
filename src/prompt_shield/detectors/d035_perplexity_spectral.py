@@ -122,9 +122,9 @@ class PerplexitySpectralDetector(BaseDetector):
         try:
             from transformers import AutoModelForCausalLM, AutoTokenizer
 
-            self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)
-            self._model = AutoModelForCausalLM.from_pretrained(self._model_name)
-            self._model.eval()
+            self._tokenizer = AutoTokenizer.from_pretrained(self._model_name)  # type: ignore[no-untyped-call, unused-ignore]
+            self._model = AutoModelForCausalLM.from_pretrained(self._model_name)  # type: ignore[no-untyped-call, unused-ignore]
+            self._model.eval()  # type: ignore[no-untyped-call, unused-ignore]
             self._available = True
             logger.info("Loaded perplexity model: %s", self._model_name)
         except ImportError:
