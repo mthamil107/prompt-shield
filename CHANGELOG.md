@@ -7,6 +7,104 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.5] - 2026-08-19
+
+**Fifth cross-domain technique + twice-promised paper deliverables.**
+Ships the fifth of seven cross-domain detectors described in the
+companion paper (d035 perplexity spectral change-point detection),
+lands the paper's twice-promised competitor rerun on three
+peer-reviewed benchmarks, expands the composed-stack adaptive-attack
+study from 2 layers to 5, refreshes `paper/paper.md` to match the new
+repo state, and lifts the pre-JOSS-submission FREEZE.md. **No
+behaviour change for existing v0.7.4 users** — d035 ships disabled by
+default. Test suite: 1,232 → 1,246 passing / 18 skipped (+14 net-new
+tests, all covering d035).
+
+### Added
+
+- **`d035_perplexity_spectral` detector — the fifth shipped cross-domain
+  technique.** Per-token perplexity + Page-1954 CUSUM change-point
+  detector, cross-domain-ported from signal analysis + change-point
+  detection in epidemiology / industrial-quality-control. Uses
+  `distilgpt2` (~350MB, downloads on first use) via the `[ml]` extra;
+  the same soft-dep pattern as d022. Ships **disabled by default**
+  (`enabled: false` in `config/default.yaml`) pending threshold
+  calibration on the paper's benchmark corpora — enabling it on
+  general traffic empirically fires on 4/4 tested benign long-form
+  business inputs at the current σ-normalised threshold of 5.0.
+  Enable only after tuning `threshold` against your own benign
+  corpus. 14 unit tests, OWASP + MITRE ATLAS mappings added. Paper
+  §4.6 moves from PROPOSED to IMPLEMENTED-BUT-OPT-IN.
+- **Composed adaptive-attack 5-layer study.** New
+  `docs/papers/evaluation/composed_adaptive_expanded.{py,md,json}`
+  extends the v0.7.3 partial run (2 layers: d028 + d027) to all 5
+  layers (adds d022, fatigue tracker, ToolResultGuard). At n = 20 per
+  layer under non-iterative hand-crafted attacks, the composed stack
+  blocked 100% of the layer-specific adaptive attacks — the paper's
+  first partial empirical support for the §2.2 composability thesis
+  at expanded scale. A full n = 100/layer gradient-informed
+  adversarial study remains v6.0 scope. Two nuanced findings landed
+  alongside: (i) the base64 wrapper drifts ToolResultGuard's
+  family classification into `encoded_payload` even when the
+  underlying intent is override/exfiltration — the guard still
+  blocks, but the family label lies; (ii) the fatigue-tracker's
+  temporal-spacing bypass hypothesis (methodology §3.3) was wrong —
+  cooldown fires only after hardening, so pure spacing still
+  triggers. The real fatigue-tracker vulnerabilities are **sample
+  dilution** (interleave 5 benign observations per near-miss to hold
+  EWMA below 0.4) and **source-key rotation** (rotate proxies so no
+  single source reaches `min_samples_before_trigger = 8`).
+- **Competitor rerun on three academic benchmarks.** New
+  `docs/papers/evaluation/competitor_rerun.{py,md,json}` — 4 OSS
+  competitors (ProtectAI DeBERTa v2, Deepset DeBERTa v3, Meta Prompt
+  Guard 2, PIGuard) × 3 academic benchmarks (Liu USENIX 2024, Garak
+  sample 500, InjecAgent sample 500), all 12 cells populated on the
+  paper's exact benchmark prompts. Delivers the deliverable paper
+  §5.4's fourth bullet promised in both v3.0 and v4.0 revisions.
+  Honest findings: **PIGuard beats prompt-shield regex-only on Liu
+  (85.5% vs 64.0%) and on Garak (77.3% vs 55.2%); prompt-shield wins
+  on InjecAgent (85.2% vs 80.6%)**. Deepset's 100/100/100 is a
+  trained-to-flag artefact — the same run flags 2/8 Liu-benign
+  prompts (25% FPR at threshold 0.5). ProtectAI DeBERTa v2 is a
+  self-comparison (prompt-shield's d022 loads the same weights).
+  Prompt-shield's differentiators shift from "detection leader" to
+  throughput (~38 scans/sec on InjecAgent vs PIGuard's ~4/sec on
+  CPU), interpretability (per-detector match evidence), the
+  federated signature feed, the ToolResultGuard boundary primitive
+  and its 9-family taxonomy, and the fatigue tracker.
+
+### Fixed
+
+- **`paper/paper.md` refresh.** Numbers updated to match the state a
+  JOSS reviewer sees after re-cloning post-freeze-lift: 34 → 35 input
+  detectors (with d035 opt-in caveat), 1,232 → 1,246 tests
+  (1,264 total including 18 skipped), four of the seven → **five of
+  the seven** techniques shipped, and one paragraph in the Research
+  Impact Statement now cites the new §5.9 (composed adaptive
+  expansion) and §5.10 (competitor rerun) additions to the arXiv
+  companion paper.
+- **FREEZE.md deletion.** The development freeze installed in v0.7.3
+  ahead of the JOSS submission window is lifted. JOSS returned "come
+  back after citations" on 2026-08-19 (soft-decline pending research
+  adoption); FREEZE.md's own §4 lift-condition triggered — the file
+  is removed rather than left as a stale artefact.
+
+### Not in this release
+
+- **No behaviour change for existing v0.7.4 users.** d035 is opt-in;
+  enabling it requires an explicit `d035_perplexity_spectral: enabled:
+  true` block in the runtime config, plus the `[ml]` extra for
+  `transformers`. Default-config engines behave identically to v0.7.4.
+- The remaining two cross-domain techniques (prediction-market
+  ensemble scoring §4.5, runtime taint tracking §4.7) remain
+  documented as design specifications for future work.
+- No API changes; no removed deprecations; no config-schema
+  migrations required.
+
+### Test suite
+
+- 1,232 → 1,246 passing / 18 skipped (+14, all covering d035).
+
 ## [0.7.4] - 2026-07-31
 
 **Correctness patch.** Closes two documentation-vs-code gaps surfaced

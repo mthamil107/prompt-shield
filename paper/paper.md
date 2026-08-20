@@ -12,7 +12,7 @@ authors:
 affiliations:
   - name: Independent Researcher
     index: 1
-date: 09 August 2026
+date: 19 August 2026
 bibliography: paper.bib
 ---
 
@@ -21,17 +21,19 @@ bibliography: paper.bib
 `prompt-shield` is an Apache 2.0-licensed Python package that hardens
 LLM-backed applications against prompt injection at three
 architectural boundaries: user input, tool-call output, and model
-output. Version 0.7.4 ships 34 input detectors (regex families,
-NFKC + homoglyph normalization, a seven-scheme encoding preprocessor,
-a DeBERTa semantic classifier, Smith-Waterman sequence alignment
-against a 187-attack signature database, forensic-linguistic
-stylometric discontinuity scoring, structural many-shot detection,
-a honeypot-tool detector, and multilingual coverage across ten
-languages), 9 output scanners (toxicity, code injection, prompt
+output. Version 0.7.5 ships 35 input detectors (of which the newest,
+d035 perplexity-spectral change-point analysis, is opt-in pending
+threshold calibration on the paper's benchmark corpora): regex
+families, NFKC + homoglyph normalization, a seven-scheme encoding
+preprocessor, a DeBERTa semantic classifier, Smith-Waterman sequence
+alignment against a 187-attack signature database, forensic-linguistic
+stylometric discontinuity scoring, structural many-shot detection, a
+honeypot-tool detector, and multilingual coverage across ten
+languages; 9 output scanners (toxicity, code injection, prompt
 leakage, PII, schema validation, jailbreak, sentiment, bias/fairness,
-hallucination/grounding), a first-class `ToolResultGuard` primitive
+hallucination/grounding); a first-class `ToolResultGuard` primitive
 for scanning tool-result content before it re-enters the model's
-context, and a federated ed25519-signed threat-intelligence feed
+context; and a federated ed25519-signed threat-intelligence feed
 (`prompt-shield-signatures`) that the engine verifies against a
 pinned public key before loading. All input is passed through an
 idempotent normalisation pipeline (NFKC, zero-width strip, Cyrillic
@@ -40,8 +42,8 @@ dispatch. The library ships with thirteen framework integrations
 (LangChain, LlamaIndex, Haystack, Pydantic AI, CrewAI, MCP, the
 OpenAI and Anthropic SDKs, FastAPI, Flask, Django, n8n, Dify) plus
 a standalone REST/Docker deployment, a Prometheus `/metrics`
-endpoint, per-key sliding-window rate limiting, and a 1,250-test
-regression suite (1,232 passing + 18 skipped).
+endpoint, per-key sliding-window rate limiting, and a 1,264-test
+regression suite (1,246 passing + 18 skipped).
 
 # Statement of need
 
@@ -96,7 +98,7 @@ incoming context is compromised.
 
 `prompt-shield` occupies a distinct point in this design space: an
 integrated defense-in-depth stack packaged as a single `pip install`,
-combining 34 input detectors, 9 output scanners, a tool-result
+combining 35 input detectors, 9 output scanners, a tool-result
 boundary gate, and a federated ed25519-signed threat feed under one
 API with reproducible per-benchmark evaluation scripts checked into
 the repository. The companion paper's Related Work section (§2.4)
@@ -154,11 +156,22 @@ techniques, each porting a mechanism from a discipline outside
 large-language-model security: forensic linguistics, materials-science
 fatigue analysis, deception technology, local-sequence alignment
 from bioinformatics, mechanism design, spectral signal analysis, and
-taint tracking. Four of the seven are implemented as shipped detectors
-in this software (d027 stylometric discontinuity, d028 Smith-Waterman
-sequence alignment, adversarial fatigue tracker, and d034 honeypot
-tool definitions); the remaining three are documented as design
-specifications for future work.
+taint tracking. **Five of the seven** are implemented as shipped
+detectors in this software (d027 stylometric discontinuity, d028
+Smith-Waterman sequence alignment, adversarial fatigue tracker, d034
+honeypot tool definitions, and d035 perplexity-spectral change-point
+analysis — the last ships **disabled by default** in v0.7.5 pending
+threshold calibration on the paper's benchmark corpora, following
+the same opt-in-until-tuned pattern already used for the d031/d032
+policy gates). The v0.7.5 release additionally delivers the paper's
+twice-promised competitor rerun on three peer-reviewed benchmarks
+(companion paper §5.10) and expands the composed-stack adaptive-attack
+study from two layers to five (companion paper §5.9); reproduction
+scripts and full numbers are checked in at
+`docs/papers/evaluation/competitor_rerun.{py,md,json}` and
+`composed_adaptive_expanded.{py,md,json}`. The remaining two techniques
+(prediction-market ensemble scoring, runtime taint tracking) are
+documented as design specifications for future work.
 
 The paper reports independent evaluation across three peer-reviewed
 academic benchmarks — Liu et al. USENIX Security 2024 [@liu-2024],
@@ -178,28 +191,18 @@ dropping from 95.0% to 0.0% under a matrix-aware second-mover
 adversary — quantifying the operating envelope publicly rather than
 obscuring it.
 
-The project has been publicly developed since 2026-02-12 (178 days
-at JOSS submission on 2026-08-09, crossing the JOSS six-month
-public-development threshold on 2026-08-12 — three days after
-submission), with 183 total commits (158 excluding merges), 20
-releases published to PyPI (19 tagged in git), and 25 pull requests
-visible in the public history. There is no private prehistory;
-every commit has been public from day one. All commits, releases,
-and pull requests to date are by the original author; external
-contributions are invited via a public `CONTRIBUTING.md` at the
-repository root, with the acknowledgement that JOSS treats
-external-contributor engagement as welcome but non-essential.
+The project has been publicly developed since 2026-02-12, with 183
+total commits (158 excluding merges), 20 releases to PyPI, and 25
+public pull requests. There is no private prehistory. All commits
+and releases to date are by the original author; external
+contributions are invited via `CONTRIBUTING.md`.
 
 Every empirical number reported in the paper is produced by scripts
-checked into the repository at pinned release tags. PyPI adoption
-stands at approximately 12,600 all-time downloads and 2,600 in the
-trailing 30 days (source: pepy.tech, snapshot 2026-08-09); GitHub
-stars are at 12 with 3 forks; the project has been externally
-covered by a technical article on the Towards AI publication that
-drove sustained referrer traffic. The federated-feed repository
-[@prompt-shield-signatures-2026] records approximately 90 CDN
-requests over the trailing 30 days (source: jsDelivr public stats
-API for `mthamil107/prompt-shield-signatures`).
+checked in at pinned release tags. PyPI adoption stands at ~12,600
+all-time downloads and ~2,600 in the trailing 30 days (pepy.tech,
+2026-08-09); GitHub stars 12; the federated-feed repository
+[@prompt-shield-signatures-2026] records ~90 CDN requests in the
+trailing 30 days (jsDelivr public stats).
 
 # Acknowledgements
 

@@ -1,0 +1,200 @@
+{
+  "config": {
+    "competitors": [
+      "protectai",
+      "deepset",
+      "prompt_guard_2",
+      "piguard"
+    ],
+    "benchmarks": [
+      "liu",
+      "garak",
+      "injecagent"
+    ],
+    "sample_size": 500,
+    "threshold": 0.5,
+    "seed": 42
+  },
+  "samples": {
+    "liu": {
+      "n_attacks": 200,
+      "n_benign": 8
+    },
+    "garak": {
+      "n_attacks": 500,
+      "n_benign": 0
+    },
+    "injecagent": {
+      "n_attacks": 500,
+      "n_benign": 0
+    }
+  },
+  "results": {
+    "protectai": {
+      "liu": {
+        "scanned": 200,
+        "skipped": 0,
+        "caught": 127,
+        "threshold": 0.5,
+        "elapsed_seconds": 20.805027900030836,
+        "mean_prob": 0.6343507964981402,
+        "detection_rate": 0.635,
+        "benign_scanned": 8,
+        "benign_fp": 0,
+        "benign_fp_rate": 0.0,
+        "wall_seconds_total": 21.857073399994988
+      },
+      "garak": {
+        "scanned": 449,
+        "skipped": 51,
+        "caught": 200,
+        "threshold": 0.5,
+        "elapsed_seconds": 124.29005800001323,
+        "mean_prob": 0.44474776244556463,
+        "detection_rate": 0.44543429844098,
+        "wall_seconds_total": 124.290103599953
+      },
+      "injecagent": {
+        "scanned": 500,
+        "skipped": 0,
+        "caught": 417,
+        "threshold": 0.5,
+        "elapsed_seconds": 71.72261190001154,
+        "mean_prob": 0.8318901000360492,
+        "detection_rate": 0.834,
+        "wall_seconds_total": 71.72267430002103
+      }
+    },
+    "deepset": {
+      "liu": {
+        "scanned": 200,
+        "skipped": 0,
+        "caught": 200,
+        "threshold": 0.5,
+        "elapsed_seconds": 19.177576999994926,
+        "mean_prob": 0.9989320412278175,
+        "detection_rate": 1.0,
+        "benign_scanned": 8,
+        "benign_fp": 2,
+        "benign_fp_rate": 0.25,
+        "wall_seconds_total": 19.779839499969967
+      },
+      "garak": {
+        "scanned": 449,
+        "skipped": 51,
+        "caught": 449,
+        "threshold": 0.5,
+        "elapsed_seconds": 90.57365119998576,
+        "mean_prob": 0.9986605798215802,
+        "detection_rate": 1.0,
+        "wall_seconds_total": 90.57370230002562
+      },
+      "injecagent": {
+        "scanned": 500,
+        "skipped": 0,
+        "caught": 500,
+        "threshold": 0.5,
+        "elapsed_seconds": 75.48657310003182,
+        "mean_prob": 0.9987233202457428,
+        "detection_rate": 1.0,
+        "wall_seconds_total": 75.48662349994993
+      }
+    },
+    "prompt_guard_2": {
+      "liu": {
+        "scanned": 200,
+        "skipped": 0,
+        "caught": 88,
+        "threshold": 0.5,
+        "elapsed_seconds": 18.55773770000087,
+        "mean_prob": 0.4367050212694448,
+        "detection_rate": 0.44,
+        "benign_scanned": 8,
+        "benign_fp": 0,
+        "benign_fp_rate": 0.0,
+        "wall_seconds_total": 19.23192360001849
+      },
+      "garak": {
+        "scanned": 449,
+        "skipped": 51,
+        "caught": 253,
+        "threshold": 0.5,
+        "elapsed_seconds": 100.91667989996495,
+        "mean_prob": 0.5680711225510957,
+        "detection_rate": 0.5634743875278396,
+        "wall_seconds_total": 100.91673320002155
+      },
+      "injecagent": {
+        "scanned": 500,
+        "skipped": 0,
+        "caught": 280,
+        "threshold": 0.5,
+        "elapsed_seconds": 76.16875940002501,
+        "mean_prob": 0.5635580882708309,
+        "detection_rate": 0.56,
+        "wall_seconds_total": 76.16880410001613
+      }
+    },
+    "piguard": {
+      "liu": {
+        "scanned": 200,
+        "skipped": 0,
+        "caught": 171,
+        "threshold": 0.5,
+        "elapsed_seconds": 19.478167099994607,
+        "mean_prob": 0.854141950851772,
+        "detection_rate": 0.855,
+        "benign_scanned": 8,
+        "benign_fp": 0,
+        "benign_fp_rate": 0.0,
+        "wall_seconds_total": 20.046518100018147
+      },
+      "garak": {
+        "scanned": 449,
+        "skipped": 51,
+        "caught": 347,
+        "threshold": 0.5,
+        "elapsed_seconds": 92.10522509994917,
+        "mean_prob": 0.7818760528880577,
+        "detection_rate": 0.7728285077951003,
+        "wall_seconds_total": 92.10526929999469
+      },
+      "injecagent": {
+        "scanned": 500,
+        "skipped": 0,
+        "caught": 403,
+        "threshold": 0.5,
+        "elapsed_seconds": 130.17983139998978,
+        "mean_prob": 0.8263191158436238,
+        "detection_rate": 0.806,
+        "wall_seconds_total": 130.179974699975
+      }
+    }
+  },
+  "load": {
+    "protectai": {
+      "status": "loaded",
+      "load_seconds": 0.922310900001321,
+      "model_id": "protectai/deberta-v3-base-prompt-injection-v2",
+      "note": "Base weights of this model are what prompt-shield's d022 semantic classifier loads internally, so the ProtectAI row is not an independent comparator \u2014 it is effectively 'd022 alone, no other detectors'."
+    },
+    "deepset": {
+      "status": "loaded",
+      "load_seconds": 1.1424068000051193,
+      "model_id": "deepset/deberta-v3-base-injection",
+      "note": "Deepset DeBERTa-v3 prompt-injection classifier."
+    },
+    "prompt_guard_2": {
+      "status": "loaded",
+      "load_seconds": 1.3914672000100836,
+      "model_id": "meta-llama/Llama-Prompt-Guard-2-86M",
+      "note": "Meta Prompt Guard 2 (86M). Access is gated behind the Meta licence; the runner will report this competitor as BLOCKED if the weights are not already present in the local HF cache."
+    },
+    "piguard": {
+      "status": "loaded",
+      "load_seconds": 0.9479717999929562,
+      "model_id": "leolee99/PIGuard",
+      "note": "PIGuard (ACL 2024). Loaded with trust_remote_code=True."
+    }
+  }
+}

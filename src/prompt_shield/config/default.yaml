@@ -250,6 +250,35 @@ prompt_shield:
         - sudo_execute_raw
         - priv_esc_helper
 
+    # ----- Perplexity spectral change-point detector (d035) -----
+    # Cross-domain: Page (1954) CUSUM applied to per-token language-model
+    # perplexity, computed in sigma-normalised units (raw perplexity is
+    # heavy-tailed and un-normalised CUSUM fires on every long benign
+    # input). Encoded / obfuscated payloads produce sudden perplexity
+    # drops; register-shift imperatives produce spikes. Either edge yields
+    # a run in the CUSUM statistic. Requires the ``ml`` extra
+    # (transformers). Silently returns detected=False when transformers is
+    # not installed. Threshold 5.0 (sigma units, Page's classic
+    # control-chart h~=4-5) is a coarse untuned default -- tune per
+    # deployment corpus.
+    # d035 ships DISABLED by default (like d031/d032 policy gates). The
+    # perplexity-CUSUM threshold has not been empirically calibrated on
+    # the paper's benchmark corpora yet — enabling it on general traffic
+    # produces medium-severity flags on long benign business text
+    # (Fable-review empirical: 4/4 tested benign inputs fired at
+    # confidence 0.11-0.18 with the current threshold=5.0 σ-normalised
+    # implementation). Enable only for deployments where the operator
+    # has tuned `threshold` against their own benign corpus. Threshold
+    # calibration + a proper FPR study is scoped for v6.0.
+    d035_perplexity_spectral:
+      enabled: false           # opt-in until threshold is corpus-calibrated
+      severity: medium
+      threshold: 5.0           # sigma-units CUSUM threshold (Page 1954 classic h~=4-5)
+      model_name: "distilgpt2" # lightweight LM for perplexity scoring
+      min_input_tokens: 20     # silent on short inputs (perplexity noisy)
+      max_input_tokens: 2000
+      cusum_k: 0.5             # Page CUSUM allowance parameter (sigma units)
+
   allowlist:
     patterns: []
 

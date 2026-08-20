@@ -179,6 +179,8 @@ DETECTOR_ATLAS_MAP: dict[str, list[str]] = {
     "d033_topic_drift": ["AML.T0054", "AML.T0042"],
     # v0.8.0 honeypot tool definitions -- plugin-compromise canary
     "d034_honeypot_tool": ["AML.T0053", "AML.T0051"],
+    # v0.8.0 perplexity + CUSUM change-point (novel cross-domain)
+    "d035_perplexity_spectral": ["AML.T0051"],
     # Engine features
     "adversarial_fatigue_tracker": ["AML.T0042"],
     "canary_tokens": ["AML.T0057", "AML.T0044"],

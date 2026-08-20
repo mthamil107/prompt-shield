@@ -152,8 +152,8 @@ def build_document() -> tuple[Document, dict]:
 
     _add_para(doc, "Thamilvendhan Munirathinam", align="center", bold=True, size=12)
     _add_para(doc, "Independent Researcher  ·  prompt-shield project", align="center", italic=True, size=10)
-    _add_para(doc, "Version 4.0  ·  Revision date: 28 July 2026", align="center", size=10)
-    _add_para(doc, "arXiv:2604.18248  (replaces v3.0.2 of 28 July 2026)", align="center", size=10)
+    _add_para(doc, "Version 4.0 (rev-2)  ·  Revision date: 19 August 2026", align="center", size=10)
+    _add_para(doc, "arXiv:2604.18248  (replaces v4.0 of 28 July 2026)", align="center", size=10)
     _add_para(doc, "DOI (v1.0 anchor): 10.5281/zenodo.19644135", align="center", size=10)
     _add_para(doc, "Repository: github.com/mthamil107/prompt-shield", align="center", size=10)
 
@@ -254,6 +254,15 @@ def build_document() -> tuple[Document, dict]:
         "(and 14/20 without the d022 semantic classifier), providing partial empirical "
         "support for the Section 2.2 composability thesis.",
     )
+    # v4.0 (revision 2026-08-19): d035 opt-in + twice-promised deliverables
+    _add_para(
+        doc,
+        "This revision also delivers the paper's twice-promised competitor rerun on three "
+        "peer-reviewed benchmarks (Section 5.10) and expands the composed-stack adaptive-"
+        "attack study from 2 layers to 5 (Section 5.9); a fifth cross-domain technique "
+        "(d035 perplexity spectral, opt-in pending calibration) ships in prompt-shield "
+        "v0.7.5. Section 4.6 accordingly moves from PROPOSED to IMPLEMENTED-BUT-OPT-IN.",
+    )
 
     # ----------------------- 1. INTRODUCTION -------------------
     doc.add_heading("1. Introduction", level=1)
@@ -309,14 +318,17 @@ def build_document() -> tuple[Document, dict]:
             "regex-plus-classifier paradigm.",
         ),
         (
-            "Four implementations with empirical validation.",
+            "Five implementations with empirical validation.",
             "The local-alignment detector (d028), the adversarial fatigue tracker, the "
-            "stylometric discontinuity detector (d027), and — as of this v4.0 revision — "
-            "the honeypot tool-definitions detector (d034) are released in prompt-shield "
-            "under the Apache 2.0 license (d028/d027/fatigue in v0.4.1; d034 on the main "
-            "branch as of commit 2efe518+, scheduled for the v0.7.3 correctness release). "
-            "Each is accompanied by unit and integration tests (one hundred and thirty-four "
-            "tests in total across the four techniques, including twenty for d034) and a "
+            "stylometric discontinuity detector (d027), the honeypot tool-definitions "
+            "detector (d034), and — as of the 2026-08-19 revision of this paper — the "
+            "perplexity-spectral change-point detector (d035) are released in prompt-shield "
+            "under the Apache 2.0 license (d028/d027/fatigue in v0.4.1; d034 in v0.7.3; "
+            "d035 in v0.7.5, shipping disabled by default pending threshold calibration on "
+            "the paper's benchmark corpora — following the same opt-in-until-tuned pattern "
+            "already used for the d031/d032 policy gates). Each is accompanied by unit and "
+            "integration tests (one hundred and forty-eight tests in total across the "
+            "five techniques, including twenty for d034 and fourteen for d035) and a "
             "public reproduction harness that regenerates every number in Section 5 from a "
             "single command invocation.",
         ),
@@ -857,7 +869,7 @@ def build_techniques(doc: Document) -> None:
     )
 
     doc.add_heading("4.6 Perplexity Spectral Analysis", level=2)
-    _add_para(doc, "Status: PROPOSED. Implementation requires an optional transformers dependency for GPT-2-small (124M params).", italic=True)
+    _add_para(doc, "Status: IMPLEMENTED-BUT-OPT-IN. Shipped as d035_perplexity_spectral in prompt-shield v0.7.5 (Apache 2.0). Source: src/prompt_shield/detectors/d035_perplexity_spectral.py. Ships disabled by default (`enabled: false` in config/default.yaml) pending threshold calibration on the paper's benchmark corpora; empirical calibration is scoped for v6.0 alongside the full corpus study.", italic=True)
     _add_para(
         doc,
         "Signal processing and epidemiology share a concern with change-point detection in "
@@ -869,6 +881,32 @@ def build_techniques(doc: Document) -> None:
         "ratio, complemented by cumulative-sum change-point detection "
         "(Page, Biometrika 1954; Vial et al., CDC Emerging Infectious Diseases 2020) to "
         "localize the boundary between benign prose and injected payload.",
+    )
+    _add_para(
+        doc,
+        "Implementation (v0.7.5, opt-in). The d035_perplexity_spectral detector runs a "
+        "single forward pass through a small reference language model (distilgpt2 by "
+        "default, ~350MB via the [ml] extra; the same soft-dependency pattern as d022) to "
+        "obtain per-token log-probabilities, converts each to per-token perplexity "
+        "p_i = exp(-log p_i), and applies the classic Page (1954) CUSUM statistic "
+        "in sigma-normalised units: S_i = max(0, S_{i-1} + ((p_i - mean) / std - k)) "
+        "with mean and std estimated over the observed sequence and k configured via "
+        "cusum_k (default 0.5, matching Page's canonical allowance in sigma units). "
+        "Sigma normalisation is required: raw per-token perplexity is heavy-tailed "
+        "(values in the hundreds to millions are common on benign text), and an "
+        "un-normalised CUSUM against a small threshold fires on every long benign input. "
+        "The detector fires when max(S_i) exceeds a sigma-units threshold (Page's classic "
+        "control-chart range is h ~= 4-5; the default is 5.0). Fourteen unit tests cover "
+        "CUSUM math, min-input-tokens gating, the "
+        "transformers-missing degraded path, and end-to-end fire/no-fire on representative "
+        "benign and injected inputs. Honest disclosure: the detector ships with "
+        "`enabled: false` in the default configuration because the sigma-normalised "
+        "threshold has not been calibrated against the paper's benchmark corpora, and "
+        "Fable-review empirical testing found the current threshold=5.0 default fires on "
+        "4 of 4 tested long-form benign business inputs at low confidence (0.11-0.18). "
+        "Operators enabling d035 in v0.7.5 should first tune `threshold` against their "
+        "own benign corpus. A full FPR study on Section 5.6's three academic benchmarks "
+        "plus a calibration recommendation is scoped for v6.0.",
     )
     _add_para(
         doc,
@@ -1649,6 +1687,201 @@ def build_evaluation(doc: Document, datasets: dict) -> None:
         "docs/papers/evaluation/held_out_indirect_injection/.",
     )
 
+    # ---- 5.9 Composed adaptive-attack 5-layer expansion (revision 2026-08-19) ----
+    doc.add_heading("5.9 Composed adaptive-attack 5-layer expansion", level=2)
+    _add_para(
+        doc,
+        "Section 5.7.6 reported a partial run of the composed-stack adaptive-attack "
+        "protocol at docs/papers/evaluation/composed_adaptive_methodology.md — two of "
+        "five layers (d028 sequence alignment via Section 5.7.2, plus d027 stylometric "
+        "floor executed in-cycle). This subsection reports the expansion to all five "
+        "layers of the shipped defence: d022 (DeBERTa semantic classifier), the "
+        "adversarial fatigue tracker, and ToolResultGuard content-shape spoofing round out "
+        "the layer coverage. Every layer now has an isolated adaptive result plus a "
+        "composed-stack pass through PromptShieldEngine().scan() on the same adaptive "
+        "corpus, so the composability delta is decomposable per attack. Full methodology, "
+        "per-detector fire counts, and reproducibility instructions are documented at "
+        "docs/papers/evaluation/composed_adaptive_expanded.md and .json.",
+    )
+    _add_para(
+        doc,
+        "Careful framing. At n = 20 per layer under non-iterative hand-crafted attacks, "
+        "the composed stack blocked 100 percent of the layer-specific adaptive attacks. "
+        "This is the paper's first partial empirical support for the Section 2.2 "
+        "composability thesis at expanded scale, and it must be read with its constraints: "
+        "(i) n = 20 per layer — Wilson 95 percent intervals span roughly plus-or-minus 20 "
+        "percentage points near 50 percent and plus-or-minus 10 percentage points near "
+        "0/100 percent; (ii) attacks are hand-crafted and non-iterative — a HotFlip or "
+        "gradient-based adversary iterating against the composed loss would produce "
+        "sharper counter-examples; (iii) MIME-header spoofing is simplified to four "
+        "wrapper shapes (raw text, nested JSON, base64 with decode hint, HTML-entity "
+        "encoding); (iv) d022 was loaded at run time via transformers 5.1.0 — a "
+        "d022-unavailable deployment is strictly weaker. A full n = 100/layer gradient-"
+        "informed adversarial study remains v6.0 scope.",
+    )
+    doc.add_heading("5.9.1 Per-layer summary", level=3)
+    expanded_headers = ["Layer", "Adaptive attack", "Layer-alone rate", "Composed-stack rate"]
+    expanded_rows = [
+        ["d028 (Smith-Waterman)", "matrix-aware substitution", "0.0% (§5.7.2)", "20/20 (§5.7.6)"],
+        ["d027 (stylometric floor)", "short-input truncation", "0.0% (§5.7.6)", "20/20 (§5.7.6)"],
+        ["d022 (DeBERTa classifier)", "hand-crafted paraphrase", "20/20 (100.0%)", "20/20 (100.0%)"],
+        ["Fatigue tracker", "sample dilution + source rotation", "hardening blocked (see §5.9.2)", "n/a — modifier, not detector"],
+        ["ToolResultGuard", "wrapper spoofing (4 shapes)", "20/20 worst-wrapper", "20/20 (100.0%)"],
+    ]
+    _add_table(doc, expanded_headers, expanded_rows)
+    _add_para(doc, "Table 5. Composed adaptive-attack 5-layer summary. Every row is one layer's adaptive attack corpus; the composed-stack column reports the full PromptShieldEngine().scan() detection rate on that same corpus.", italic=True, size=9)
+
+    doc.add_heading("5.9.2 Nuanced finding #1: fatigue-tracker methodology correction", level=3)
+    _add_para(
+        doc,
+        "Methodology §3.3 hypothesised that a 60-second temporal-spacing attack would "
+        "defeat the fatigue tracker by allowing the cooldown to clear the EWMA between "
+        "near-miss observations. Empirically this is wrong: the cooldown fires only "
+        "AFTER hardening, and only on a non-near-miss observation, so pure temporal "
+        "spacing on a single source still triggers hardening at approximately sample 8. "
+        "The two attacks that actually defeat the tracker are (i) sample dilution — "
+        "interleaving each near-miss with 5 benign observations holds the EWMA at a "
+        "measured steady-state of ~0.057, well below the 0.4 trigger — at a 6× "
+        "observation-volume cost the attacker must pay; and (ii) source-key rotation — "
+        "30 near-miss observations across 30 distinct sources give each source at most 1 "
+        "sample, below the min_samples_before_trigger = 8 gate. The composability "
+        "implication is that fatigue is a hardening amplifier, not a standalone "
+        "detector: defeating it leaves base thresholds intact, so whatever d001/d022/"
+        "d028/... would catch on a single probe, they still catch. The correct "
+        "composability metric for this layer is attack-cost inflation (probes-per-source "
+        "cap or observation-volume amplification), not adaptive detection rate.",
+    )
+
+    doc.add_heading("5.9.3 Nuanced finding #2: base64 wrapper drifts ToolResultGuard family classification", level=3)
+    _add_para(
+        doc,
+        "Every payload in the ToolResultGuard corpus is caught by the composed stack in "
+        "every wrapper shape (raw, nested JSON, base64, HTML-entities — all four at "
+        "20/20 block rate). However, the family-classification labels are NOT consistent "
+        "across wrappers: on 0 of 20 payloads did the non-empty family sets match across "
+        "every wrapper. The base64 wrapper in particular drops the payload into the "
+        "encoded_payload family (triggered by d008_base64_payload) rather than into the "
+        "underlying override/exfiltration/role-hijack family. Operationally this means "
+        "that an operator routing mitigation policy by family label — for example, "
+        "exfiltration payloads block, encoded payloads decode-and-rescan — sees the same "
+        "attack differently depending on wrapper shape. The block still fires, but the "
+        "family label lies about the attack type. A future revision of the Section 7.3 "
+        "taxonomic-projection pattern will need to specify that family classification is "
+        "wrapper-sensitive and to prescribe a consistent policy for wrapper unwinding.",
+    )
+
+    # ---- 5.10 Competitor rerun (revision 2026-08-19) ----
+    doc.add_heading("5.10 Competitor rerun on three peer-reviewed academic benchmarks", level=2)
+    _add_para(
+        doc,
+        "Section 5.4's fourth-last limitation flagged that the competitor comparison "
+        "harness — running ProtectAI DeBERTa v2, PIGuard, Meta Prompt Guard 2, Deepset "
+        "DeBERTa v3 and prompt-shield on the paper's three academic benchmarks — had not "
+        "been rerun. The v3.0 and v4.0 revisions both scoped this as a v4/v5 "
+        "deliverable. This subsection delivers it: all four OSS competitors cross all "
+        "three benchmarks, all twelve cells populated on the exact benchmark prompts "
+        "prompt-shield was measured on. Full methodology, per-cell wall-clock, and "
+        "reproducibility instructions are documented at "
+        "docs/papers/evaluation/competitor_rerun.md and .json.",
+    )
+    doc.add_heading("5.10.1 Detection rate (higher is better)", level=3)
+    comp_headers = ["Detector", "Liu 200", "Garak 500", "InjecAgent 500"]
+    comp_rows = [
+        ["prompt-shield (§5.6, regex-only, full corpora)", "64.0% (128/200)", "55.2% (3,294/5,968)", "85.2% (1,796/2,108)"],
+        ["ProtectAI DeBERTa v2 [self-referential — see below]", "63.5% (127/200)", "44.5% (200/449)", "83.4% (417/500)"],
+        ["Deepset DeBERTa v3", "100.0% (200/200)", "100.0% (449/449)", "100.0% (500/500)"],
+        ["Meta Prompt Guard 2 (86M)", "44.0% (88/200)", "56.3% (253/449)", "56.0% (280/500)"],
+        ["PIGuard (leolee99)", "85.5% (171/200)", "77.3% (347/449)", "80.6% (403/500)"],
+    ]
+    _add_table(doc, comp_headers, comp_rows)
+    _add_para(doc, "Table 6. Competitor rerun on the same three academic benchmarks measured in Section 5.6. Garak and InjecAgent are sampled to 500 per competitor with seed=42 for CPU wall-clock reasons; pass --sample-size 0 for a strictly matched full-corpus run.", italic=True, size=9)
+
+    doc.add_heading("5.10.2 Benign false-positive rate (Liu, 8 benign prompts)", level=3)
+    fpr_headers = ["Detector", "FP / total", "FPR"]
+    fpr_rows = [
+        ["prompt-shield (§5.6, regex-only)", "0/8", "0.0%"],
+        ["ProtectAI DeBERTa v2", "0/8", "0.0%"],
+        ["Deepset DeBERTa v3", "2/8", "25.0%"],
+        ["Meta Prompt Guard 2 (86M)", "0/8", "0.0%"],
+        ["PIGuard (leolee99)", "0/8", "0.0%"],
+    ]
+    _add_table(doc, fpr_headers, fpr_rows)
+    _add_para(doc, "Table 7. Benign FPR on Liu's 8 clean prompts. Small denominator — treat as directional, not definitive.", italic=True, size=9)
+
+    doc.add_heading("5.10.3 Honest reading", level=3)
+    _add_para(
+        doc,
+        "There is no honest single-winner story. Four caveats govern how these numbers "
+        "should be read together, and this subsection walks them out explicitly.",
+    )
+    _add_para(
+        doc,
+        "(a) ProtectAI DeBERTa v2 is a self-comparison. prompt-shield's d022 loads the "
+        "same ProtectAI weights internally, which is why ProtectAI-standalone at 63.5 "
+        "percent and prompt-shield regex-only at 64.0 percent on Liu are the same signal "
+        "by different routes — the regex layer catches Ignore + Combine attacks "
+        "verbatim, DeBERTa reaches a similar total via classifier confidence. Read the "
+        "ProtectAI row as the d022-only lesion of prompt-shield, not as an independent "
+        "rival system.",
+    )
+    _add_para(
+        doc,
+        "(b) Deepset DeBERTa v3's 100/100/100 is a trained-to-flag artefact, not "
+        "universal superiority. The same run flags 2 of 8 Liu-benign prompts (25 percent "
+        "FPR at threshold 0.5): specifically \"Your invoice from last quarter is attached "
+        "for your review.\" (P = 0.687) and \"Please be respectful to all members of our "
+        "community.\" (P = 0.667). On attack-only corpora that reads as \"perfect\"; on "
+        "mixed production traffic it would raise support-ticket volume proportionally. "
+        "The other three OSS detectors and prompt-shield sit at 0 percent FPR on the "
+        "same 8 prompts.",
+    )
+    _add_para(
+        doc,
+        "(c) PIGuard (leolee99) is the strongest independent OSS competitor here. It "
+        "beats prompt-shield regex-only on Liu (85.5 percent vs 64.0 percent) and Garak "
+        "(77.3 percent vs 55.2 percent) and comes close on InjecAgent (80.6 percent vs "
+        "85.2 percent), at 0 percent FPR on Liu-benign. Its weights are independent of "
+        "prompt-shield's training data or design, so the comparison is fair. The honest "
+        "read is that on override-heavy corpora prompt-shield holds its own, and on "
+        "subtle-injection corpora PIGuard is stronger — which is consistent with the "
+        "Section 5.6 finding that pure pattern-based input detection plateaus around "
+        "35-45 percent on subtle indirect injection.",
+    )
+    _add_para(
+        doc,
+        "(d) Meta Prompt Guard 2 (86M) posts the lowest number on Liu (44 percent) but "
+        "recovers to ~56 percent on Garak and InjecAgent. Meta explicitly optimised for "
+        "low FPR on benign traffic (0/8 here), which is consistent with the Liu "
+        "shortfall — the attacks it misses are override-keyword strings that generic "
+        "input-firewall regexes catch trivially.",
+    )
+    _add_para(
+        doc,
+        "prompt-shield's differentiators after this rerun. The rerun reframes the "
+        "prompt-shield positioning: it is not the detection-rate leader on subtle-"
+        "injection corpora. Its differentiators are (i) throughput — approximately 38 "
+        "scans/sec on InjecAgent vs PIGuard's ~4/sec on CPU; (ii) per-detector "
+        "interpretability — every scan report names the specific detector that fired "
+        "with match evidence, versus a single opaque classifier confidence; (iii) the "
+        "federated ed25519-signed threat feed (Section 7.2); (iv) the ToolResultGuard "
+        "primitive and its 9-family taxonomy (Sections 7.1 and 7.3); and (v) the "
+        "fatigue tracker (Section 4.2). None of the four OSS competitors ships any "
+        "combination of these primitives.",
+    )
+
+    doc.add_heading("5.10.4 Scope caveats", level=3)
+    _add_para(
+        doc,
+        "Commercial detectors are absent: Lakera Guard, AWS Bedrock Guardrails, Azure "
+        "AI Prompt Shield, Google Model Armor, and Rebuff (which requires an OpenAI key "
+        "for its LLM-check layer) are cloud-only, priced-per-unit, or gated services and "
+        "cannot be reproduced from a fully offline OSS pipeline. Meta Prompt Guard 2's "
+        "success depends on licence-accepted weights already sitting in the local "
+        "HuggingFace cache; a fresh installer hits an authentication wall. The rerun "
+        "measures only stock detection rate at threshold 0.5 — no threshold sweep, no "
+        "adversarial retest, no output-side scanner combined result.",
+    )
+
 
 def build_conclusions_and_refs(doc: Document) -> None:
     """Section 6, References, Appendix — copied from v2 with v3 updates."""
@@ -1705,15 +1938,23 @@ def build_conclusions_and_refs(doc: Document) -> None:
         "to 0.000 F1 while the composed engine still recovers 0.815 F1 (Section 5.8); and "
         "the shipping of the honeypot tool-definitions detector (d034) that moves the "
         "paper's implemented-technique ratio from three of seven to four of seven "
-        "(Section 4.3). We note honestly that Section 6 of the v3 revision scoped a full "
-        "adaptive-attack evaluation and a competitor rerun for v4.0. On scope review we "
-        "prioritized the design-pattern formalization (Section 7) — driven by the shipping "
-        "of ToolResultGuard in prompt-shield v0.7.0 and the observation that four "
-        "concurrent 2026 systems ship the same pattern without a shared name — plus the "
-        "held-out and composed-adaptive experiments above, and delivered only the smaller "
-        "preliminary adaptive experiment reported in Section 5.7 for d028 in isolation. "
-        "The full five-layer adaptive-attack evaluation and the competitor rerun carry to "
-        "v5.0 with the specific commitments below.",
+        "(Section 4.3).",
+    )
+    _add_para(
+        doc,
+        "The 2026-08-19 rev-2 addendum to v4.0 additionally folds in: the composed-"
+        "stack adaptive-attack expansion from 2 layers to all 5 (Section 5.9), including "
+        "the fatigue-tracker methodology correction and the ToolResultGuard family-drift "
+        "finding; the twice-promised competitor rerun on all three peer-reviewed academic "
+        "benchmarks (Section 5.10), including the PIGuard-beats-prompt-shield finding on "
+        "Liu and Garak and the Deepset trained-to-flag artefact; and the shipping of the "
+        "d035 perplexity-spectral detector — now IMPLEMENTED-BUT-OPT-IN in prompt-shield "
+        "v0.7.5, moving the paper's implemented-technique ratio to 5/7 (Section 4.6). "
+        "Both deliverables were scoped in the v3 and v4 conclusion sections and had "
+        "previously carried forward; they are now landed in the same release cycle and "
+        "so are documented here rather than being re-scoped. The full n = 100/layer "
+        "gradient-informed adversarial study, and the d035 empirical calibration study "
+        "against the paper's benchmark corpora, both carry to v6.0.",
     )
     _add_para(
         doc,
@@ -2009,11 +2250,13 @@ def build_conclusions_and_refs(doc: Document) -> None:
         ("src/prompt_shield/detectors/d027_stylometric_discontinuity.py", "Stylometric discontinuity detector (Section 4.1)."),
         ("src/prompt_shield/detectors/d029_many_shot_structural.py", "Many-shot structural detector (preview; full §-level write-up in v4)."),
         ("src/prompt_shield/detectors/d034_honeypot_tool.py", "Honeypot tool-definitions detector (Section 4.3; v4.0 cycle)."),
+        ("src/prompt_shield/detectors/d035_perplexity_spectral.py", "Perplexity-spectral CUSUM detector (Section 4.6; v0.7.5, ships disabled by default)."),
         ("src/prompt_shield/fatigue/tracker.py", "Adversarial fatigue tracker (Section 4.2)."),
         ("tests/detectors/test_d028_sequence_alignment.py", "Tests covering alignment math, substitution matrix, detector behavior."),
         ("tests/detectors/test_d027_stylometric_discontinuity.py", "Tests covering feature extraction, Jensen-Shannon math, detector behavior and fixtures."),
         ("tests/detectors/test_d029_many_shot_structural.py", "36 tests covering many-shot pattern detection (v3-shipped)."),
         ("tests/detectors/test_d034_honeypot_tool.py", "20 tests covering both firing modes and every tool-call shape (Section 4.3)."),
+        ("tests/detectors/test_d035_perplexity_spectral.py", "14 tests covering CUSUM math, min-input-tokens gating, transformers-missing degraded path (Section 4.6)."),
         ("tests/fatigue/test_tracker.py, test_engine_integration.py", "Tests including the probing-campaign integration test cited in Section 5.3."),
         ("tests/benchmark_liu_attackers.py", "Section 5.6 — Liu et al. (USENIX Security 2024) attack-strategy benchmark."),
         ("tests/benchmark_garak.py", "Section 5.6 — Garak prompt-injection probe evaluation."),
@@ -2025,6 +2268,8 @@ def build_conclusions_and_refs(doc: Document) -> None:
         ("docs/papers/evaluation/held_out_indirect_injection.md, .json", "Human-readable and machine-readable results for Table 4 (Section 5.8)."),
         ("docs/papers/evaluation/composed_adaptive_methodology.md", "Full 5-layer composed-stack adaptive-attack protocol (Section 5.7.6)."),
         ("docs/papers/evaluation/composed_adaptive_partial.py, .md", "Reproducible partial run of the composed-stack adaptive attack (Section 5.7.6)."),
+        ("docs/papers/evaluation/composed_adaptive_expanded.py, .md, .json", "Reproducible 5-layer expansion of the composed-stack adaptive attack (Section 5.9)."),
+        ("docs/papers/evaluation/competitor_rerun.py, .md, .json", "Head-to-head rerun of 4 OSS competitors on the 3 academic benchmarks (Section 5.10)."),
         ("docs/papers/evaluation/v041_public_datasets.json", "Machine-readable source of every number in Table 1."),
         ("docs/papers/evaluation/liu_attackers.md, garak.md, injecagent.md", "Per-benchmark methodology and findings for Section 5.6."),
         ("docs/papers/evaluation/garak_regex_only.json, injecagent_regex_only.json", "Raw per-probe / per-split results for Section 5.6."),

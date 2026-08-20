@@ -182,6 +182,8 @@ DETECTOR_OWASP_MAP: dict[str, list[str]] = {
     "d033_topic_drift": ["LLM01"],
     # v0.8.0 honeypot tool definitions -- tool-misuse canary
     "d034_honeypot_tool": ["LLM01", "LLM06"],
+    # v0.8.0 perplexity + CUSUM change-point (novel cross-domain)
+    "d035_perplexity_spectral": ["LLM01", "LLM04"],
 }
 
 # All valid OWASP category IDs for validation
@@ -300,6 +302,7 @@ DETECTOR_AGENTIC_MAP: dict[str, list[str]] = {
     "d032_topic_enforcement": ["ASI03", "ASI07"],
     "d033_topic_drift": ["ASI01", "ASI08"],
     "d034_honeypot_tool": ["ASI02", "ASI07", "ASI10"],
+    "d035_perplexity_spectral": ["ASI01", "ASI05"],
     # AgentGuard features (not detector-based)
     "agent_guard_input_gate": ["ASI01", "ASI10"],
     "agent_guard_data_gate": ["ASI02", "ASI05", "ASI08"],
