@@ -242,7 +242,7 @@ First-class primitive for scanning tool-result content, with an attack-family ta
 | `llamaindex_handler.py` | `PromptShieldHandler` | LlamaIndex handler. `scan_retrieved_nodes` delegates to `ToolResultGuard`. | `scan_query()`, `scan_retrieved_nodes()`, `scan_response()` |
 | `haystack_component.py` | `PromptShieldGuard`, `PromptShieldOutputGuard` | Haystack v2 pipeline components. Document scanning delegates to `ToolResultGuard`; gate string normalized in v0.7.0 from `"retrieved_document"` → `"tool_result"` + `"tool_type": "retrieval"`. | `run()` |
 | `anthropic_wrapper.py` | `PromptShieldAnthropic` | Anthropic client wrapper. Scans input messages, output responses, and (new in v0.7.0) `tool_result` blocks inside message content lists. | `create()` |
-| `pydantic_ai_guard.py` | `PromptShieldOutputValidator`, `scan_input`, `attach` | pydantic-ai integration (input + output). Tool-result primitives arrive in v0.7.1. | `scan_input()`, `attach()` |
+| `pydantic_ai_guard.py` | `PromptShieldToolset`, `PromptShieldOutputValidator`, `scan_input`, `scan_tool_result`, `attach` | pydantic-ai integration. The public `WrapperToolset.call_tool()` boundary scans sync and async tool results before model context; input and final-output guards remain available separately. | `call_tool()`, `scan_input()`, `scan_tool_result()`, `attach()` |
 
 ### CLI (`cli.py`)
 
