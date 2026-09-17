@@ -158,6 +158,48 @@ result = await protected.call_tool("search", {"query": "test"})
 
 See [Agentic Security](agentic-security.md) for details on the MCP filter.
 
+## Pydantic AI
+
+```bash
+pip install prompt-shield-ai[pydantic-ai]
+```
+
+Wrap a Pydantic AI toolset to scan every tool return value before it is added
+to model context:
+
+```python
+from pydantic_ai import Agent, FunctionToolset
+from prompt_shield.integrations.pydantic_ai_guard import (
+    PromptShieldToolset,
+    scan_input,
+    scan_tool_result,
+)
+
+tools = FunctionToolset(tools=[web_search, retrieve_document])
+guarded_tools = PromptShieldToolset(tools, mode="block")
+agent = Agent("openai:gpt-5", toolsets=[guarded_tools])
+
+prompt = "Find the release notes"
+scan_input(prompt)
+result = agent.run_sync(prompt)
+```
+
+`PromptShieldToolset` uses Pydantic AI's public `WrapperToolset.call_tool()`
+extension point, which receives results from both sync and async tools. Mode
+behavior is:
+
+| Mode | Detected tool result |
+|---|---|
+| `block` | Raises `ValueError`; the result does not enter model context |
+| `sanitize` | Replaces the result with `scan_context.sanitized_text` |
+| `flag` | Logs a warning and preserves the original result |
+| `log` | Preserves the original result without a warning |
+
+For manually executed tools, call `scan_tool_result(content,
+tool_name="web_search", mode="block")`. It returns the full `ScanReport`; in
+`sanitize` mode, replacement text is available at
+`report.scan_context.sanitized_text`.
+
 ## Direct Use
 
 For maximum control, use the engine directly:
