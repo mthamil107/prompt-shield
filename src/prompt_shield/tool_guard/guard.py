@@ -26,6 +26,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import logging
+import threading
 from collections import OrderedDict
 from typing import Any
 
@@ -80,12 +81,30 @@ class ToolResultGuard:
         self.cache_size = cache_size
         self.sanitize_replacement = sanitize_replacement
         self._cache: OrderedDict[str, ScanReport] = OrderedDict()
+        self._lock = threading.Lock()
 
     @property
     def engine(self) -> PromptShieldEngine:
         if self._engine is None:
             self._engine = PromptShieldEngine()
         return self._engine
+
+    def _cache_lookup(self, cache_key: str | None) -> ScanReport | None:
+        if not cache_key:
+            return None
+        with self._lock:
+            if cache_key in self._cache:
+                self._cache.move_to_end(cache_key)
+                return self._cache[cache_key]
+        return None
+
+    def _cache_set(self, cache_key: str | None, report: ScanReport) -> None:
+        if not cache_key:
+            return
+        with self._lock:
+            self._cache[cache_key] = report
+            while len(self._cache) > self.cache_size:
+                self._cache.popitem(last=False)
 
     def scan(
         self,
@@ -99,9 +118,8 @@ class ToolResultGuard:
     ) -> ScanReport:
         """Scan ``text`` and return a ``ScanReport`` with ``scan_context`` populated."""
         cache_key = self._cache_key(text, tool_name, tool_type)
-        if cache_key and cache_key in self._cache:
-            self._cache.move_to_end(cache_key)
-            cached = self._cache[cache_key]
+        cached = self._cache_lookup(cache_key)
+        if cached is not None:
             self._enforce(cached, tool_name=tool_name)
             return cached
 
@@ -144,11 +162,7 @@ class ToolResultGuard:
             sanitized_text=sanitized,
         )
 
-        if cache_key:
-            self._cache[cache_key] = report
-            while len(self._cache) > self.cache_size:
-                self._cache.popitem(last=False)
-
+        self._cache_set(cache_key, report)
         self._enforce(report, tool_name=tool_name)
         return report
 
