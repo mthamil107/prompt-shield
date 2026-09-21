@@ -186,3 +186,23 @@ class TestUnclassifiedBehaviour:
         families = set(report.scan_context.attack_families)
         if ToolResultAttackFamily.UNCLASSIFIED in families:
             assert families == {ToolResultAttackFamily.UNCLASSIFIED}
+
+
+class TestConcurrentAscan:
+    def test_concurrent_ascan_cache_thread_safety(self, engine):
+        """Spawns concurrent ascan() calls on the same guard instance with overlapping keys.
+
+        Asserts that no KeyError (e.g. from move_to_end or popitem) or race condition occurs.
+        """
+        guard = ToolResultGuard(engine=engine, mode="log", cache_size=4)
+
+        async def run():
+            # 32 concurrent requests with overlapping keys to trigger hit/eviction concurrency
+            texts = [f"Repeated query pattern {i % 6}" for i in range(32)]
+            tasks = [guard.ascan(t, tool_name=f"tool_{i % 3}") for i, t in enumerate(texts)]
+            reports = await asyncio.gather(*tasks)
+            assert len(reports) == 32
+            for r in reports:
+                assert r.scan_context is not None
+
+        asyncio.run(run())
