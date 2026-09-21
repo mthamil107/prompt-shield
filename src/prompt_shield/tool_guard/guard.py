@@ -61,6 +61,8 @@ class ToolResultGuard:
         ``"sanitize"`` returns the report with ``scan_context.sanitized_text`` populated.
     cache_size :
         LRU cache size keyed by content hash. ``0`` disables caching.
+        The cache is thread-safe; a single guard may be shared across
+        threads or concurrent ``ascan`` callers.
     sanitize_replacement :
         Placeholder string used when ``mode="sanitize"`` for non-PII spans.
     """

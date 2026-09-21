@@ -7,30 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### In progress / v0.8.0
-
 **Framework-integration parity for the tool-result boundary.** The
 `ToolResultGuard` primitive (v0.7.0) and the standalone
 `prompt-shield-mcp` server (v0.7.6) are stable; v0.8.0 extends the
 same pattern to three framework wrappers so tool return values get
 the attack-family taxonomy and `sanitize` support regardless of
-which integration the app uses. All three are tracked in the
-[v0.8.0 milestone](https://github.com/mthamil107/prompt-shield/milestone/1)
-and open for contributions (`help wanted`):
+which integration the app uses. Tracked in the
+[v0.8.0 milestone](https://github.com/mthamil107/prompt-shield/milestone/1).
 
-- **OpenAI wrapper — `role="tool"` message scanning.**
-  Route `role == "tool"` messages in `PromptShieldOpenAI.create()`
-  through `ToolResultGuard` instead of the generic input gate.
-  See [#29](https://github.com/mthamil107/prompt-shield/issues/29)
-  for the design notes and test-coverage expectations.
+### Added
+
+- **OpenAI wrapper — `role="tool"` / `role="function"` message
+  scanning through `ToolResultGuard`.** New `scan_tool_results` and
+  `tool_result_mode` init options on `PromptShieldOpenAI`. Handles
+  both string and structured-list content shapes via
+  `_extract_openai_message_text`. `tool_result_mode` defaults to
+  `None` and inherits from the outer `mode` — existing
+  `mode="monitor"` callers are unaffected on upgrade. `sanitize` is
+  currently rejected with a clear `ValueError` (write-back needs a
+  message-mutation contract the wrapper does not yet own; a future
+  PR can add it). Closes [#29](https://github.com/mthamil107/prompt-shield/issues/29).
+  Contributed by [@MohamedIdhries](https://github.com/MohamedIdhries)
+  in [#34](https://github.com/mthamil107/prompt-shield/pull/34).
+
+### Fixed
+
+- **`ToolResultGuard` cache mutation race under concurrent callers.**
+  The `OrderedDict` cache is now guarded by a per-instance
+  `threading.Lock`; concurrent `scan()` / `ascan()` callers on a
+  shared guard could previously raise `KeyError` from `move_to_end`
+  or `popitem`. The lock protects only the O(1) cache lookup /
+  insert / eviction — the detector run itself is outside the lock,
+  so throughput is unaffected. Closes
+  [#33](https://github.com/mthamil107/prompt-shield/issues/33).
+  Contributed by [@DYNOSuprovo](https://github.com/DYNOSuprovo) in
+  [#35](https://github.com/mthamil107/prompt-shield/pull/35).
+
+### Still in progress for v0.8.0
+
 - **pydantic-ai — `scan_tool_result` primitives.**
-  Hook `ToolResultGuard` into the pydantic-ai `Agent` /`Tool`
+  Hook `ToolResultGuard` into the pydantic-ai `Agent` / `Tool`
   execution flow. See
-  [#30](https://github.com/mthamil107/prompt-shield/issues/30).
+  [#30](https://github.com/mthamil107/prompt-shield/issues/30) —
+  draft under review in
+  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
 - **CrewAI — `scan_tool_result` method.**
   Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
   method so tool outputs on a Crew get intercepted. See
-  [#31](https://github.com/mthamil107/prompt-shield/issues/31).
+  [#31](https://github.com/mthamil107/prompt-shield/issues/31)
+  (`help wanted`).
 
 ## [0.7.6] - 2026-09-11
 
