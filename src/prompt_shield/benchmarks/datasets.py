@@ -33,6 +33,15 @@ _DATASET_REGISTRY: dict[str, dict[str, str]] = {
         "description": "Community prompt injection dataset from HuggingFace",
         "source": "huggingface",
     },
+    "jailbreakbench": {
+        "name": "JailbreakBench (Chao et al., NeurIPS 2024)",
+        "description": (
+            "100 harmful + 100 benign behaviors across 10 categories. "
+            "Jailbreak / harmful-behavior benchmark, NOT a prompt-injection "
+            "benchmark; loader is provided for scope-completeness eval."
+        ),
+        "source": "huggingface",
+    },
 }
 
 
@@ -68,10 +77,85 @@ def load_dataset(
             "deepset/prompt-injections",
             cache_dir=data_dir,
         )
+    elif name == "jailbreakbench":
+        return load_jailbreakbench(cache_dir=data_dir)
     elif name not in _DATASET_REGISTRY:
         available = ", ".join(_DATASET_REGISTRY.keys())
         raise BenchmarkError(f"Unknown dataset '{name}'. Available: {available}")
     raise BenchmarkError(f"Dataset '{name}' is registered but has no loader")
+
+
+def load_jailbreakbench(cache_dir: str | None = None) -> list[BenchmarkSample]:
+    """Load JailbreakBench (100 harmful + 100 benign behaviors).
+
+    Fetches both splits from the ``JailbreakBench/JBB-Behaviors`` HuggingFace
+    dataset (config ``behaviors``) via the stdlib datasets-server API — no
+    ``datasets`` dependency required. Harmful goals are labelled
+    ``is_injection=True``, benign goals ``False``, mirroring the shape the
+    rest of the benchmark harness expects.
+
+    Note: JailbreakBench is a jailbreak (harmful-behavior) benchmark, not a
+    prompt-injection benchmark. See ``tests/benchmark_jailbreakbench.py`` for
+    a runner that reports harmful-recall AND benign-FPR side by side, which
+    is the honest way to consume this dataset for an injection defender.
+    """
+    import urllib.error
+    import urllib.request
+
+    base = (
+        "https://datasets-server.huggingface.co/rows?"
+        "dataset=JailbreakBench/JBB-Behaviors&config=behaviors&split={split}&"
+        "offset=0&length=100"
+    )
+    cache_path = None
+    if cache_dir:
+        cache_path = Path(cache_dir) / "hf_JailbreakBench_JBB-Behaviors.json"
+        if cache_path.exists():
+            try:
+                cached = json.loads(cache_path.read_text(encoding="utf-8"))
+                return _samples_from_jbb_payload(cached)
+            except (json.JSONDecodeError, KeyError):
+                pass
+
+    combined: dict[str, list[dict]] = {}
+    for split in ("harmful", "benign"):
+        try:
+            req = urllib.request.Request(
+                base.format(split=split), headers={"User-Agent": "prompt-shield"}
+            )
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+        except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
+            raise BenchmarkError(
+                f"Failed to fetch JailbreakBench '{split}' split: {exc}"
+            ) from exc
+        combined[split] = data.get("rows", [])
+
+    if cache_path:
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(json.dumps(combined), encoding="utf-8")
+
+    return _samples_from_jbb_payload(combined)
+
+
+def _samples_from_jbb_payload(payload: dict[str, list[dict]]) -> list[BenchmarkSample]:
+    samples: list[BenchmarkSample] = []
+    for split, rows in payload.items():
+        is_injection = split == "harmful"
+        for entry in rows:
+            row = entry.get("row", {})
+            goal = row.get("Goal", "")
+            if goal:
+                samples.append(
+                    BenchmarkSample(
+                        text=str(goal),
+                        is_injection=is_injection,
+                        source=f"jailbreakbench:{split}",
+                    )
+                )
+    if not samples:
+        raise BenchmarkError("JailbreakBench payload contained no rows")
+    return samples
 
 
 def _load_bundled_sample() -> list[BenchmarkSample]:
