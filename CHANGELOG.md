@@ -17,6 +17,43 @@ which integration the app uses. Tracked in the
 
 ### Added
 
+- **`capabilities/` — receipt-format adapters for `ToolResultGuard`.**
+  Consumes signed capability receipts issued by upstream projects
+  (Pipelock v1 action receipts via `pipelock-verify`, generic JWS/JWT
+  via `PyJWT`). Interop-first: prompt-shield verifies receipts, does
+  not mint tokens. A failed verification adds `UNTRUSTED_ORIGIN` to
+  `attack_families`, appends a synthetic `DetectionResult`
+  (`detector_id="receipt_verification"`) so integrations that gate on
+  `if report.detections:` fire, and enforces per the guard's `mode`.
+  The cache is bypassed automatically when a `receipt_adapter` is
+  configured so verifications are always fresh. Public API is
+  backward-compatible — existing callers that don't pass `receipt` /
+  `receipt_adapter` behave unchanged. Optional extras:
+  `capabilities-pipelock`, `capabilities-jws`. See
+  `docs/capabilities/receipt-adapter.md` for adjacent-project interop
+  notes and deployment guidance.
+
+  Hardened after adversarial review:
+    - **Fail-closed** on missing receipt when an adapter is configured
+      (a rogue upstream stripping the receipt must not silently
+      bypass verification).
+    - Adapter-raised exceptions (`jwt.InvalidKeyError` from
+      algorithm-confusion, `UnicodeDecodeError`, structural
+      `ReceiptVerificationError`, unexpected bugs) are converted to
+      `trusted=False` inside the guard — they never crash `scan()`.
+    - `PipelockAdapter` now requires an explicit `public_key_hex` —
+      the previous `None` default trusted the receipt's embedded
+      signer_key (forgery vector for any Ed25519 keypair).
+    - `JWSAdapter.algorithms` is required (no default); mixing HMAC and
+      asymmetric families enables key-confusion.
+    - `arg_hash` binding is enforced when the caller supplies it: JWS
+      rejects when the token carries no matching claim, Pipelock
+      rejects (v1 has no such binding — use JWS instead).
+    - PyJWT floor raised to `>=2.13` to close CVE-2024-53861,
+      CVE-2026-32597, CVE-2026-48523, CVE-2026-48526.
+    - Python 3.10 compatibility fix (`datetime.UTC` is 3.11+; replaced
+      with `datetime.timezone.utc`).
+
 - **OpenAI wrapper — `role="tool"` / `role="function"` message
   scanning through `ToolResultGuard`.** New `scan_tool_results` and
   `tool_result_mode` init options on `PromptShieldOpenAI`. Handles
@@ -42,6 +79,40 @@ which integration the app uses. Tracked in the
   [#33](https://github.com/mthamil107/prompt-shield/issues/33).
   Contributed by [@DYNOSuprovo](https://github.com/DYNOSuprovo) in
   [#35](https://github.com/mthamil107/prompt-shield/pull/35).
+
+### Known limitations (deferred to v0.8.1)
+
+- **Pipelock replay window.** Pipelock v1 receipts do not carry an
+  expiry claim; the v0.8.0 adapter reads `timestamp` but does not
+  enforce a `max_age`. A captured `allow` receipt can be replayed
+  indefinitely. v0.8.1 will add a `max_age: timedelta | None`
+  parameter, parse RFC 3339 `timestamp`, populate `expires_at`, and
+  reject future-dated receipts beyond skew; chain verification
+  (`verify_chain()` in `pipelock-verify`) will also be wired.
+  Callers who need freshness guarantees today should use `JWSAdapter`
+  with `require_exp=True`.
+- **`capabilities/` cache-bypass perf regression.** The
+  `ToolResultGuard` cache is bypassed whenever a `receipt_adapter` is
+  configured, because a cached verification would be a correctness
+  bug. Cost: 283–383 ms per receipt-bearing scan vs. 0.06 ms cached.
+  v0.8.1 fix: cache the content report, attach fresh verification via
+  `ScanReport.model_copy`.
+- **`ScanReport.overall_risk_score` not promoted on receipt failure.**
+  When a receipt fails verification, `action` promotes PASS → FLAG and
+  a HIGH-severity synthetic `DetectionResult` lands in
+  `report.detections`, but `overall_risk_score` stays at 0.0. Any
+  caller surfacing `risk_score` sees an inconsistent state alongside
+  a FLAG action. v0.8.1: promote `risk_score` in lockstep with
+  `action`.
+- **`__init__.py` upstream survey.** Adjacent projects (Invariant
+  Guardrails, mcp-gate, agentauth, Progent) are named as *adjacent*,
+  not *consumable*. The see-also list will be revisited each release
+  in case any of them publishes a wire format for prompt-shield to
+  adopt.
+- **`README.md` family table missing `UNTRUSTED_ORIGIN`.** The
+  `ToolResultAttackFamily` table in the README does not list the new
+  `UNTRUSTED_ORIGIN` family added in v0.8.0. Doc-only nit; v0.8.1
+  adds the row.
 
 ### Still in progress for v0.8.0
 

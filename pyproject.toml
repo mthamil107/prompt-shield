@@ -43,7 +43,11 @@ dependencies = [
     # (SignaturesClient in prompt_shield.signatures). Added in v0.7.4:
     # was previously a transitively-missing dep, causing a documented-but-
     # broken import for anyone doing a base `pip install prompt-shield-ai`.
-    "cryptography>=41",
+    # Floor bumped to 50.0.0 in v0.8.0 so `pip-audit`/Dependabot won't
+    # flag CVE-2026-69247/-69248/-69249 (fixed in 49.0.0/50.0.0); none
+    # reachable from our ed25519 code path, but the floor should not
+    # admit them.
+    "cryptography>=50.0.0",
 ]
 
 [project.optional-dependencies]
@@ -66,7 +70,21 @@ ml = [
 observability = ["prometheus_client>=0.17"]
 sentiment = ["vaderSentiment>=3.3"]
 language = ["langdetect>=1.0"]
-all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,haystack,pydantic-ai,django,crewai,mcp,openai,anthropic,ml,observability,sentiment,language]"]
+# v0.8.0 — receipt-format adapters for ToolResultGuard (interop layer for
+# upstream capability enforcement projects; prompt-shield verifies, does
+# not mint tokens). See docs/capabilities/receipt-adapter.md.
+capabilities-pipelock = ["pipelock-verify>=0.1"]
+# PyJWT lower bound raised to 2.13 to close CVE-2024-53861 (issuer
+# partial-match, reachable via issuer=) plus CVE-2026-32597 (unknown
+# crit accepted, 2.12+), CVE-2026-48523 (algorithm allow-list bypass
+# via PyJWK, 2.12.1+), CVE-2026-48526 (public JWK accepted as HMAC
+# secret when mixed families are allowed, 2.13+). cryptography floor
+# is 50.0.0 to close CVE-2026-69247 (PKCS#7 Bleichenbacher oracle,
+# fixed 50.0.0), CVE-2026-69248 (name-constraint bypass, fixed 49.0.0)
+# and CVE-2026-69249 (path-building DoS, fixed 49.0.0); none reachable
+# from our verify path but pip-audit will flag lower floors.
+capabilities-jws = ["PyJWT>=2.13.0", "cryptography>=50.0.0"]
+all = ["prompt-shield-ai[fastapi,flask,langchain,llamaindex,haystack,pydantic-ai,django,crewai,mcp,openai,anthropic,ml,observability,sentiment,language,capabilities-pipelock,capabilities-jws]"]
 dev = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
@@ -170,6 +188,17 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = ["prompt_shield.detectors.d030_custom_rules"]
 disable_error_code = ["import-untyped", "unused-ignore"]
+
+# Receipt-format adapters lazy-import third-party packages (pipelock-verify,
+# PyJWT) that may or may not be installed depending on which
+# capabilities-* extra the user picked. Their `import` lines carry
+# `# type: ignore[import-not-found]` which mypy would flag as unused when
+# the package IS installed in the dev env. Also, PyJWT's `options=` param
+# expects a private TypedDict — passing a plain dict is idiomatic in the
+# real API but trips mypy in strict mode.
+[[tool.mypy.overrides]]
+module = ["prompt_shield.capabilities.*"]
+disable_error_code = ["arg-type", "unused-ignore", "import-not-found"]
 
 # haystack-ai and pydantic-ai are optional deps; their decorators aren't
 # fully typed for our usage, and the internal factory functions build

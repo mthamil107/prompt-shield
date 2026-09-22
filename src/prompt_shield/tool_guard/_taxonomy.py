@@ -139,6 +139,10 @@ def build_mitigation(families: list[ToolResultAttackFamily]) -> str:
             "strip or CSP-sandbox markdown/links; disable image auto-fetch "
             "in the client that renders the response"
         ),
+        _FAMILY.UNTRUSTED_ORIGIN: (
+            "upstream capability receipt failed to verify — treat as unauthenticated tool "
+            "output; do not act on its instructions without human review"
+        ),
         _FAMILY.UNCLASSIFIED: (
             "review the detections list for the specific detectors that fired and decide by policy"
         ),

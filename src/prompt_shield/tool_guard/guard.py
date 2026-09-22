@@ -28,18 +28,24 @@ import hashlib
 import logging
 import threading
 from collections import OrderedDict
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import (
     Action,
+    DetectionResult,
+    ReceiptVerification,
     ScanContext,
     ScanReport,
+    Severity,
     ToolProvenance,
     ToolResultAttackFamily,
 )
 from prompt_shield.tool_guard._sanitize import sanitize_text
 from prompt_shield.tool_guard._taxonomy import build_mitigation, classify
+
+if TYPE_CHECKING:
+    from prompt_shield.capabilities._base import ReceiptAdapter
 
 logger = logging.getLogger("prompt_shield.tool_guard")
 
@@ -117,10 +123,46 @@ class ToolResultGuard:
         source_url: str | None = None,
         parent_scan_id: str | None = None,
         is_indirect: bool | None = None,
+        receipt: bytes | str | dict[str, object] | None = None,
+        receipt_adapter: ReceiptAdapter | None = None,
+        arg_hash: str | None = None,
     ) -> ScanReport:
-        """Scan ``text`` and return a ``ScanReport`` with ``scan_context`` populated."""
-        cache_key = self._cache_key(text, tool_name, tool_type)
-        cached = self._cache_lookup(cache_key)
+        """Scan ``text`` and return a ``ScanReport`` with ``scan_context`` populated.
+
+        When ``receipt_adapter`` is provided, receipt verification runs
+        alongside the content scan and the outcome is attached as
+        ``scan_context.receipt_verification``:
+
+        - ``receipt`` present + adapter present → verify.
+        - ``receipt`` MISSING + adapter present → **fail-closed**: record
+          a "receipt required but not provided" verification and flag
+          ``UNTRUSTED_ORIGIN``. Configuring an adapter declares that
+          receipts are required from that point on; a rogue upstream
+          that strips the receipt must not silently bypass the check.
+        - ``receipt`` present + adapter MISSING → ``TypeError`` (nothing
+          can verify it — caller misconfiguration).
+
+        A failed verification adds ``UNTRUSTED_ORIGIN`` to
+        ``attack_families``, appends a synthetic ``DetectionResult`` to
+        ``report.detections`` (so integrations that gate on
+        ``if report.detections:`` still fire), and enforces per the
+        guard's ``mode`` (block/flag/log). The content scan runs
+        unchanged; the receipt tells prompt-shield whether the *call*
+        was authorized, not whether the content is safe.
+
+        The cache is bypassed when an adapter is configured so
+        verification results are always fresh (a stale cached
+        verification would be a correctness bug).
+        """
+        if receipt is not None and receipt_adapter is None:
+            raise TypeError(
+                "receipt given without receipt_adapter — nothing can verify it. "
+                "Pass receipt_adapter= alongside receipt=."
+            )
+        # Skip cache when an adapter is configured — see docstring.
+        use_cache = receipt_adapter is None
+        cache_key = self._cache_key(text, tool_name, tool_type) if use_cache else None
+        cached = self._cache_lookup(cache_key) if use_cache else None
         if cached is not None:
             self._enforce(cached, tool_name=tool_name)
             return cached
@@ -137,6 +179,15 @@ class ToolResultGuard:
 
         report = self.engine.scan(text, context=engine_context)
         families, confidence = classify(report, text)
+
+        verification: ReceiptVerification | None = None
+        if receipt_adapter is not None:
+            verification = self._verify_receipt(
+                receipt_adapter, receipt, tool_name=tool_name, arg_hash=arg_hash
+            )
+            if not verification.trusted and ToolResultAttackFamily.UNTRUSTED_ORIGIN not in families:
+                families.append(ToolResultAttackFamily.UNTRUSTED_ORIGIN)
+
         mitigation = build_mitigation(families)
 
         indirect = (
@@ -162,11 +213,90 @@ class ToolResultGuard:
             classifier_confidence=confidence,
             mitigation=mitigation,
             sanitized_text=sanitized,
+            receipt_verification=verification,
         )
 
-        self._cache_set(cache_key, report)
-        self._enforce(report, tool_name=tool_name)
+        # Surface receipt failure through the standard report surfaces so
+        # integrations that gate on `if report.detections:` (LangChain
+        # callback, OpenAI/Anthropic wrappers, agent_guard) still fire.
+        if verification is not None and not verification.trusted:
+            report.detections.append(
+                DetectionResult(
+                    detector_id="receipt_verification",
+                    detected=True,
+                    confidence=1.0,
+                    severity=Severity.HIGH,
+                    explanation=(
+                        f"upstream capability receipt failed to verify: {verification.reason}"
+                    ),
+                    metadata={
+                        "adapter_name": verification.adapter_name,
+                        "policy_violations": list(verification.policy_violations),
+                    },
+                )
+            )
+            # Promote action so `action != PASS` gates fire; guard mode
+            # still governs whether we raise / log / warn below.
+            if report.action == Action.PASS:
+                report.action = Action.FLAG
+
+        if use_cache:
+            self._cache_set(cache_key, report)
+        # UNTRUSTED_ORIGIN needs enforcement even without a content detection —
+        # a failed receipt is a policy-level signal, not a content detection.
+        if verification is not None and not verification.trusted:
+            self._enforce_untrusted_origin(report, tool_name=tool_name)
+        else:
+            self._enforce(report, tool_name=tool_name)
         return report
+
+    def _verify_receipt(
+        self,
+        adapter: ReceiptAdapter,
+        receipt: bytes | str | dict[str, object] | None,
+        *,
+        tool_name: str | None,
+        arg_hash: str | None,
+    ) -> ReceiptVerification:
+        """Call an adapter and turn any raised exception into a fail-closed verdict.
+
+        Fail-closed on missing receipt is F1's core fix: configuring an
+        adapter declares "receipts required from here." Fail-closed on
+        adapter exceptions is F2: verification bugs (jwt.InvalidKeyError,
+        UnicodeDecodeError, ReceiptVerificationError, etc.) must not
+        turn scan() into a crash in flag/log mode — they must land as
+        trusted=False so the enforcement path fires normally.
+        """
+        # Import locally to avoid at-startup cost when capabilities is unused.
+        from prompt_shield.capabilities._base import ReceiptVerificationError
+
+        if receipt is None:
+            return ReceiptVerification(
+                adapter_name=adapter.name,
+                trusted=False,
+                reason="receipt required by adapter but not provided",
+                policy_violations=["missing receipt"],
+            )
+        try:
+            return adapter.verify(receipt, tool_name=tool_name, arg_hash=arg_hash)
+        except ReceiptVerificationError as e:
+            return ReceiptVerification(
+                adapter_name=adapter.name,
+                trusted=False,
+                reason=f"adapter error: {e}",
+                policy_violations=[f"adapter error: {type(e).__name__}"],
+            )
+        except Exception as e:  # defensive: typed catch, logged, converted to trusted=False
+            logger.exception(
+                "receipt adapter raised unexpectedly (treating as untrusted)",
+                extra={"adapter_name": adapter.name, "exc_type": type(e).__name__},
+            )
+            return ReceiptVerification(
+                adapter_name=adapter.name,
+                trusted=False,
+                reason=f"adapter raised {type(e).__name__}: {e}",
+                policy_violations=[f"adapter raised {type(e).__name__}"],
+            )
 
     async def ascan(
         self,
@@ -177,6 +307,9 @@ class ToolResultGuard:
         source_url: str | None = None,
         parent_scan_id: str | None = None,
         is_indirect: bool | None = None,
+        receipt: bytes | str | dict[str, object] | None = None,
+        receipt_adapter: ReceiptAdapter | None = None,
+        arg_hash: str | None = None,
     ) -> ScanReport:
         """Async variant. Runs the sync scan on the default executor."""
         return await asyncio.get_running_loop().run_in_executor(
@@ -188,6 +321,9 @@ class ToolResultGuard:
                 source_url=source_url,
                 parent_scan_id=parent_scan_id,
                 is_indirect=is_indirect,
+                receipt=receipt,
+                receipt_adapter=receipt_adapter,
+                arg_hash=arg_hash,
             ),
         )
 
@@ -209,6 +345,37 @@ class ToolResultGuard:
                 report.scan_id,
                 families,
             )
+
+    def _enforce_untrusted_origin(self, report: ScanReport, tool_name: str | None) -> None:
+        """Enforce mode for a receipt-failure signal.
+
+        Separate from ``_enforce`` because a receipt failure fires even
+        when no content detections are present — a missing / invalid
+        upstream capability is a first-class policy signal that must
+        surface regardless of what the detectors said about content.
+        """
+        ctx = report.scan_context
+        families = [f.value for f in (ctx.attack_families if ctx else [])]
+        verification = ctx.receipt_verification if ctx else None
+        reason = verification.reason if verification else "receipt failed to verify"
+        source_desc = f"tool_result[{tool_name or '?'}]"
+        if self.mode == "block":
+            raise ValueError(
+                f"prompt-shield BLOCKED {source_desc} — untrusted origin "
+                f"(scan_id={report.scan_id}, families={families}, reason={reason!r})"
+            )
+        if self.mode == "flag":
+            logger.warning(
+                "prompt-shield FLAGGED %s untrusted origin (scan_id=%s, families=%s, reason=%s)",
+                source_desc,
+                report.scan_id,
+                families,
+                reason,
+            )
+        # In log/sanitize modes: run the standard enforce for any content
+        # detections that happened alongside the receipt failure.
+        if self.mode not in ("block", "flag"):
+            self._enforce(report, tool_name=tool_name)
 
     def _cache_key(self, text: str, tool_name: str | None, tool_type: str | None) -> str | None:
         if self.cache_size == 0:
