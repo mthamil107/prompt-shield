@@ -117,7 +117,7 @@ def load_jailbreakbench(cache_dir: str | None = None) -> list[BenchmarkSample]:
             except (json.JSONDecodeError, KeyError):
                 pass
 
-    combined: dict[str, list[dict]] = {}
+    combined: dict[str, list[dict[str, Any]]] = {}
     for split in ("harmful", "benign"):
         try:
             req = urllib.request.Request(
@@ -136,7 +136,7 @@ def load_jailbreakbench(cache_dir: str | None = None) -> list[BenchmarkSample]:
     return _samples_from_jbb_payload(combined)
 
 
-def _samples_from_jbb_payload(payload: dict[str, list[dict]]) -> list[BenchmarkSample]:
+def _samples_from_jbb_payload(payload: dict[str, list[dict[str, Any]]]) -> list[BenchmarkSample]:
     samples: list[BenchmarkSample] = []
     for split, rows in payload.items():
         is_injection = split == "harmful"
