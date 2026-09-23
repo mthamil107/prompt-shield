@@ -29,6 +29,12 @@ Post-v0.8.0 work in progress toward v0.9.0.
   [@tomerzipori](https://github.com/tomerzipori) volunteered
   2026-09-21.
 
+### Changed
+
+- `PromptShieldAnthropic` now inherits `mode` when `tool_result_mode` is
+  omitted, instead of defaulting to `"block"`. This means
+  `mode="monitor"` no longer hard-blocks tool results by default.
+
 ## [0.8.0] - 2026-09-23
 
 **Consumer-side capability-token verification, expanded eval
@@ -147,7 +153,6 @@ parity for pydantic-ai / CrewAI / Anthropic continues into v0.9.0.
   install time. Bumped on the base dep, not only the extra, so
   `pip-audit` passes for users who never install
   `capabilities-jws`.
-
 ### Fixed
 
 - **`ToolResultGuard` cache mutation race under concurrent callers.**

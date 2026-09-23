@@ -65,7 +65,7 @@ class PromptShieldAnthropic:
         mode: str = "block",
         scan_responses: bool = False,
         scan_tool_results: bool = True,
-        tool_result_mode: str = "block",
+        tool_result_mode: str | None = None,
     ) -> None:
         if client is None:
             try:
@@ -81,7 +81,18 @@ class PromptShieldAnthropic:
         self.mode = mode
         self.scan_responses = scan_responses
         self.scan_tool_results = scan_tool_results
-        self.tool_result_mode = tool_result_mode
+
+        effective_tool_mode = mode if tool_result_mode is None else tool_result_mode
+        if effective_tool_mode == "sanitize":
+            raise ValueError(
+                "tool_result_mode='sanitize' is not supported by PromptShieldAnthropic"
+            )
+        valid_modes = ("block", "flag", "log", "monitor")
+        if effective_tool_mode not in valid_modes:
+            raise ValueError(
+                f"tool_result_mode must be one of {valid_modes}, got {effective_tool_mode!r}"
+            )
+        self.tool_result_mode = effective_tool_mode
         # mode="log" so this wrapper controls block/flag via tool_result_mode.
         self._tool_guard = ToolResultGuard(engine=self._engine, mode="log")
 
