@@ -225,14 +225,8 @@ def main() -> None:
     benign = _rollup("benign")
 
     print("\n=== Headline ===")
-    print(
-        f"  Harmful (recall): {harmful['detected']}/{harmful['total']} = "
-        f"{harmful['rate']:.1%}"
-    )
-    print(
-        f"  Benign  (FPR):    {benign['detected']}/{benign['total']} = "
-        f"{benign['rate']:.1%}"
-    )
+    print(f"  Harmful (recall): {harmful['detected']}/{harmful['total']} = {harmful['rate']:.1%}")
+    print(f"  Benign  (FPR):    {benign['detected']}/{benign['total']} = {benign['rate']:.1%}")
 
     print("\n=== By category (harmful | benign, detected/total) ===")
     print(f"  {'Category':<30} {'harmful':>10} {'benign':>10}")
@@ -241,10 +235,7 @@ def main() -> None:
     for cat in cats:
         h = by_split_cat.get(("harmful", cat), {"total": 0, "detected": 0})
         b = by_split_cat.get(("benign", cat), {"total": 0, "detected": 0})
-        print(
-            f"  {cat:<30} {h['detected']:>3}/{h['total']:<6} "
-            f"{b['detected']:>3}/{b['total']:<6}"
-        )
+        print(f"  {cat:<30} {h['detected']:>3}/{h['total']:<6} {b['detected']:>3}/{b['total']:<6}")
         per_cat_summary[cat] = {
             "harmful_detected": h["detected"],
             "harmful_total": h["total"],

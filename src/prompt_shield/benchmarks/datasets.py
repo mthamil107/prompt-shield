@@ -126,9 +126,7 @@ def load_jailbreakbench(cache_dir: str | None = None) -> list[BenchmarkSample]:
             with urllib.request.urlopen(req, timeout=30) as resp:
                 data = json.loads(resp.read().decode("utf-8"))
         except (urllib.error.URLError, OSError, json.JSONDecodeError) as exc:
-            raise BenchmarkError(
-                f"Failed to fetch JailbreakBench '{split}' split: {exc}"
-            ) from exc
+            raise BenchmarkError(f"Failed to fetch JailbreakBench '{split}' split: {exc}") from exc
         combined[split] = data.get("rows", [])
 
     if cache_path:
