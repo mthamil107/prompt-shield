@@ -7,13 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-**Framework-integration parity for the tool-result boundary.** The
-`ToolResultGuard` primitive (v0.7.0) and the standalone
-`prompt-shield-mcp` server (v0.7.6) are stable; v0.8.0 extends the
-same pattern to three framework wrappers so tool return values get
-the attack-family taxonomy and `sanitize` support regardless of
-which integration the app uses. Tracked in the
-[v0.8.0 milestone](https://github.com/mthamil107/prompt-shield/milestone/1).
+Post-v0.8.0 work in progress toward v0.9.0.
+
+### In progress
+
+- **pydantic-ai — `scan_tool_result` primitives.**
+  Hook `ToolResultGuard` into the pydantic-ai `Agent` / `Tool`
+  execution flow. See
+  [#30](https://github.com/mthamil107/prompt-shield/issues/30) —
+  draft under review in
+  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+- **CrewAI — `scan_tool_result` method.**
+  Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
+  method so tool outputs on a Crew get intercepted. See
+  [#31](https://github.com/mthamil107/prompt-shield/issues/31)
+  (`help wanted`).
+- **Anthropic wrapper parity** with the OpenAI wrapper's
+  post-#34 `tool_result_mode` (inherit default, validated set,
+  `sanitize` reject). See
+  [#36](https://github.com/mthamil107/prompt-shield/issues/36) —
+  [@tomerzipori](https://github.com/tomerzipori) volunteered
+  2026-09-21.
+
+## [0.8.0] - 2026-09-23
+
+**Consumer-side capability-token verification, expanded eval
+harness, and OpenAI-wrapper tool-result scanning.** Ships the
+tool-result origin binding via a new `capabilities/` module
+(Pipelock v1 receipts + JWS/JWT — verifies, does not mint), the
+OpenAI wrapper's `role="tool"` / `role="function"` message scanning
+through `ToolResultGuard`, the JailbreakBench evaluation runner,
+and a NotInject-FPR column across four HF classifiers. CVE-closing
+security floors on `PyJWT` and `cryptography`. Framework-wrapper
+parity for pydantic-ai / CrewAI / Anthropic continues into v0.9.0.
 
 ### Added
 
@@ -67,6 +93,61 @@ which integration the app uses. Tracked in the
   Contributed by [@MohamedIdhries](https://github.com/MohamedIdhries)
   in [#34](https://github.com/mthamil107/prompt-shield/pull/34).
 
+- **JailbreakBench evaluation runner, scoped as content-moderation.**
+  New `tests/benchmark_jailbreakbench.py` with `--fetch` / `--ml` /
+  `--json-out` flags mirroring the HarmBench runner shape. Loader
+  `load_jailbreakbench()` added to
+  `src/prompt_shield/benchmarks/datasets.py` using the HF
+  datasets-server (no `datasets` dep). Result file at
+  `docs/papers/evaluation/jailbreakbench.md` leads with the scope
+  framing: JailbreakBench is a jailbreak / harmful-behavior
+  benchmark, not a prompt-injection benchmark. Numbers: 5% harmful
+  recall / 4% benign FPR (default); benign FPR is the meaningful
+  number and stays inside the paper's 0.9–3.8% NotInject budget.
+  Dataset MIT-verified via GitHub API.
+
+- **NotInject FPR column + `d022` classifier-swap docs.** All four
+  benchmarked HF classifiers now carry a NotInject false-positive
+  rate alongside their attack-recall in
+  `docs/papers/evaluation/competitor_rerun.md` §3.4. Measured today:
+  PromptGuard 2 = 4.4% FPR (Meta-license-gated); PIGuard = 11.5%
+  (best independent, ~4× lower than default); ProtectAI v2 = 43.4%
+  (default; engine composition survives on thresholding); Deepset
+  DeBERTa v3 = 71.4% (the 100 / 100 / 100 recall is trained-to-flag,
+  not universal superiority). Default classifier unchanged. New
+  documentation at `docs/detectors/d022-classifier-swap.md` covers
+  the `model_name` swap knob with a validated shortlist. Durable
+  harness at `docs/papers/evaluation/notinject_fpr/`. Harness
+  validated against InjecGuard (arXiv 2410.22770) to within 0.06pp.
+
+- **Standalone MCP server Dockerfile (`Dockerfile.mcp`).**
+  Stdio-only image with the `[mcp]` extra pre-installed, entrypoint
+  at `python -m prompt_shield.mcp_server`. Complements the
+  `prompt-shield-mcp` package released in v0.7.6.
+
+### Changed
+
+- **OpenAI wrapper — clearer error on the inherit path when
+  `mode="sanitize"`.** If a caller sets `mode="sanitize"` without
+  passing `tool_result_mode` explicitly, the error now blames the
+  inheritance source (`"mode='sanitize' cannot be inherited as
+  tool_result_mode..."`) instead of a parameter the caller never
+  set. Docstring for `PromptShieldOpenAI.__init__` also tightened:
+  `tool_result_mode` non-block modes "log and pass through" rather
+  than the earlier "controls" phrasing.
+
+### Security
+
+- **`PyJWT` floor raised to `>=2.13.0`.** Closes CVE-2024-53861
+  (issuer partial match — directly reachable via `issuer=` param on
+  `JWSAdapter`), plus CVE-2026-32597, CVE-2026-48523,
+  CVE-2026-48526.
+- **`cryptography` floor raised to `>=50.0.0`.** Closes three
+  additional CVEs unreachable in current code paths but blocked at
+  install time. Bumped on the base dep, not only the extra, so
+  `pip-audit` passes for users who never install
+  `capabilities-jws`.
+
 ### Fixed
 
 - **`ToolResultGuard` cache mutation race under concurrent callers.**
@@ -113,20 +194,6 @@ which integration the app uses. Tracked in the
   `ToolResultAttackFamily` table in the README does not list the new
   `UNTRUSTED_ORIGIN` family added in v0.8.0. Doc-only nit; v0.8.1
   adds the row.
-
-### Still in progress for v0.8.0
-
-- **pydantic-ai — `scan_tool_result` primitives.**
-  Hook `ToolResultGuard` into the pydantic-ai `Agent` / `Tool`
-  execution flow. See
-  [#30](https://github.com/mthamil107/prompt-shield/issues/30) —
-  draft under review in
-  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
-- **CrewAI — `scan_tool_result` method.**
-  Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
-  method so tool outputs on a Crew get intercepted. See
-  [#31](https://github.com/mthamil107/prompt-shield/issues/31)
-  (`help wanted`).
 
 ## [0.7.6] - 2026-09-11
 

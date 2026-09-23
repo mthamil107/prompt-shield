@@ -38,8 +38,10 @@ class PromptShieldOpenAI:
     when the ``messages`` list contains messages with ``role="tool"`` or
     ``role="function"`` (OpenAI's tool/function result message format),
     each message's text is scanned through ``ToolResultGuard`` before the
-    request is forwarded. ``tool_result_mode`` controls tool result scanning
-    ('block', 'flag', 'log', 'monitor'); 'sanitize' is not supported by this wrapper.
+    request is forwarded. ``tool_result_mode`` controls tool result enforcement:
+    ``'block'`` raises on detection, non-block modes (``'flag'``, ``'log'``,
+    ``'monitor'``) log and pass through. ``'sanitize'`` is not supported by
+    this wrapper.
 
     Usage::
 
@@ -77,6 +79,12 @@ class PromptShieldOpenAI:
 
         effective_tool_mode = mode if tool_result_mode is None else tool_result_mode
         if effective_tool_mode == "sanitize":
+            if tool_result_mode is None:
+                raise ValueError(
+                    f"mode={mode!r} cannot be inherited as tool_result_mode "
+                    "('sanitize' is not supported by PromptShieldOpenAI); "
+                    "pass tool_result_mode explicitly"
+                )
             raise ValueError("tool_result_mode='sanitize' is not supported by PromptShieldOpenAI")
         valid_modes = ("block", "flag", "log", "monitor")
         if effective_tool_mode not in valid_modes:
