@@ -23,6 +23,15 @@ Post-v0.8.0 work in progress toward v0.9.0.
   [#31](https://github.com/mthamil107/prompt-shield/issues/31)
   (`help wanted`).
 
+## [0.8.1] - 2026-09-24
+
+**Anthropic wrapper parity with the OpenAI wrapper's post-#34
+`tool_result_mode` shape.** Small patch release: brings
+`PromptShieldAnthropic` onto the same inherit-from-`mode` default
+and same validation set as `PromptShieldOpenAI`, closing the
+v0.8.0-era asymmetry. Plus a follow-up polish commit under
+maintainer identity.
+
 ### Changed
 
 - `PromptShieldAnthropic` now inherits `mode` when `tool_result_mode` is
@@ -30,10 +39,13 @@ Post-v0.8.0 work in progress toward v0.9.0.
   `mode="monitor"` no longer hard-blocks tool results by default. Also
   validates `tool_result_mode` against `("block", "flag", "log",
   "monitor")` and rejects `"sanitize"` with a `ValueError`, matching
-  `PromptShieldOpenAI`. Closes
+  `PromptShieldOpenAI`. The inherit-path `sanitize` error message
+  now blames the inheritance source rather than a parameter the
+  caller never set. Docstring documents the semantics. Closes
   [#36](https://github.com/mthamil107/prompt-shield/issues/36).
   Contributed by [@tomerzipori](https://github.com/tomerzipori) in
-  [#37](https://github.com/mthamil107/prompt-shield/pull/37).
+  [#37](https://github.com/mthamil107/prompt-shield/pull/37);
+  follow-up polish landed as `2a5eb4c`.
 
 ## [0.8.0] - 2026-09-23
 
