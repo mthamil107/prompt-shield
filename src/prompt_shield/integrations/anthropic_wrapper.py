@@ -44,6 +44,12 @@ class PromptShieldAnthropic:
     classified into ``ToolResultAttackFamily`` values available via
     ``report.scan_context.attack_families``.
 
+    ``tool_result_mode`` controls tool result enforcement: ``'block'``
+    raises on detection, non-block modes (``'flag'``, ``'log'``,
+    ``'monitor'``) log and pass through. ``'sanitize'`` is not supported
+    by this wrapper. When omitted, ``tool_result_mode`` inherits from
+    ``mode``.
+
     Usage::
 
         from anthropic import Anthropic
@@ -84,6 +90,12 @@ class PromptShieldAnthropic:
 
         effective_tool_mode = mode if tool_result_mode is None else tool_result_mode
         if effective_tool_mode == "sanitize":
+            if tool_result_mode is None:
+                raise ValueError(
+                    f"mode={mode!r} cannot be inherited as tool_result_mode "
+                    "('sanitize' is not supported by PromptShieldAnthropic); "
+                    "pass tool_result_mode explicitly"
+                )
             raise ValueError(
                 "tool_result_mode='sanitize' is not supported by PromptShieldAnthropic"
             )

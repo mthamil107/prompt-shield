@@ -216,6 +216,18 @@ class TestPromptShieldAnthropic:
                 tool_result_mode="sanitize",
             )
 
+    def test_tool_result_mode_inherit_sanitize_blames_mode(self, engine, mock_anthropic_client):
+        """When mode='sanitize' is inherited (no explicit tool_result_mode),
+        the error message must point at the inheritance source, not at a
+        parameter the caller never set. Mirrors PromptShieldOpenAI post-#34.
+        """
+        with pytest.raises(ValueError, match="mode='sanitize' cannot be inherited"):
+            PromptShieldAnthropic(
+                client=mock_anthropic_client,
+                engine=engine,
+                mode="sanitize",
+            )
+
     def test_tool_result_mode_inherits_from_mode(self, engine, mock_anthropic_client):
         shield = PromptShieldAnthropic(
             client=mock_anthropic_client,

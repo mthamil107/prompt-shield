@@ -22,18 +22,18 @@ Post-v0.8.0 work in progress toward v0.9.0.
   method so tool outputs on a Crew get intercepted. See
   [#31](https://github.com/mthamil107/prompt-shield/issues/31)
   (`help wanted`).
-- **Anthropic wrapper parity** with the OpenAI wrapper's
-  post-#34 `tool_result_mode` (inherit default, validated set,
-  `sanitize` reject). See
-  [#36](https://github.com/mthamil107/prompt-shield/issues/36) —
-  [@tomerzipori](https://github.com/tomerzipori) volunteered
-  2026-09-21.
 
 ### Changed
 
 - `PromptShieldAnthropic` now inherits `mode` when `tool_result_mode` is
   omitted, instead of defaulting to `"block"`. This means
-  `mode="monitor"` no longer hard-blocks tool results by default.
+  `mode="monitor"` no longer hard-blocks tool results by default. Also
+  validates `tool_result_mode` against `("block", "flag", "log",
+  "monitor")` and rejects `"sanitize"` with a `ValueError`, matching
+  `PromptShieldOpenAI`. Closes
+  [#36](https://github.com/mthamil107/prompt-shield/issues/36).
+  Contributed by [@tomerzipori](https://github.com/tomerzipori) in
+  [#37](https://github.com/mthamil107/prompt-shield/pull/37).
 
 ## [0.8.0] - 2026-09-23
 
@@ -153,6 +153,7 @@ parity for pydantic-ai / CrewAI / Anthropic continues into v0.9.0.
   install time. Bumped on the base dep, not only the extra, so
   `pip-audit` passes for users who never install
   `capabilities-jws`.
+
 ### Fixed
 
 - **`ToolResultGuard` cache mutation race under concurrent callers.**
