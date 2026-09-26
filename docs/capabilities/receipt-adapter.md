@@ -25,7 +25,7 @@ Configuring a `receipt_adapter` declares that receipts are required from that po
 
 Pipelock v1 receipts do not carry an expiry claim, and the v0.8.0 adapter reads `timestamp` but does not enforce a `max_age`. A captured Pipelock `allow` receipt can be replayed indefinitely — a receipt dated 2020 or dated 2099 both verify successfully today. Chain verification (`verify_chain()` in `pipelock-verify`) is also not attempted.
 
-Callers who need freshness guarantees should use `JWSAdapter` with `exp` claim required (`require_exp=True`) until v0.8.1 lands `max_age` enforcement for Pipelock.
+Callers who need freshness guarantees should use `JWSAdapter` with `exp` claim required (`require_exp=True`) until a later release lands `max_age` enforcement for Pipelock.
 
 ## Adjacent projects (interop, not competitors)
 

@@ -47,6 +47,14 @@ maintainer identity.
   [#37](https://github.com/mthamil107/prompt-shield/pull/37);
   follow-up polish landed as `2a5eb4c`.
 
+### Not in this release
+
+- The `[0.8.0]` "Known limitations (deferred to v0.8.1)" items —
+  Pipelock `max_age` replay window, `capabilities/` cache-bypass
+  perf, `risk_score` promotion on receipt failure, README
+  `UNTRUSTED_ORIGIN` row — are not in this patch. They move to
+  v0.9.0 alongside the framework-wrapper parity work.
+
 ## [0.8.0] - 2026-09-23
 
 **Consumer-side capability-token verification, expanded eval
