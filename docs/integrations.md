@@ -164,8 +164,8 @@ See [Agentic Security](agentic-security.md) for details on the MCP filter.
 pip install prompt-shield-ai[pydantic-ai]
 ```
 
-Wrap a Pydantic AI toolset to scan every tool return value before it is added
-to model context:
+Wrap a Pydantic AI toolset to scan every return value from tools registered
+with that toolset before it is added to model context:
 
 ```python
 from pydantic_ai import Agent, FunctionToolset
@@ -188,10 +188,15 @@ result = agent.run_sync(prompt)
 extension point, which receives results from both sync and async tools. Mode
 behavior is:
 
+Tools registered directly with `@agent.tool` or `@agent.tool_plain` live in
+the agent's separate function toolset and bypass this wrapper. Move those tools
+into a `FunctionToolset` (or another explicit toolset) and wrap it with
+`PromptShieldToolset` when their results need guarding.
+
 | Mode | Detected tool result |
 |---|---|
 | `block` | Raises `ValueError`; the result does not enter model context |
-| `sanitize` | Replaces the result with `scan_context.sanitized_text` |
+| `sanitize` | Preserves `ToolReturn` structure and metadata while replacing its model-facing text; other non-string results become strings |
 | `flag` | Logs a warning and preserves the original result |
 | `log` | Preserves the original result without a warning |
 
