@@ -44,6 +44,12 @@ class PromptShieldAnthropic:
     classified into ``ToolResultAttackFamily`` values available via
     ``report.scan_context.attack_families``.
 
+    ``tool_result_mode`` controls tool result enforcement: ``'block'``
+    raises on detection, non-block modes (``'flag'``, ``'log'``,
+    ``'monitor'``) log and pass through. ``'sanitize'`` is not supported
+    by this wrapper. When omitted, ``tool_result_mode`` inherits from
+    ``mode``.
+
     Usage::
 
         from anthropic import Anthropic
@@ -65,7 +71,7 @@ class PromptShieldAnthropic:
         mode: str = "block",
         scan_responses: bool = False,
         scan_tool_results: bool = True,
-        tool_result_mode: str = "block",
+        tool_result_mode: str | None = None,
     ) -> None:
         if client is None:
             try:
@@ -81,7 +87,24 @@ class PromptShieldAnthropic:
         self.mode = mode
         self.scan_responses = scan_responses
         self.scan_tool_results = scan_tool_results
-        self.tool_result_mode = tool_result_mode
+
+        effective_tool_mode = mode if tool_result_mode is None else tool_result_mode
+        if effective_tool_mode == "sanitize":
+            if tool_result_mode is None:
+                raise ValueError(
+                    f"mode={mode!r} cannot be inherited as tool_result_mode "
+                    "('sanitize' is not supported by PromptShieldAnthropic); "
+                    "pass tool_result_mode explicitly"
+                )
+            raise ValueError(
+                "tool_result_mode='sanitize' is not supported by PromptShieldAnthropic"
+            )
+        valid_modes = ("block", "flag", "log", "monitor")
+        if effective_tool_mode not in valid_modes:
+            raise ValueError(
+                f"tool_result_mode must be one of {valid_modes}, got {effective_tool_mode!r}"
+            )
+        self.tool_result_mode = effective_tool_mode
         # mode="log" so this wrapper controls block/flag via tool_result_mode.
         self._tool_guard = ToolResultGuard(engine=self._engine, mode="log")
 

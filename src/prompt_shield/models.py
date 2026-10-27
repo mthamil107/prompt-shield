@@ -64,6 +64,7 @@ class ToolResultAttackFamily(str, Enum):
     TOOL_MISUSE = "tool_misuse"
     ENCODED_PAYLOAD = "encoded_payload"
     RENDERED_EXFIL = "rendered_exfil"
+    UNTRUSTED_ORIGIN = "untrusted_origin"
     UNCLASSIFIED = "unclassified"
 
 
@@ -74,6 +75,23 @@ class ToolProvenance(BaseModel):
     tool_type: str | None = None
     source_url: str | None = None
     parent_scan_id: str | None = None
+
+
+class ReceiptVerification(BaseModel):
+    """Outcome of verifying an upstream capability receipt for a tool call.
+
+    Populated when a receipt is passed to ``ToolResultGuard.scan()`` alongside
+    a ``ReceiptAdapter``. The receipt tells prompt-shield whether the tool
+    call was authorized upstream; content safety is separate and stays with
+    the standard detector pipeline.
+    """
+
+    adapter_name: str
+    trusted: bool
+    reason: str = ""
+    issuer: str | None = None
+    expires_at: datetime | None = None
+    policy_violations: list[str] = []
 
 
 class ScanContext(BaseModel):
@@ -91,6 +109,7 @@ class ScanContext(BaseModel):
     classifier_confidence: float = Field(default=0.0, ge=0.0, le=1.0)
     mitigation: str = ""
     sanitized_text: str | None = None
+    receipt_verification: ReceiptVerification | None = None
 
 
 class ScanReport(BaseModel):

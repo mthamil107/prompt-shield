@@ -95,6 +95,52 @@ denominator — treat as directional, not definitive.
 | Meta Prompt Guard 2 (86M) | 0/8 | 0.0% |
 | PIGuard (leolee99) | 0/8 | 0.0% |
 
+### 3.4 Benign false-positive rate on NotInject (339 benign prompts, added 2026-09-22)
+
+Liu's 8-prompt denominator is too small to separate detectors that are
+well-calibrated from ones that are trained to flag; §3.3 already flags
+this. NotInject (Zhu et al., ACL 2025 — 339 benign prompts that look
+adversarial but are not) is the standard larger-denominator FPR corpus
+and is the only one that shows the shape of the trade-off across the
+four competitors:
+
+| Detector | FP / total (NotInject) | NotInject FPR | Liu-benign FPR (§3.3) |
+|---|---:|---:|---:|
+| Meta Prompt Guard 2 (86M) | 15 / 339 | **4.4%** | 0.0% |
+| PIGuard (leolee99) | 39 / 339 | **11.5%** | 0.0% |
+| ProtectAI DeBERTa v2 (prompt-shield default) | 147 / 339 | **43.4%** | 0.0% |
+| Deepset DeBERTa v3 | 242 / 339 | **71.4%** | 25.0% |
+| prompt-shield full engine (paper §5.5) | — | **0.9–3.8%** | 0.0% |
+
+*Recall-only comparisons overstate defender quality — a model that
+returns "attack" on everything scores 100% recall at 100% FPR.* Every
+classifier row above is `d022`-shaped: standalone, no thresholding, no
+composition. The prompt-shield full-engine row (paper §5.5) is the
+33-detector engine with the ProtectAI classifier gated behind
+thresholding and composition; the ~40× gap between "ProtectAI at 43.4%"
+and "engine at 0.9–3.8%" is entirely the composition — the classifier
+alone is not the calibration story.
+
+**Method.** Same tokenizer / model loading / softmax / threshold as
+§3.1 (see [`competitor_rerun.py`](competitor_rerun.py)); harness scripts
+and raw output at [`notinject_fpr/`](notinject_fpr/) —
+[`run_deepset_protectai.py`](notinject_fpr/run_deepset_protectai.py) and
+[`run_piguard_pg2.py`](notinject_fpr/run_piguard_pg2.py). Offline against
+local HF cache. **External cross-validation:** InjecGuard (arXiv 2410.22770,
+Table 1) reports Deepset over-defense-accuracy 5.31% and benign-accuracy
+34.06% on NotInject; ProtectAI 56.64% benign-accuracy; our 43.4% ProtectAI
+FPR corresponds to 56.6% benign-accuracy, matching InjecGuard's independent
+number to within 0.06 pp — the harness is validated. Top NotInject false
+positives for Deepset include Chinese-language benign questions about
+password safety (P = 0.999).
+
+**Consequence.** Deepset DeBERTa v3's 100 / 100 / 100 in §3.1 read as
+"perfect" on attack-only corpora, but at 71.4% FPR on NotInject would
+break any production deployment that sees mixed traffic. `d022`'s
+shipped default stays **ProtectAI DeBERTa v2** — see §4(b) and
+[`docs/detectors/d022-classifier-swap.md`](../../detectors/d022-classifier-swap.md)
+for the swap knob and the validated shortlist.
+
 ## 4. Interpretation
 
 There is no single "winner" table row that would be honest to publish

@@ -328,7 +328,7 @@ shield = PromptShieldAnthropic(
     client=Anthropic(),
     mode="block",
     scan_tool_results=True,        # default
-    tool_result_mode="block",       # default
+    tool_result_mode="block",       # explicit; default inherits `mode`
 )
 
 # tool_result blocks inside the messages list are scanned before forwarding.

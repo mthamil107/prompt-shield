@@ -7,22 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### In progress / v0.8.0
+Post-v0.8.0 work in progress toward v0.9.0.
 
-**Framework-integration parity for the tool-result boundary.** The
-`ToolResultGuard` primitive (v0.7.0) and the standalone
-`prompt-shield-mcp` server (v0.7.6) are stable; v0.8.0 extends the
-same pattern to three framework wrappers so tool return values get
-the attack-family taxonomy and `sanitize` support regardless of
-which integration the app uses. All three are tracked in the
-[v0.8.0 milestone](https://github.com/mthamil107/prompt-shield/milestone/1)
-and open for contributions (`help wanted`):
+### In progress
 
-- **OpenAI wrapper — `role="tool"` message scanning.**
-  Route `role == "tool"` messages in `PromptShieldOpenAI.create()`
-  through `ToolResultGuard` instead of the generic input gate.
-  See [#29](https://github.com/mthamil107/prompt-shield/issues/29)
-  for the design notes and test-coverage expectations.
 - **pydantic-ai — `scan_tool_result` primitives.**
   Added `PromptShieldToolset`, an idiomatic `WrapperToolset.call_tool()`
   interceptor that routes both sync and async tool results through
@@ -35,7 +23,206 @@ and open for contributions (`help wanted`):
 - **CrewAI — `scan_tool_result` method.**
   Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
   method so tool outputs on a Crew get intercepted. See
-  [#31](https://github.com/mthamil107/prompt-shield/issues/31).
+  [#31](https://github.com/mthamil107/prompt-shield/issues/31)
+  (`help wanted`).
+
+## [0.8.1] - 2026-09-24
+
+**Anthropic wrapper parity with the OpenAI wrapper's post-#34
+`tool_result_mode` shape.** Small patch release: brings
+`PromptShieldAnthropic` onto the same inherit-from-`mode` default
+and same validation set as `PromptShieldOpenAI`, closing the
+v0.8.0-era asymmetry. Plus a follow-up polish commit under
+maintainer identity.
+
+### Changed
+
+- `PromptShieldAnthropic` now inherits `mode` when `tool_result_mode` is
+  omitted, instead of defaulting to `"block"`. This means
+  `mode="monitor"` no longer hard-blocks tool results by default. Also
+  validates `tool_result_mode` against `("block", "flag", "log",
+  "monitor")` and rejects `"sanitize"` with a `ValueError`, matching
+  `PromptShieldOpenAI`. The inherit-path `sanitize` error message
+  now blames the inheritance source rather than a parameter the
+  caller never set. Docstring documents the semantics. Closes
+  [#36](https://github.com/mthamil107/prompt-shield/issues/36).
+  Contributed by [@tomerzipori](https://github.com/tomerzipori) in
+  [#37](https://github.com/mthamil107/prompt-shield/pull/37);
+  follow-up polish landed as `2a5eb4c`.
+
+### Not in this release
+
+- The `[0.8.0]` "Known limitations (deferred to v0.8.1)" items —
+  Pipelock `max_age` replay window, `capabilities/` cache-bypass
+  perf, `risk_score` promotion on receipt failure, README
+  `UNTRUSTED_ORIGIN` row — are not in this patch. They move to
+  v0.9.0 alongside the framework-wrapper parity work.
+
+## [0.8.0] - 2026-09-23
+
+**Consumer-side capability-token verification, expanded eval
+harness, and OpenAI-wrapper tool-result scanning.** Ships the
+tool-result origin binding via a new `capabilities/` module
+(Pipelock v1 receipts + JWS/JWT — verifies, does not mint), the
+OpenAI wrapper's `role="tool"` / `role="function"` message scanning
+through `ToolResultGuard`, the JailbreakBench evaluation runner,
+and a NotInject-FPR column across four HF classifiers. CVE-closing
+security floors on `PyJWT` and `cryptography`. Framework-wrapper
+parity for pydantic-ai / CrewAI / Anthropic continues into v0.9.0.
+
+### Added
+
+- **`capabilities/` — receipt-format adapters for `ToolResultGuard`.**
+  Consumes signed capability receipts issued by upstream projects
+  (Pipelock v1 action receipts via `pipelock-verify`, generic JWS/JWT
+  via `PyJWT`). Interop-first: prompt-shield verifies receipts, does
+  not mint tokens. A failed verification adds `UNTRUSTED_ORIGIN` to
+  `attack_families`, appends a synthetic `DetectionResult`
+  (`detector_id="receipt_verification"`) so integrations that gate on
+  `if report.detections:` fire, and enforces per the guard's `mode`.
+  The cache is bypassed automatically when a `receipt_adapter` is
+  configured so verifications are always fresh. Public API is
+  backward-compatible — existing callers that don't pass `receipt` /
+  `receipt_adapter` behave unchanged. Optional extras:
+  `capabilities-pipelock`, `capabilities-jws`. See
+  `docs/capabilities/receipt-adapter.md` for adjacent-project interop
+  notes and deployment guidance.
+
+  Hardened after adversarial review:
+    - **Fail-closed** on missing receipt when an adapter is configured
+      (a rogue upstream stripping the receipt must not silently
+      bypass verification).
+    - Adapter-raised exceptions (`jwt.InvalidKeyError` from
+      algorithm-confusion, `UnicodeDecodeError`, structural
+      `ReceiptVerificationError`, unexpected bugs) are converted to
+      `trusted=False` inside the guard — they never crash `scan()`.
+    - `PipelockAdapter` now requires an explicit `public_key_hex` —
+      the previous `None` default trusted the receipt's embedded
+      signer_key (forgery vector for any Ed25519 keypair).
+    - `JWSAdapter.algorithms` is required (no default); mixing HMAC and
+      asymmetric families enables key-confusion.
+    - `arg_hash` binding is enforced when the caller supplies it: JWS
+      rejects when the token carries no matching claim, Pipelock
+      rejects (v1 has no such binding — use JWS instead).
+    - PyJWT floor raised to `>=2.13` to close CVE-2024-53861,
+      CVE-2026-32597, CVE-2026-48523, CVE-2026-48526.
+    - Python 3.10 compatibility fix (`datetime.UTC` is 3.11+; replaced
+      with `datetime.timezone.utc`).
+
+- **OpenAI wrapper — `role="tool"` / `role="function"` message
+  scanning through `ToolResultGuard`.** New `scan_tool_results` and
+  `tool_result_mode` init options on `PromptShieldOpenAI`. Handles
+  both string and structured-list content shapes via
+  `_extract_openai_message_text`. `tool_result_mode` defaults to
+  `None` and inherits from the outer `mode` — existing
+  `mode="monitor"` callers are unaffected on upgrade. `sanitize` is
+  currently rejected with a clear `ValueError` (write-back needs a
+  message-mutation contract the wrapper does not yet own; a future
+  PR can add it). Closes [#29](https://github.com/mthamil107/prompt-shield/issues/29).
+  Contributed by [@MohamedIdhries](https://github.com/MohamedIdhries)
+  in [#34](https://github.com/mthamil107/prompt-shield/pull/34).
+
+- **JailbreakBench evaluation runner, scoped as content-moderation.**
+  New `tests/benchmark_jailbreakbench.py` with `--fetch` / `--ml` /
+  `--json-out` flags mirroring the HarmBench runner shape. Loader
+  `load_jailbreakbench()` added to
+  `src/prompt_shield/benchmarks/datasets.py` using the HF
+  datasets-server (no `datasets` dep). Result file at
+  `docs/papers/evaluation/jailbreakbench.md` leads with the scope
+  framing: JailbreakBench is a jailbreak / harmful-behavior
+  benchmark, not a prompt-injection benchmark. Numbers: 5% harmful
+  recall / 4% benign FPR (default); benign FPR is the meaningful
+  number and stays inside the paper's 0.9–3.8% NotInject budget.
+  Dataset MIT-verified via GitHub API.
+
+- **NotInject FPR column + `d022` classifier-swap docs.** All four
+  benchmarked HF classifiers now carry a NotInject false-positive
+  rate alongside their attack-recall in
+  `docs/papers/evaluation/competitor_rerun.md` §3.4. Measured today:
+  PromptGuard 2 = 4.4% FPR (Meta-license-gated); PIGuard = 11.5%
+  (best independent, ~4× lower than default); ProtectAI v2 = 43.4%
+  (default; engine composition survives on thresholding); Deepset
+  DeBERTa v3 = 71.4% (the 100 / 100 / 100 recall is trained-to-flag,
+  not universal superiority). Default classifier unchanged. New
+  documentation at `docs/detectors/d022-classifier-swap.md` covers
+  the `model_name` swap knob with a validated shortlist. Durable
+  harness at `docs/papers/evaluation/notinject_fpr/`. Harness
+  validated against InjecGuard (arXiv 2410.22770) to within 0.06pp.
+
+- **Standalone MCP server Dockerfile (`Dockerfile.mcp`).**
+  Stdio-only image with the `[mcp]` extra pre-installed, entrypoint
+  at `python -m prompt_shield.mcp_server`. Complements the
+  `prompt-shield-mcp` package released in v0.7.6.
+
+### Changed
+
+- **OpenAI wrapper — clearer error on the inherit path when
+  `mode="sanitize"`.** If a caller sets `mode="sanitize"` without
+  passing `tool_result_mode` explicitly, the error now blames the
+  inheritance source (`"mode='sanitize' cannot be inherited as
+  tool_result_mode..."`) instead of a parameter the caller never
+  set. Docstring for `PromptShieldOpenAI.__init__` also tightened:
+  `tool_result_mode` non-block modes "log and pass through" rather
+  than the earlier "controls" phrasing.
+
+### Security
+
+- **`PyJWT` floor raised to `>=2.13.0`.** Closes CVE-2024-53861
+  (issuer partial match — directly reachable via `issuer=` param on
+  `JWSAdapter`), plus CVE-2026-32597, CVE-2026-48523,
+  CVE-2026-48526.
+- **`cryptography` floor raised to `>=50.0.0`.** Closes three
+  additional CVEs unreachable in current code paths but blocked at
+  install time. Bumped on the base dep, not only the extra, so
+  `pip-audit` passes for users who never install
+  `capabilities-jws`.
+
+### Fixed
+
+- **`ToolResultGuard` cache mutation race under concurrent callers.**
+  The `OrderedDict` cache is now guarded by a per-instance
+  `threading.Lock`; concurrent `scan()` / `ascan()` callers on a
+  shared guard could previously raise `KeyError` from `move_to_end`
+  or `popitem`. The lock protects only the O(1) cache lookup /
+  insert / eviction — the detector run itself is outside the lock,
+  so throughput is unaffected. Closes
+  [#33](https://github.com/mthamil107/prompt-shield/issues/33).
+  Contributed by [@DYNOSuprovo](https://github.com/DYNOSuprovo) in
+  [#35](https://github.com/mthamil107/prompt-shield/pull/35).
+
+### Known limitations (deferred to v0.8.1)
+
+- **Pipelock replay window.** Pipelock v1 receipts do not carry an
+  expiry claim; the v0.8.0 adapter reads `timestamp` but does not
+  enforce a `max_age`. A captured `allow` receipt can be replayed
+  indefinitely. v0.8.1 will add a `max_age: timedelta | None`
+  parameter, parse RFC 3339 `timestamp`, populate `expires_at`, and
+  reject future-dated receipts beyond skew; chain verification
+  (`verify_chain()` in `pipelock-verify`) will also be wired.
+  Callers who need freshness guarantees today should use `JWSAdapter`
+  with `require_exp=True`.
+- **`capabilities/` cache-bypass perf regression.** The
+  `ToolResultGuard` cache is bypassed whenever a `receipt_adapter` is
+  configured, because a cached verification would be a correctness
+  bug. Cost: 283–383 ms per receipt-bearing scan vs. 0.06 ms cached.
+  v0.8.1 fix: cache the content report, attach fresh verification via
+  `ScanReport.model_copy`.
+- **`ScanReport.overall_risk_score` not promoted on receipt failure.**
+  When a receipt fails verification, `action` promotes PASS → FLAG and
+  a HIGH-severity synthetic `DetectionResult` lands in
+  `report.detections`, but `overall_risk_score` stays at 0.0. Any
+  caller surfacing `risk_score` sees an inconsistent state alongside
+  a FLAG action. v0.8.1: promote `risk_score` in lockstep with
+  `action`.
+- **`__init__.py` upstream survey.** Adjacent projects (Invariant
+  Guardrails, mcp-gate, agentauth, Progent) are named as *adjacent*,
+  not *consumable*. The see-also list will be revisited each release
+  in case any of them publishes a wire format for prompt-shield to
+  adopt.
+- **`README.md` family table missing `UNTRUSTED_ORIGIN`.** The
+  `ToolResultAttackFamily` table in the README does not list the new
+  `UNTRUSTED_ORIGIN` family added in v0.8.0. Doc-only nit; v0.8.1
+  adds the row.
 
 ## [0.7.6] - 2026-09-11
 
