@@ -12,11 +12,14 @@ Post-v0.8.0 work in progress toward v0.9.0.
 ### In progress
 
 - **pydantic-ai — `scan_tool_result` primitives.**
-  Hook `ToolResultGuard` into the pydantic-ai `Agent` / `Tool`
-  execution flow. See
-  [#30](https://github.com/mthamil107/prompt-shield/issues/30) —
-  draft under review in
-  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+  Added `PromptShieldToolset`, an idiomatic `WrapperToolset.call_tool()`
+  interceptor that routes both sync and async tool results through
+  `ToolResultGuard` before they return to model context. `block` raises,
+  `sanitize` substitutes sanitized text, and `flag` / `log` preserve the
+  original value. A standalone `scan_tool_result()` helper supports manual
+  execution paths. Existing `scan_input`, output validation, and older
+  pydantic-ai installations retain their previous behavior. Closes
+  [#30](https://github.com/mthamil107/prompt-shield/issues/30).
 - **CrewAI — `scan_tool_result` method.**
   Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
   method so tool outputs on a Crew get intercepted. See

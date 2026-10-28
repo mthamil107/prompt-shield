@@ -387,6 +387,26 @@ result = await proxy.call_tool("web_search", {"q": "..."})
 </details>
 
 <details>
+<summary><b>Pydantic AI — <code>WrapperToolset.call_tool</code> interception</b></summary>
+
+```python
+# doctest: +SKIP  (illustrative: tools and a model are application-specific)
+from pydantic_ai import Agent, FunctionToolset
+from prompt_shield.integrations.pydantic_ai_guard import PromptShieldToolset
+
+tools = FunctionToolset(tools=[web_search, retrieve_document])
+guarded_tools = PromptShieldToolset(tools, mode="block")
+agent = Agent("openai:gpt-5", toolsets=[guarded_tools])
+```
+
+Pydantic AI routes both sync and async function tools through the wrapper's
+async `call_tool` boundary. `block` raises before the result enters model
+context; `sanitize` substitutes sanitized text; `flag` and `log` preserve the
+original value. For manual tool execution, use
+`pydantic_ai_guard.scan_tool_result(...)` and inspect the returned report.
+</details>
+
+<details>
 <summary><b>AgentGuard (framework-agnostic 3-gate)</b></summary>
 
 Backward-compatible: `scan_tool_result` still returns `GateResult`. New attack-family metadata is exposed via `GateResult.metadata["attack_families"]` and `GateResult.metadata["scan_context"]`.
@@ -411,7 +431,9 @@ prompt-shield scan "Ignore previous instructions" --gate tool_result --tool-name
 
 ### Coming in v0.8.0
 
-pydantic-ai `scan_tool_result` primitives, OpenAI wrapper `role="tool"` message scanning, and CrewAI `scan_tool_result` method. Split from v0.7.0 to isolate framework-specific edge cases; the core primitive is stable today.
+OpenAI wrapper `role="tool"` message scanning and a CrewAI `scan_tool_result`
+method. Split from v0.7.0 to isolate framework-specific edge cases; the core
+primitive and Pydantic AI toolset wrapper are stable today.
 
 ---
 

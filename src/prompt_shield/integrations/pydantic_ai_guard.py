@@ -1,7 +1,7 @@
 """Pydantic AI integration for prompt-shield.
 
 Adds prompt-shield scanning around a Pydantic AI ``Agent`` with minimal
-ceremony. Two primitives:
+ceremony. Four primitives:
 
 - ``scan_input(prompt, engine, mode)`` — call before ``agent.run()`` to
   gate user input. Raises on ``mode="block"`` (default), warns on
@@ -9,17 +9,25 @@ ceremony. Two primitives:
 - ``PromptShieldOutputValidator(engine, mode)`` — a Pydantic AI
   ``result_validator``-compatible callable that scans the agent's
   final response through the 9 output scanners.
+- ``scan_tool_result(content, tool_name, engine, mode)`` — manually
+  scan a tool return value through ``ToolResultGuard``.
+- ``PromptShieldToolset(toolset, engine, mode)`` — wrap a Pydantic AI
+  toolset so results from tools registered with that toolset are scanned
+  before they return to the model. Tools registered directly with
+  ``@agent.tool`` or ``@agent.tool_plain`` are outside the wrapper.
 
 One-line install onto an existing agent via ``attach(agent, ...)``:
 
     from pydantic_ai import Agent
-    from prompt_shield.integrations.pydantic_ai_guard import attach
+    from prompt_shield.integrations.pydantic_ai_guard import attach, scan_input
 
     agent = Agent('openai:gpt-4o', system_prompt='You are helpful.')
-    attach(agent, mode='block')            # installs input + output guards
+    attach(agent, mode='block')            # installs the output guard
 
-    result = await agent.run("What is the capital of France?")
-    # If the user prompt was injection → raises before reaching OpenAI.
+    prompt = "What is the capital of France?"
+    scan_input(prompt, mode='block')        # explicit input gate
+    result = await agent.run(prompt)
+    # If the user prompt was injection → scan_input raises before OpenAI.
     # If the model output leaks PII/prompt/toxicity → raises after generation.
 
 Lazy import: ``pydantic-ai`` is an optional dependency. The module
@@ -30,6 +38,7 @@ with the pip install hint.
 from __future__ import annotations
 
 import logging
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 try:
@@ -39,10 +48,32 @@ try:
 except ImportError:
     _PYDANTIC_AI_AVAILABLE = False
 
+
+try:
+    from pydantic_ai import ToolReturn as _PydanticAIToolReturn
+    from pydantic_ai import WrapperToolset as _WrapperToolset
+    from pydantic_ai.messages import ToolReturnPart as _PydanticAIToolReturnPart
+
+    _PYDANTIC_AI_TOOLSET_AVAILABLE = True
+except ImportError:
+    _PYDANTIC_AI_TOOLSET_AVAILABLE = False
+    _PydanticAIToolReturn = None  # type: ignore[assignment,misc]
+    _PydanticAIToolReturnPart = None  # type: ignore[assignment,misc]
+
+    class _WrapperToolset:  # type: ignore[no-redef]
+        """Import-safe stand-in used when the optional dependency is absent."""
+
+        def __init__(self, wrapped: Any) -> None:
+            self.wrapped = wrapped
+
+
 from prompt_shield.engine import PromptShieldEngine
 from prompt_shield.models import Action
+from prompt_shield.tool_guard import ToolResultGuard
 
 if TYPE_CHECKING:
+    from pydantic_ai import AbstractToolset, RunContext, ToolsetTool
+
     from prompt_shield.models import ScanReport
 
 logger = logging.getLogger("prompt_shield.pydantic_ai")
@@ -56,6 +87,39 @@ _MISSING_MSG = (
 def _require_pydantic_ai() -> None:
     if not _PYDANTIC_AI_AVAILABLE:
         raise ImportError(_MISSING_MSG)
+
+
+def _require_toolset_api() -> None:
+    _require_pydantic_ai()
+    if not _PYDANTIC_AI_TOOLSET_AVAILABLE:
+        raise ImportError(
+            "PromptShieldToolset requires a pydantic-ai version that provides "
+            'WrapperToolset. Upgrade with: pip install -U "pydantic-ai>=1.0.12"'
+        )
+
+
+def _tool_result_text(content: Any, tool_name: str | None) -> str:
+    """Serialize the portion of a result that Pydantic AI sends to the model."""
+    payload = content
+    if _PydanticAIToolReturn is not None and isinstance(content, _PydanticAIToolReturn):
+        payload = content.content or content.return_value
+
+    if _PydanticAIToolReturnPart is not None:
+        return _PydanticAIToolReturnPart(
+            tool_name=tool_name or "",
+            content=payload,
+            tool_call_id="",
+        ).model_response_str()
+    return payload if isinstance(payload, str) else str(payload)
+
+
+def _sanitized_tool_result(result: Any, sanitized: str) -> Any:
+    """Preserve a structured ToolReturn while replacing its model-facing text."""
+    if _PydanticAIToolReturn is not None and isinstance(result, _PydanticAIToolReturn):
+        if result.content:
+            return replace(result, content=sanitized)
+        return replace(result, return_value=sanitized)
+    return sanitized
 
 
 def _enforce(report: ScanReport, source_desc: str, mode: str) -> None:
@@ -107,6 +171,83 @@ def scan_input(
     )
     _enforce(report, source_desc=f"input: {prompt[:80]}", mode=mode)
     return report
+
+
+def scan_tool_result(
+    content: Any,
+    *,
+    tool_name: str | None = None,
+    engine: PromptShieldEngine | None = None,
+    mode: str = "block",
+) -> ScanReport:
+    """Scan one Pydantic AI tool result before it returns to the model.
+
+    ``block`` raises ``ValueError`` on a detection. ``flag`` warns and
+    ``log`` returns silently. ``sanitize`` exposes the replacement text
+    on ``report.scan_context.sanitized_text``.
+
+    Use :class:`PromptShieldToolset` when automatic interception is
+    preferable to calling this helper manually.
+    """
+    text = _tool_result_text(content, tool_name)
+    guard = ToolResultGuard(engine=engine, mode=mode, cache_size=0)
+    return guard.scan(text, tool_name=tool_name)
+
+
+class PromptShieldToolset(_WrapperToolset):
+    """Pydantic AI toolset wrapper that guards wrapped tool return values.
+
+    Pydantic AI funnels both synchronous and asynchronous function tools
+    through the asynchronous ``WrapperToolset.call_tool`` extension point.
+    The wrapped result is therefore scanned exactly once, immediately before
+    Pydantic AI places it back into model context.
+
+    Tools registered directly through ``@agent.tool`` or ``@agent.tool_plain``
+    live in the agent's separate function toolset and are not intercepted.
+    Move those tools into a ``FunctionToolset`` (or similar) and wrap that
+    toolset to guard their results.
+
+    ``block`` raises ``ValueError`` and prevents the result from reaching the
+    model. ``sanitize`` preserves ``ToolReturn`` metadata and structure while
+    replacing its model-facing text; other non-string results become strings.
+    ``flag`` and ``log`` preserve the original result (and its type).
+    """
+
+    def __init__(
+        self,
+        wrapped: AbstractToolset[Any],
+        *,
+        engine: PromptShieldEngine | None = None,
+        mode: str = "block",
+        cache_size: int = 128,
+        sanitize_replacement: str = "[REDACTED by prompt-shield]",
+    ) -> None:
+        _require_toolset_api()
+        super().__init__(wrapped)
+        self.guard = ToolResultGuard(
+            engine=engine,
+            mode=mode,
+            cache_size=cache_size,
+            sanitize_replacement=sanitize_replacement,
+        )
+
+    async def call_tool(
+        self,
+        name: str,
+        tool_args: dict[str, Any],
+        ctx: RunContext[Any],
+        tool: ToolsetTool[Any],
+    ) -> Any:
+        """Run the wrapped tool, scan its result, and enforce the configured mode."""
+        result = await super().call_tool(name, tool_args, ctx, tool)
+        text = _tool_result_text(result, name)
+        report = await self.guard.ascan(text, tool_name=name)
+
+        if self.guard.mode == "sanitize" and report.scan_context is not None:
+            sanitized = report.scan_context.sanitized_text
+            if sanitized is not None:
+                return _sanitized_tool_result(result, sanitized)
+        return result
 
 
 class PromptShieldOutputValidator:
@@ -241,6 +382,8 @@ def attach(
 
 __all__ = [
     "PromptShieldOutputValidator",
+    "PromptShieldToolset",
     "attach",
     "scan_input",
+    "scan_tool_result",
 ]
