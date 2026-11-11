@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 780" role="img" aria-labelledby="arch-title arch-desc">
   <title id="arch-title">prompt-shield v0.7.0 architecture</title>
-  <desc id="arch-desc">Five-gate architecture: user input runs through the Input Gate (33 detectors, DeBERTa classifier, ensemble scoring), reaches the LLM or agent, which may call external tools; the Tool-Result Gate (ToolResultGuard v0.7.0) scans tool output and classifies it into nine attack families before it re-enters the LLM context; the Output Gate applies nine output scanners before the response reaches the user. The Attack Vault (self-learning, auto-tuning) is fed by every detection and augmented by a federated ed25519-signed community threat feed.</desc>
+  <desc id="arch-desc">Five-gate architecture: user input runs through the Input Gate (35 detectors available, 32 enabled by default, DeBERTa classifier, ensemble scoring), reaches the LLM or agent, which may call external tools; the Tool-Result Gate (ToolResultGuard v0.7.0) scans tool output and classifies it into nine attack families before it re-enters the LLM context; the Output Gate applies nine output scanners before the response reaches the user. The Attack Vault (self-learning, auto-tuning) is fed by every detection and augmented by a federated ed25519-signed community threat feed.</desc>
   <style>
     :root { color-scheme: light dark; }
     .bg { fill: #ffffff; }
@@ -107,7 +107,7 @@
 
   <rect class="bg" width="1200" height="780"/>
   <text class="h1" x="600" y="34">prompt-shield architecture</text>
-  <text class="sub" x="600" y="54">33 input detectors · 9 output scanners · ToolResultGuard v0.7.0 · federated ed25519 threat feed</text>
+  <text class="sub" x="600" y="54">35 input detectors · 9 output scanners · ToolResultGuard v0.7.0 · federated ed25519 threat feed</text>
 
   <!-- ============ Top row: main pipeline ============ -->
   <!-- User -->
@@ -122,7 +122,7 @@
   <g>
     <rect class="card card-input" x="250" y="80" width="220" height="90" rx="10"/>
     <text class="h2" x="360" y="103">INPUT GATE</text>
-    <text class="mono" x="360" y="126" text-anchor="middle">33 detectors · DeBERTa classifier</text>
+    <text class="mono" x="360" y="126" text-anchor="middle">35 detectors · DeBERTa classifier</text>
     <text class="mono-mid" x="360" y="143" text-anchor="middle">ensemble scoring · vault similarity</text>
     <g transform="translate(360,158)">
       <text class="action-block" x="-72" y="0" text-anchor="middle">BLOCK</text>

@@ -219,7 +219,7 @@ Key functions:
 
 ### Tool Guard (`tool_guard/`) — new in v0.7.0
 
-First-class primitive for scanning tool-result content, with an attack-family taxonomy that projects over the 33 input detectors. Delegated to by every integration that scans tool-result content.
+First-class primitive for scanning tool-result content, with an attack-family taxonomy that projects over the 35 input detectors. Delegated to by every integration that scans tool-result content.
 
 | Module | Symbol | Purpose |
 |--------|--------|---------|

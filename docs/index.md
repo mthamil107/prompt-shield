@@ -1,7 +1,7 @@
 ---
 layout: home
 title: prompt-shield — OSS prompt-injection firewall
-description: Apache 2.0 prompt-injection detection engine for LLM applications. 33 input detectors, 9 output scanners, federated ed25519-signed threat-intel feed. Paper + benchmarks + integrations for LangChain, LlamaIndex, CrewAI.
+description: Apache 2.0 prompt-injection detection engine for LLM applications. 35 input detectors, 9 output scanners, federated ed25519-signed threat-intel feed. Paper + benchmarks + integrations for LangChain, LlamaIndex, CrewAI.
 seo:
   type: SoftwareApplication
   name: prompt-shield
@@ -11,7 +11,7 @@ image: https://raw.githubusercontent.com/mthamil107/prompt-shield/main/prompt-sh
 # prompt-shield
 
 **Open-source [prompt injection](https://owasp.org/www-project-top-10-for-large-language-model-applications/) firewall for LLM applications.**
-Apache 2.0. 33 input detectors, 9 output scanners, first OSS federated threat-intel feed for LLM defense.
+Apache 2.0. 35 input detectors, 9 output scanners, first OSS federated threat-intel feed for LLM defense.
 
 - 📦 **Install:** `pip install prompt-shield-ai`
 - 💻 **Repo:** [github.com/mthamil107/prompt-shield](https://github.com/mthamil107/prompt-shield)
@@ -92,7 +92,7 @@ Ships with 13 first-party integrations: LangChain, LlamaIndex, Haystack, Pydanti
 ## Compliance
 
 Maps every detector to four frameworks:
-- OWASP LLM Top 10 (2025) — 8/10 categories (LLM01, LLM02, LLM04–LLM08, LLM10), all 33 detectors mapped
+- OWASP LLM Top 10 (2025) — 8/10 categories (LLM01, LLM02, LLM04–LLM08, LLM10), all 35 detectors mapped
 - OWASP Agentic Top 10 — 10/10 categories (ASI01–ASI10), 41 detector mappings
 - EU AI Act (Aug 2026 deadline) — article-level mapping
 - MITRE ATLAS — 9/9 techniques (T0048, T0049, T0051-T0054, T0057)
