@@ -65,3 +65,6 @@ data/jbb_*
 # Dify packaging artifacts
 dify.exe
 *.difypkg
+
+# Python package downloads (defensive)
+*.whl
