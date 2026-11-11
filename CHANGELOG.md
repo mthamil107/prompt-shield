@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Post-v0.8.0 work in progress toward v0.9.0.
 
+### Fixed
+
+- **pydantic-ai integration: `ToolReturn` now scanned on both emission
+  paths.** `PromptShieldToolset` and `scan_tool_result` previously used
+  `content or return_value` and so inspected only one of the two fields
+  pydantic-ai sends to the model (`_tool_execution.py` emits a
+  `ToolReturnPart` carrying `return_value` AND a separate
+  `UserPromptPart` carrying `content`). An injection parked in
+  `return_value` while a clean string sat in `content` reached the
+  model unscanned. Both fields are now scanned independently; sanitize
+  mode redacts both and preserves `ToolReturn.metadata` and
+  `ToolReturn.tools`. Follow-up to
+  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+
 ### In progress
 
 - **pydantic-ai — `scan_tool_result` primitives.**

@@ -98,12 +98,8 @@ def _require_toolset_api() -> None:
         )
 
 
-def _tool_result_text(content: Any, tool_name: str | None) -> str:
-    """Serialize the portion of a result that Pydantic AI sends to the model."""
-    payload = content
-    if _PydanticAIToolReturn is not None and isinstance(content, _PydanticAIToolReturn):
-        payload = content.content or content.return_value
-
+def _serialize_payload(payload: Any, tool_name: str | None) -> str:
+    """Serialize one payload the way pydantic-ai will send it to the model."""
     if _PydanticAIToolReturnPart is not None:
         return _PydanticAIToolReturnPart(
             tool_name=tool_name or "",
@@ -113,13 +109,61 @@ def _tool_result_text(content: Any, tool_name: str | None) -> str:
     return payload if isinstance(payload, str) else str(payload)
 
 
-def _sanitized_tool_result(result: Any, sanitized: str) -> Any:
-    """Preserve a structured ToolReturn while replacing its model-facing text."""
+def _tool_result_payloads(
+    content: Any,
+    tool_name: str | None,
+) -> list[tuple[str, str]]:
+    """Return the ordered list of (field_name, serialized_text) pairs to scan.
+
+    - Plain return (string/dict/anything non-ToolReturn): one entry
+      ``("payload", serialized)``.
+    - ``ToolReturn``: up to TWO entries - one for ``return_value`` (what
+      becomes the ``ToolReturnPart.content``) and one for ``content`` (what
+      becomes the separate ``UserPromptPart``). ``None``/empty fields are
+      skipped. Both fields are scanned independently so an injection in
+      either path is caught.
+    """
+    if _PydanticAIToolReturn is not None and isinstance(content, _PydanticAIToolReturn):
+        pairs: list[tuple[str, str]] = []
+        if content.return_value is not None:
+            pairs.append(("return_value", _serialize_payload(content.return_value, tool_name)))
+        if content.content:  # str or non-empty Sequence[UserContent]
+            pairs.append(("content", _serialize_payload(content.content, tool_name)))
+        return pairs
+    return [("payload", _serialize_payload(content, tool_name))]
+
+
+def _tool_result_text(content: Any, tool_name: str | None) -> str:
+    """Return the first serialized model-facing payload (single-string contract)."""
+    pairs = _tool_result_payloads(content, tool_name)
+    return pairs[0][1] if pairs else ""
+
+
+def _sanitized_tool_result(
+    result: Any,
+    sanitized_by_field: dict[str, str],
+) -> Any:
+    """Preserve a structured ToolReturn while replacing per-field model-facing text.
+
+    ``sanitized_by_field`` maps field name (``"return_value"`` or ``"content"``)
+    to its sanitized string. Fields not in the dict are left unchanged. For
+    non-``ToolReturn`` results, falls back to the single sanitized string
+    (keyed as ``"payload"``).
+
+    Known gap: a non-string ``content`` (a sequence of ``UserContent``) is
+    replaced by the sanitized serialized string and does not round-trip back
+    into ``UserContent`` parts.
+    """
     if _PydanticAIToolReturn is not None and isinstance(result, _PydanticAIToolReturn):
-        if result.content:
-            return replace(result, content=sanitized)
-        return replace(result, return_value=sanitized)
-    return sanitized
+        kwargs: dict[str, Any] = {}
+        if "return_value" in sanitized_by_field:
+            kwargs["return_value"] = sanitized_by_field["return_value"]
+        if "content" in sanitized_by_field:
+            kwargs["content"] = sanitized_by_field["content"]
+        if not kwargs:
+            return result
+        return replace(result, **kwargs)
+    return sanitized_by_field.get("payload", result)
 
 
 def _enforce(report: ScanReport, source_desc: str, mode: str) -> None:
@@ -182,16 +226,26 @@ def scan_tool_result(
 ) -> ScanReport:
     """Scan one Pydantic AI tool result before it returns to the model.
 
-    ``block`` raises ``ValueError`` on a detection. ``flag`` warns and
-    ``log`` returns silently. ``sanitize`` exposes the replacement text
-    on ``report.scan_context.sanitized_text``.
+    When ``content`` is a ``ToolReturn``, BOTH ``return_value`` and
+    ``content`` are scanned independently - pydantic-ai emits them to the
+    model via separate parts, so a single scan of either field alone is
+    unsound. In ``block`` mode the first flagged field raises
+    ``ValueError``. In ``sanitize`` mode the returned report is the last
+    *flagged* field's report (``content`` if both were dirty); its
+    ``sanitized_text`` applies to that field only - use
+    :class:`PromptShieldToolset` for per-field redaction.
+    ``flag`` warns and ``log`` returns silently.
 
     Use :class:`PromptShieldToolset` when automatic interception is
     preferable to calling this helper manually.
     """
-    text = _tool_result_text(content, tool_name)
     guard = ToolResultGuard(engine=engine, mode=mode, cache_size=0)
-    return guard.scan(text, tool_name=tool_name)
+    payloads = _tool_result_payloads(content, tool_name)
+    if not payloads:
+        return guard.scan("", tool_name=tool_name)
+    reports = [guard.scan(text, tool_name=tool_name) for _field_name, text in payloads]
+    flagged = [r for r in reports if r.detections]
+    return flagged[-1] if flagged else reports[-1]
 
 
 class PromptShieldToolset(_WrapperToolset):
@@ -238,15 +292,22 @@ class PromptShieldToolset(_WrapperToolset):
         ctx: RunContext[Any],
         tool: ToolsetTool[Any],
     ) -> Any:
-        """Run the wrapped tool, scan its result, and enforce the configured mode."""
+        """Run the wrapped tool, scan every model-facing payload, enforce mode."""
         result = await super().call_tool(name, tool_args, ctx, tool)
-        text = _tool_result_text(result, name)
-        report = await self.guard.ascan(text, tool_name=name)
+        payloads = _tool_result_payloads(result, name)
 
-        if self.guard.mode == "sanitize" and report.scan_context is not None:
-            sanitized = report.scan_context.sanitized_text
-            if sanitized is not None:
-                return _sanitized_tool_result(result, sanitized)
+        sanitized_by_field: dict[str, str] = {}
+        for field_name, text in payloads:
+            report = await self.guard.ascan(text, tool_name=name)
+            if (
+                self.guard.mode == "sanitize"
+                and report.scan_context is not None
+                and report.scan_context.sanitized_text is not None
+            ):
+                sanitized_by_field[field_name] = report.scan_context.sanitized_text
+
+        if self.guard.mode == "sanitize" and sanitized_by_field:
+            return _sanitized_tool_result(result, sanitized_by_field)
         return result
 
 
