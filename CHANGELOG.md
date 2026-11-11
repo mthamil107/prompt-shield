@@ -5,40 +5,113 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.9.0] - 2026-11-11
 
-Post-v0.8.0 work in progress toward v0.9.0.
+**Pydantic AI framework integration.** Adds `PromptShieldToolset`,
+an idiomatic `WrapperToolset.call_tool()` interceptor that routes
+both sync and async tool results through `ToolResultGuard` before
+they return to model context. Also ships a 2026-11-11 README and
+docs claim-audit pass that brings counts and roadmap wording in
+line with the current code.
+
+### Added
+
+- **pydantic-ai — `scan_tool_result` via `PromptShieldToolset`.**
+  New `PromptShieldToolset` wraps any pydantic-ai toolset and routes
+  both sync and async tool results through `ToolResultGuard` before
+  they reach model context. `block` raises, `sanitize` substitutes
+  sanitized text, and `flag` / `log` preserve the original value.
+  A standalone `scan_tool_result()` helper supports manual execution
+  paths. `scan_input`, output validation, and older pydantic-ai
+  installations retain their previous behavior. Both
+  `ToolReturn.content` and `ToolReturn.return_value` are scanned
+  independently, so an injection payload in either field is
+  detected. Closes
+  [#30](https://github.com/mthamil107/prompt-shield/issues/30).
+  Contributed by [@YaoSong808](https://github.com/YaoSong808) in
+  [#32](https://github.com/mthamil107/prompt-shield/pull/32);
+  follow-up dual-field scan added in
+  [#38](https://github.com/mthamil107/prompt-shield/pull/38).
+
+### Changed
+
+- **`pydantic-ai` optional-extra floor raised from `>=0.0.10` to
+  `>=1.0.12`** (required for `WrapperToolset`). Callers pinned
+  below `1.0.12` retain `scan_input` and output validation; only
+  `PromptShieldToolset` requires the newer version (and raises
+  `ImportError` on older installs with a clear upgrade message).
+- **CITATION.cff:** top-level `version` set to `0.9.0` and
+  `date-released` to `2026-11-11` for software-citation tooling
+  (GitHub "Cite this repository" widget, reference managers).
+  `abstract` claim of "33 input detectors" corrected to
+  "35 input detectors" to match current code
+  (`src/prompt_shield/detectors/d001..d035`).
 
 ### Fixed
 
-- **pydantic-ai integration: `ToolReturn` now scanned on both emission
-  paths.** `PromptShieldToolset` and `scan_tool_result` previously used
-  `content or return_value` and so inspected only one of the two fields
-  pydantic-ai sends to the model (`_tool_execution.py` emits a
-  `ToolReturnPart` carrying `return_value` AND a separate
-  `UserPromptPart` carrying `content`). An injection parked in
-  `return_value` while a clean string sat in `content` reached the
-  model unscanned. Both fields are now scanned independently; sanitize
-  mode redacts both and preserves `ToolReturn.metadata` and
-  `ToolReturn.tools`. Follow-up to
-  [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+Documentation corrections, 2026-11-11 (README and docs claim audit):
 
-### In progress
+- **tests badge: 1,246 → 1,368.** The old figure was the v0.7.5
+  passing count (1,264 collected including 18 skipped); the new
+  figure is tests collected by `pytest --co` at the v0.9.0 tag
+  commit. Growth reflects tests added across v0.7.6 – v0.8.1,
+  pydantic-ai [#32](https://github.com/mthamil107/prompt-shield/pull/32)
+  (12 tests) and [#38](https://github.com/mthamil107/prompt-shield/pull/38)
+  (4 tests). The metric reported on the badge changed from
+  passing-count to collected-count; the historical
+  `1,232 → 1,246` release note for v0.7.5 is unchanged.
+- **PIGuard NotInject FP: 0.0% → 11.5%.** The prior value dates
+  from the initial 2026-03-28 benchmark run (commit `62a865f`)
+  and is not reproducible from any committed artifact; the
+  current value `39/339 = 11.5%` is from
+  `docs/papers/evaluation/notinject_fpr/results.txt`. README
+  Benchmark 3 row corrected and re-sorted; prompt-shield (3.8%)
+  remains the lowest rate in that table.
+- **OWASP LLM01 mapping:** "26 detectors map to LLM01 alone"
+  → 28 detectors map to LLM01, 21 exclusively (source:
+  `DETECTOR_OWASP_MAP`).
+- **MITRE ATLAS T0051:** 22 → 24 entries (23 detectors +
+  federated threat intel) (source: `DETECTOR_ATLAS_MAP`).
+- **README roadmap scope correction:** the v0.8.0 line
+  previously conflated the shipped scope with items on the
+  v0.8.0 roadmap wish-list. Replaced with the actual shipped
+  scope (consumer-side capability-receipt verification, OpenAI
+  `role="tool"` scanning, JailbreakBench runner, NotInject FPR
+  column, `Dockerfile.mcp`) plus an explicit "Not shipped, still
+  planned" list (Sigstore, OCR/audio, OpenTelemetry, CrewAI
+  [#31](https://github.com/mthamil107/prompt-shield/issues/31),
+  `sync_threats()` hard-flip). Added a v0.9.0 line.
+- **README "Coming in v0.8.0" section** replaced with a
+  per-integration "Status by integration" list reflecting what
+  actually shipped in v0.8.0 (OpenAI, Anthropic) and what ships
+  in v0.9.0 (pydantic-ai) vs. what remains open (CrewAI).
+- **README Input Detectors header:** "(33)" → "(35)".
+- **docs detector count 33 → 35** across `index.md`,
+  `_config.yml`, `architecture.md`, `agentic-security.md`, and
+  `blog-covers/architecture.svg` (source:
+  `ls src/prompt_shield/detectors/d0*.py | wc -l` returns 35).
+  Input Gate wording in `agentic-security.md` and the SVG now
+  states 32 enabled by default (`d031`, `d032`, `d035` opt-in).
 
-- **pydantic-ai — `scan_tool_result` primitives.**
-  Added `PromptShieldToolset`, an idiomatic `WrapperToolset.call_tool()`
-  interceptor that routes both sync and async tool results through
-  `ToolResultGuard` before they return to model context. `block` raises,
-  `sanitize` substitutes sanitized text, and `flag` / `log` preserve the
-  original value. A standalone `scan_tool_result()` helper supports manual
-  execution paths. Existing `scan_input`, output validation, and older
-  pydantic-ai installations retain their previous behavior. Closes
-  [#30](https://github.com/mthamil107/prompt-shield/issues/30).
-- **CrewAI — `scan_tool_result` method.**
-  Add a `guarded_tool` wrapper or `CrewAIGuard.scan_tool_result`
-  method so tool outputs on a Crew get intercepted. See
+### Not in this release
+
+The following items remain planned and are not part of v0.9.0:
+
+- **Pipelock `max_age` replay window** (deferred from v0.8.0
+  known-limitations list).
+- **`capabilities/` cache-bypass perf** (deferred from v0.8.0
+  known-limitations list).
+- **`risk_score` promotion on receipt failure** (deferred from
+  v0.8.0 known-limitations list).
+- **README `UNTRUSTED_ORIGIN` row** (deferred from v0.8.0
+  known-limitations list).
+- **CrewAI `scan_tool_result`** —
   [#31](https://github.com/mthamil107/prompt-shield/issues/31)
   (`help wanted`).
+- **Sigstore Cosign keyless signing, multimodal OCR/audio
+  scanning, OpenTelemetry, `sync_threats()` hard-flip from
+  `FutureWarning` to `ValueError`** — items from the v0.8.0
+  roadmap wish-list that have not shipped.
 
 ## [0.8.1] - 2026-09-24
 
@@ -734,8 +807,8 @@ passing, 18 skipped (+29 net-new tests vs v0.7.1).
 ## [0.7.1] - 2026-07-22
 
 **Correctness patch release.** Addresses two shipped-behaviour issues
-identified by an independent claim audit (`CLAIM-AUDIT.md`) plus a
-handful of accuracy corrections in the surrounding docs. No new features.
+identified by an independent claim audit plus a handful of accuracy
+corrections in the surrounding docs. No new features.
 
 ### ⚠️ Behaviour change (default flip)
 

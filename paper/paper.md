@@ -12,7 +12,7 @@ authors:
 affiliations:
   - name: Independent Researcher
     index: 1
-date: 19 August 2026
+date: 11 November 2026
 bibliography: paper.bib
 ---
 
@@ -21,7 +21,7 @@ bibliography: paper.bib
 `prompt-shield` is an Apache 2.0-licensed Python package that hardens
 LLM-backed applications against prompt injection at three
 architectural boundaries: user input, tool-call output, and model
-output. Version 0.7.5 ships 35 input detectors (of which the newest,
+output. Version 0.9.0 ships 35 input detectors (of which the newest,
 d035 perplexity-spectral change-point analysis, is opt-in pending
 threshold calibration on the paper's benchmark corpora): regex
 families, NFKC + homoglyph normalization, a seven-scheme encoding
@@ -42,8 +42,14 @@ dispatch. The library ships with thirteen framework integrations
 (LangChain, LlamaIndex, Haystack, Pydantic AI, CrewAI, MCP, the
 OpenAI and Anthropic SDKs, FastAPI, Flask, Django, n8n, Dify) plus
 a standalone REST/Docker deployment, a Prometheus `/metrics`
-endpoint, per-key sliding-window rate limiting, and a 1,264-test
-regression suite (1,246 passing + 18 skipped).
+endpoint, per-key sliding-window rate limiting, and a regression suite of 1,368
+collected tests.[^testcount]
+
+[^testcount]: Count collected by `pytest --co -q` on the `main` branch at
+    the v0.9.0 tag (2026-11-11), following the merges of PR #32 (12 test
+    functions) and PR #38 (4 test functions). The full suite also runs on
+    ubuntu CI via `.github/workflows/ci.yml`. No passing/skipped split is
+    reported for this count.
 
 # Statement of need
 
@@ -160,7 +166,7 @@ taint tracking. **Five of the seven** are implemented as shipped
 detectors in this software (d027 stylometric discontinuity, d028
 Smith-Waterman sequence alignment, adversarial fatigue tracker, d034
 honeypot tool definitions, and d035 perplexity-spectral change-point
-analysis — the last ships **disabled by default** in v0.7.5 pending
+analysis — the last has shipped **disabled by default** since v0.7.5 pending
 threshold calibration on the paper's benchmark corpora, following
 the same opt-in-until-tuned pattern already used for the d031/d032
 policy gates). The v0.7.5 release additionally delivers the paper's
@@ -191,16 +197,16 @@ dropping from 95.0% to 0.0% under a matrix-aware second-mover
 adversary — quantifying the operating envelope publicly rather than
 obscuring it.
 
-The project has been publicly developed since 2026-02-12, with 183
-total commits (158 excluding merges), 20 releases to PyPI, and 25
-public pull requests. There is no private prehistory. All commits
+The project has been publicly developed since 2026-02-12; as of the
+v0.7.5 release (2026-08-19) it had 183 total commits (158 excluding
+merges), 20 releases to PyPI, and 25 public pull requests. There is no private prehistory. All commits
 and releases to date are by the original author; external
 contributions are invited via `CONTRIBUTING.md`.
 
 Every empirical number reported in the paper is produced by scripts
 checked in at pinned release tags. PyPI adoption stands at ~12,600
 all-time downloads and ~2,600 in the trailing 30 days (pepy.tech,
-2026-08-09); GitHub stars 12; the federated-feed repository
+2026-08-09); GitHub stars 12 as of the v0.7.5 release (2026-08-19); the federated-feed repository
 [@prompt-shield-signatures-2026] records ~90 CDN requests in the
 trailing 30 days (jsDelivr public stats).
 
@@ -209,9 +215,8 @@ trailing 30 days (jsDelivr public stats).
 We thank the authors of ClawGuard, DualView, Prismata, Token-Flow
 Firewall, and AgentSpec whose concurrent, independent implementations
 of the tool-result boundary pattern in 2026 made it legible as a
-pattern worth naming. We also acknowledge the accuracy audit
-documented in `CLAIM-AUDIT.md`, whose findings informed the v0.7.1
-correctness release.
+pattern worth naming. We also acknowledge an internal accuracy audit whose findings
+informed the v0.7.1 correctness release.
 
 # AI usage disclosure
 
@@ -228,5 +233,23 @@ and empirical measurements before inclusion. All empirical numbers
 reported in this paper and the companion arXiv preprint were produced
 by scripts in the repository (paths cited in each subsection) and are
 independently reproducible.
+
+# Corrections
+
+- **2026-11-11** — Version reference updated from `0.7.5` to `0.9.0`.
+  Reason: paper drafted at the 0.7.5 cut; four subsequent releases (0.7.6,
+  0.8.0, 0.8.1, 0.9.0) ship without altering the claims in the Summary.
+  References to v0.7.5 in the Research impact statement describe that
+  specific release and are unchanged.
+- **2026-11-11** — Test-suite count updated from `1,264 tests (1,246 passing
+  + 18 skipped)` to `1,368 tests collected` at the v0.9.0 tag (see footnote).
+  Reason: suite grew since 0.7.5; the earlier passing/skipped split required
+  a full run and is not re-reported.
+- **2026-11-11** — Output-scanner enumeration: the "jailbreak" scanner listed
+  in the Summary is implemented in the module `relevance`
+  (`output_scanners/relevance.py`, jailbreak compliance / persona adoption
+  detection). Count of 9 is unchanged.
+- **2026-11-11** — Paper date updated from 19 August 2026 to 11 November 2026.
+  Reason: date of this correction pass.
 
 # References

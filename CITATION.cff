@@ -1,7 +1,9 @@
 cff-version: 1.2.0
 message: "If you use prompt-shield in research, please cite the research paper (preferred) or this software repository."
 title: "prompt-shield"
-abstract: "Prompt-injection detection engine for LLM applications. 33 input detectors, 9 output scanners, ToolResultGuard tool-result boundary primitive, cross-domain novel techniques, and a federated ed25519-signed threat-intel feed."
+version: "0.9.0"
+date-released: "2026-11-11"
+abstract: "Prompt-injection detection engine for LLM applications. 35 input detectors, 9 output scanners, ToolResultGuard tool-result boundary primitive, cross-domain novel techniques, and a federated ed25519-signed threat-intel feed."
 authors:
   - family-names: "Munirathinam"
     given-names: "Thamilvendhan"

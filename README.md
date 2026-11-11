@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_(self--curated_n%3D54)-96.0%25-success" alt="F1 96% on Benchmark 1: 39 attacks + 15 benign, self-curated - see paper 5.4 for self-eval caveats" />
   <img src="https://img.shields.io/badge/false_positives_(deepset_n%3D56)-0%25-success" alt="0% FP on deepset benign - NotInject FPR is 3.8%; see benchmark table" />
-  <img src="https://img.shields.io/badge/tests-1246-blue" alt="1246 tests" />
+  <img src="https://img.shields.io/badge/tests-1368-blue" alt="1368 tests" />
   <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
@@ -127,10 +127,6 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
-</p>
-
-<p align="center">
-  <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo_gif.py --mode all</code></sub>
 </p>
 
 ---
@@ -429,11 +425,12 @@ if result.blocked:
 prompt-shield scan "Ignore previous instructions" --gate tool_result --tool-name web_search
 ```
 
-### Coming in v0.8.0
+### Status by integration
 
-OpenAI wrapper `role="tool"` message scanning and a CrewAI `scan_tool_result`
-method. Split from v0.7.0 to isolate framework-specific edge cases; the core
-primitive and Pydantic AI toolset wrapper are stable today.
+- **Pydantic AI** — `PromptShieldToolset` (ships in v0.9.0) routes sync and async tool results through `ToolResultGuard` via [#32](https://github.com/mthamil107/prompt-shield/pull/32); `scan_tool_result()` helper also available for manual paths.
+- **OpenAI wrapper** — `role="tool"` / `role="function"` scanning shipped in v0.8.0 via [#34](https://github.com/mthamil107/prompt-shield/pull/34).
+- **Anthropic wrapper** — inherit-from-`mode` parity shipped in v0.8.1 via [#37](https://github.com/mthamil107/prompt-shield/pull/37).
+- **CrewAI** — `scan_tool_result` is still open at [#31](https://github.com/mthamil107/prompt-shield/issues/31) (`help wanted`).
 
 ---
 
@@ -445,7 +442,7 @@ primitive and Pydantic AI toolset wrapper are stable today.
 
 ## Built-in Detectors
 
-### Input Detectors (33)
+### Input Detectors (35)
 
 | ID | Name | Category | Severity |
 |----|------|----------|----------|
@@ -544,9 +541,9 @@ The [leolee99/NotInject](https://huggingface.co/datasets/leolee99/NotInject) dat
 
 | Scanner | FP Rate | False Positives |
 |---------|---------|-----------------|
-| **PIGuard** | **0.0%** | 0/339 |
 | **prompt-shield (shipped default, v0.7.1+)** | **3.8%** | 13/339 |
 | Meta Prompt Guard 2 | 4.4% | 15/339 |
+| PIGuard | 11.5% | 39/339 |
 | ProtectAI DeBERTa v2 | 43.4% | 147/339 |
 | Deepset DeBERTa v3 | 71.4% | 242/339 |
 
@@ -863,9 +860,9 @@ prompt-shield compliance report --framework all            # All frameworks
 
 | Framework | Coverage | Details |
 |-----------|----------|---------|
-| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 35 detectors mapped; 26 detectors map to LLM01 alone |
+| **OWASP LLM Top 10 (2025)** | **8/10 categories** | All 35 detectors mapped; 28 detectors map to LLM01 (21 exclusively to LLM01) |
 | **OWASP Agentic Top 10 (2026)** | **10/10 categories** | All 35 detectors + AgentGuard gates + 4 output scanners |
-| **MITRE ATLAS** *(new)* | **9/9 techniques (100%)** | T0051 LLM Prompt Injection: 22 detectors. T0054 LLM Jailbreak: 11. T0057 LLM Data Leakage: 7. |
+| **MITRE ATLAS** *(new)* | **9/9 techniques (100%)** | T0051 LLM Prompt Injection: 24 entries (23 detectors + federated threat intel). T0054 LLM Jailbreak: 11. T0057 LLM Data Leakage: 7. |
 | **EU AI Act** | 7 articles | Art.9, 10, 13, 14, 15, 50, 52 |
 
 **Why MITRE ATLAS matters.** Enterprise security teams already inventory their controls against ATLAS — the same way ATT&CK governs traditional security. Without an explicit ATLAS mapping, prompt-shield's coverage was invisible to SOC playbooks. The mapping makes the engine's telemetry consumable by SIEM rules + red-team coverage models without translation work.
@@ -1232,14 +1229,16 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ TaintP2X citation correction: the ICSE 2026 Research Track paper is no longer mis-linked to the (unrelated) FIDES arXiv preprint. Now cited by canonical author-list only.
   - ✅ SignaturesClient README block runs without a `# doctest: +SKIP` marker again — the block is now honestly executable on a base install.
   - ✅ No API changes; upgrade is safe. Tests unchanged at 1,232 passing / 18 skipped. This was the pre-JOSS-submission version.
-- **v0.7.5 (current): fifth cross-domain technique + twice-promised paper deliverables** —
+- **v0.7.5: fifth cross-domain technique + twice-promised paper deliverables** —
   - ✅ `d035_perplexity_spectral` detector shipped — the **fifth of seven** cross-domain techniques from the companion paper (Page-1954 CUSUM change-point detection on per-token LM perplexity; requires the `[ml]` extra). Ships **disabled by default** pending threshold calibration on the paper's benchmark corpora — enable only after tuning `threshold` against your own benign corpus. Same opt-in-until-tuned pattern as d031/d032.
   - ✅ **Composed adaptive-attack 5-layer study** landed at `docs/papers/evaluation/composed_adaptive_expanded.{py,md,json}` — extends the v0.7.3 partial (2 layers) to all 5 layers. Composed stack blocks 100% (n=20/layer) of the layer-specific adaptive attacks. Two nuanced findings: base64 wrapper drifts ToolResultGuard family classification (block still fires; family label lies); fatigue-tracker temporal-spacing hypothesis was wrong — real vulnerabilities are sample dilution + source-key rotation.
   - ✅ **Competitor rerun** landed at `docs/papers/evaluation/competitor_rerun.{py,md,json}` — 4 OSS competitors × 3 academic benchmarks, all 12 cells populated. Delivers paper §5.4's twice-promised deliverable. Honest findings: PIGuard beats prompt-shield regex-only on Liu (85.5% vs 64.0%) and Garak (77.3% vs 55.2%); prompt-shield wins InjecAgent (85.2% vs 80.6%); Deepset's 100/100/100 is a trained-to-flag artefact (25% FPR on Liu benign).
   - ✅ Paper §4.6 moves from PROPOSED to IMPLEMENTED-BUT-OPT-IN; paper.md numbers refreshed (34→35 detectors, 1,232→1,246 tests, 4/7→5/7 techniques).
   - ✅ FREEZE.md removed — the pre-JOSS-submission development freeze installed in v0.7.3 has lifted (JOSS returned "come back after citations" on 2026-08-19; FREEZE.md's own §4 lift-condition triggered).
   - ✅ +14 tests (1,232 → 1,246 passing, 18 skipped). No behaviour change for existing v0.7.4 users; d035 is opt-in.
-- **v0.8.0** (planned): Sigstore Cosign keyless signing (lifts the offline-key constraint, enables hourly feed refresh), MCP protocol-level security scanner, multimodal OCR/audio scanning, OpenTelemetry, Helm charts, remaining framework integrations (pydantic-ai / OpenAI / CrewAI adapters for `scan_tool_result`), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`
+- **v0.7.6 – v0.8.1** — see [CHANGELOG.md](CHANGELOG.md).
+- **v0.8.0** (shipped 2026-09-23): consumer-side capability-receipt verification (`capabilities/` Pipelock v1 + JWS/JWT), OpenAI wrapper `role="tool"` / `role="function"` scanning via [#34](https://github.com/mthamil107/prompt-shield/pull/34), JailbreakBench evaluation runner, NotInject FPR column across four classifiers + `d022` classifier-swap docs, and `Dockerfile.mcp`. **Not shipped, still planned:** Sigstore Cosign keyless signing, multimodal OCR/audio scanning, OpenTelemetry, CrewAI `scan_tool_result` ([#31](https://github.com/mthamil107/prompt-shield/issues/31)), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`.
+- **v0.9.0** (current, shipped 2026-11-11): pydantic-ai `PromptShieldToolset` routing both sync and async tool results through `ToolResultGuard` via [#32](https://github.com/mthamil107/prompt-shield/pull/32).
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
