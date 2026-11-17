@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.9.1] - 2026-11-17
+
+**Scan-coverage warning (stopgap).** When `scan_responses=True` and the
+response returned by `PromptShieldOpenAI.create()` or
+`PromptShieldAnthropic.create()` is not scannable (today: `stream=True`,
+or any shape without the expected `.choices`/`.content` attribute), the
+wrappers now emit a `UserWarning` instead of silently skipping response
+scanning. Full streaming, async, and Responses-API coverage is planned
+for v0.10.0; this release surfaces the gap so users know when response
+scanning is being skipped.
+
+### Changed
+
+- `PromptShieldOpenAI.create()` and `PromptShieldAnthropic.create()`
+  now emit a `UserWarning` (`stacklevel=2`, caller-frame) when
+  `scan_responses=True` and the response has no expected content
+  attribute (e.g. a streaming iterator). Previously such responses
+  were silently skipped. Behaviour on scannable responses and when
+  `scan_responses=False` is unchanged.
+
+### Tests
+
+- +8 regression tests across
+  `tests/integrations/test_openai_wrapper.py` and
+  `tests/integrations/test_anthropic_wrapper.py` covering: warning
+  fires on streamed / unknown-shape responses with
+  `scan_responses=True`; no warning on scannable responses; no
+  warning when `scan_responses=False`. Each stream test pins the
+  warning text with a `match=` pattern and asserts
+  `len(record) == 1` so a future move of the `warn` call into a loop
+  would be caught.
+
+### Not in this release
+
+- Full streaming / async / Responses-API coverage — planned for
+  v0.10.0 (the warning text points callers at that release).
+- `AutoTuner` initial-threshold reset issue (threshold writes 0.5x
+  when no tuning row exists, overriding configured 0.7 / 0.63) —
+  tracked as a separate correctness fix.
+
 ## [0.9.0] - 2026-11-11
 
 **Pydantic AI framework integration.** Adds `PromptShieldToolset`,
