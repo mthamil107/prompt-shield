@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
@@ -393,3 +395,48 @@ class TestPromptShieldOpenAI:
                 ],
             )
         mock_openai_client.chat.completions.create.assert_not_called()
+
+    def test_warns_on_streamed_response_with_scan_responses_true(self, engine, mock_openai_client):
+        # A stream iterator has no `.choices`; spec=[] keeps hasattr() False.
+        stream_obj = MagicMock(spec=[])
+        mock_openai_client.chat.completions.create.return_value = stream_obj
+
+        shield = PromptShieldOpenAI(client=mock_openai_client, engine=engine, scan_responses=True)
+        with pytest.warns(UserWarning, match=r"stream=True.*prompt-shield 0\.10\.0") as record:
+            shield.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": "Hello"}],
+                stream=True,
+            )
+        assert len(record) == 1
+        assert record[0].filename == __file__
+
+    def test_warns_on_unknown_response_shape(self, engine, mock_openai_client):
+        mock_openai_client.chat.completions.create.return_value = SimpleNamespace()
+        shield = PromptShieldOpenAI(client=mock_openai_client, engine=engine, scan_responses=True)
+        with pytest.warns(UserWarning, match="not a scannable"):
+            shield.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": "Hello"}],
+            )
+
+    def test_no_warn_on_scannable_chat_completion(self, engine, mock_openai_client):
+        shield = PromptShieldOpenAI(client=mock_openai_client, engine=engine, scan_responses=True)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            shield.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": "Hello"}],
+            )
+
+    def test_no_warn_when_scan_responses_false(self, engine, mock_openai_client):
+        stream_obj = MagicMock(spec=[])
+        mock_openai_client.chat.completions.create.return_value = stream_obj
+        shield = PromptShieldOpenAI(client=mock_openai_client, engine=engine, scan_responses=False)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            shield.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": "Hello"}],
+                stream=True,
+            )

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Any
 
 from prompt_shield.engine import PromptShieldEngine
@@ -160,19 +161,31 @@ class PromptShieldAnthropic:
 
         response = self._client.messages.create(**kwargs)
 
-        if self.scan_responses and hasattr(response, "content"):
-            for block in response.content:
-                text = getattr(block, "text", None)
-                if text:
-                    resp_report = self._engine.scan(
-                        text,
-                        context={"gate": "output", "source": "anthropic"},
-                    )
-                    if resp_report.detections:
-                        logger.warning(
-                            "Suspicious content in response: %s",
-                            resp_report.scan_id,
+        if self.scan_responses:
+            if hasattr(response, "content"):
+                for block in response.content:
+                    text = getattr(block, "text", None)
+                    if text:
+                        resp_report = self._engine.scan(
+                            text,
+                            context={"gate": "output", "source": "anthropic"},
                         )
+                        if resp_report.detections:
+                            logger.warning(
+                                "Suspicious content in response: %s",
+                                resp_report.scan_id,
+                            )
+            else:
+                warnings.warn(
+                    "prompt-shield: response scanning is enabled but the response shape "
+                    "is not scannable (stream=True returns an event iterator with no "
+                    ".content attribute). This call's output was not scanned. Streaming "
+                    "response scanning is scheduled for prompt-shield 0.10.0; until then, "
+                    "set scan_responses=False or use a non-streaming call to suppress "
+                    "this warning.",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
         return response
 

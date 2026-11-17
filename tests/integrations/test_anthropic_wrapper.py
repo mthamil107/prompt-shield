@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import warnings
 from unittest.mock import MagicMock
 
 import pytest
@@ -320,3 +321,44 @@ class TestPromptShieldAnthropic:
                 ],
             )
         mock_anthropic_client.messages.create.assert_not_called()
+
+
+class TestScanCoverageWarning:
+    _CALL = {
+        "model": "test-model",
+        "max_tokens": 16,
+        "messages": [{"role": "user", "content": "hi"}],
+    }
+
+    def test_warn_on_streamed_response(self, engine, mock_anthropic_client):
+        mock_anthropic_client.messages.create.return_value = MagicMock(spec=[])
+        shield = PromptShieldAnthropic(
+            client=mock_anthropic_client, engine=engine, scan_responses=True
+        )
+        with pytest.warns(UserWarning, match="stream=True"):
+            shield.create(**self._CALL)
+
+    def test_warn_on_unknown_shape(self, engine, mock_anthropic_client):
+        mock_anthropic_client.messages.create.return_value = MagicMock(spec=[])
+        shield = PromptShieldAnthropic(
+            client=mock_anthropic_client, engine=engine, scan_responses=True
+        )
+        with pytest.warns(UserWarning, match="not scannable"):
+            shield.create(**self._CALL)
+
+    def test_no_warn_on_scannable_response(self, engine, mock_anthropic_client):
+        shield = PromptShieldAnthropic(
+            client=mock_anthropic_client, engine=engine, scan_responses=True
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            shield.create(**self._CALL)
+
+    def test_no_warn_when_scan_responses_false(self, engine, mock_anthropic_client):
+        mock_anthropic_client.messages.create.return_value = MagicMock(spec=[])
+        shield = PromptShieldAnthropic(
+            client=mock_anthropic_client, engine=engine, scan_responses=False
+        )
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
+            shield.create(**self._CALL)

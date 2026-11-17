@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import warnings
 from typing import Any
 
 from prompt_shield.engine import PromptShieldEngine
@@ -185,6 +186,15 @@ class PromptShieldOpenAI:
                             "Suspicious content in response: %s",
                             resp_report.scan_id,
                         )
+        elif self.scan_responses:
+            warnings.warn(
+                "prompt-shield: scan_responses=True but the response is not a "
+                "scannable chat.completions object (stream=True or an unrecognised "
+                "response shape); output scanning was skipped for this call. "
+                "Streaming and Responses API coverage ships in prompt-shield 0.10.0.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         return response
 
