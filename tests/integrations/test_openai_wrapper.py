@@ -408,8 +408,11 @@ class TestPromptShieldOpenAI:
                 messages=[{"role": "user", "content": "Hello"}],
                 stream=True,
             )
-        assert len(record) == 1
-        assert record[0].filename == __file__
+        # Filter: pytest.warns records ALL warnings fired in the context (torch/vader
+        # DeprecationWarnings can leak in), so count only our scan-coverage UserWarning.
+        ours = [r for r in record if issubclass(r.category, UserWarning) and "stream=True" in str(r.message)]
+        assert len(ours) == 1
+        assert ours[0].filename == __file__
 
     def test_warns_on_unknown_response_shape(self, engine, mock_openai_client):
         mock_openai_client.chat.completions.create.return_value = SimpleNamespace()
