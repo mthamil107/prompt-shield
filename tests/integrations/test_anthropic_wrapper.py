@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import warnings
+from typing import ClassVar
 from unittest.mock import MagicMock
 
 import pytest
@@ -324,7 +325,7 @@ class TestPromptShieldAnthropic:
 
 
 class TestScanCoverageWarning:
-    _CALL = {
+    _CALL: ClassVar[dict] = {
         "model": "test-model",
         "max_tokens": 16,
         "messages": [{"role": "user", "content": "hi"}],
