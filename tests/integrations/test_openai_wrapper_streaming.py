@@ -505,6 +505,56 @@ class TestClientTypeMismatch:
             )
 
 
+class TestSanitizeNotSupportedOnStreams:
+    """Guard against the silent-downgrade regression: when the wrapper
+    constructs OK under ``mode='sanitize'`` (which requires an explicit
+    ``tool_result_mode``), the stream guard must raise ``ValueError`` at
+    stream entry — not quietly map to ``log`` via the default mode table.
+
+    Construction with ``mode='sanitize'`` and no ``tool_result_mode`` already
+    raises in ``__init__`` ("cannot be inherited"); that path is unchanged
+    by this fix and is not re-tested here.
+    """
+
+    def test_sanitize_with_explicit_tool_result_mode_raises_on_stream_sync(
+        self, engine, mock_openai_client
+    ):
+        shield = PromptShieldOpenAI(
+            client=mock_openai_client,
+            engine=engine,
+            mode="sanitize",
+            tool_result_mode="block",
+            scan_responses=True,
+        )
+        with pytest.raises(ValueError, match=r"sanitize.*not supported.*stream"):
+            list(
+                shield.create(
+                    model="gpt-4o",
+                    messages=[{"role": "user", "content": "hi"}],
+                    stream=True,
+                )
+            )
+
+    @pytest.mark.asyncio
+    async def test_sanitize_with_explicit_tool_result_mode_raises_on_stream_async(self, engine):
+        client = _make_async_client(chat_return=None)
+        shield = PromptShieldOpenAI(
+            client=client,
+            engine=engine,
+            mode="sanitize",
+            tool_result_mode="block",
+            scan_responses=True,
+        )
+        with pytest.raises(ValueError, match=r"sanitize.*not supported.*stream"):
+            iterator = await shield.acreate(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": "hi"}],
+                stream=True,
+            )
+            async for _ in iterator:
+                pass
+
+
 # ----------------------------------------------------------------------
 # Covered path never warns
 # ----------------------------------------------------------------------

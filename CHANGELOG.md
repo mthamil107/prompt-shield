@@ -68,17 +68,22 @@ docstring.
   (no text blocks) in `PromptShieldAnthropic.create()` are now scanned
   through the tool-call path instead of being silently skipped. The
   v0.9.1 `UserWarning` previously missed this case; it is now covered.
+- `PromptShieldOpenAI(mode="sanitize", tool_result_mode="block",
+  scan_responses=True).create(stream=True)` previously constructed OK
+  and silently ran the stream guard in `log` mode (the `sanitize` mode
+  was not mapped in `_STREAM_MODE_MAP`). All four streaming entry
+  points on the OpenAI wrapper (`create`, `acreate`, `responses.create`,
+  `responses.acreate`) now raise `ValueError` at stream entry when
+  `mode="sanitize"`, matching the Anthropic wrapper's behaviour.
 
 ### Known limitations
 
 - `mode="sanitize"` is not supported on streams because released text
   cannot be recalled; stream-time sanitization would misrepresent what
-  the caller has already seen. The Anthropic wrapper raises at stream
-  entry when `mode="sanitize"`. **Known issue:** the OpenAI wrapper
-  currently has a gap on some constructor combinations (for example
-  `mode="sanitize"`, `tool_result_mode="block"`, `scan_responses=True`)
-  where `sanitize` silently degrades to `log` on streams instead of
-  raising; a follow-up fix is pending in the next release. Use `block` (stop future chunks on first finding),
+  the caller has already seen. Both wrappers raise `ValueError` at
+  stream entry when `mode="sanitize"` is combined with `stream=True`
+  (chat, async, Responses on OpenAI; stream, async, `stream_messages`
+  on Anthropic). Use `block` (stop future chunks on first finding),
   `flag` (collect findings, keep streaming), or `log` (as `flag`,
   plus `logger.warning`).
 - **`block` stops future chunks; it does not retract prior chunks.**

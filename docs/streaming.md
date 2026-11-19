@@ -162,14 +162,11 @@ and the rationale behind each default.
   if noisy on your traffic.
 - **`sanitize` mode is not supported on streams.** There is no
   stream-time sanitizer because released text cannot be recalled; one
-  would misrepresent what the caller has already seen. The Anthropic
-  wrapper raises at stream entry when `mode="sanitize"`. **Known issue:**
-  the OpenAI wrapper currently has a gap on some constructor
-  combinations (for example `mode="sanitize"`, `tool_result_mode="block"`,
-  `scan_responses=True`) where `sanitize` silently degrades to `log` on
-  streams instead of raising. A follow-up fix is pending in the next
-  release; until then, do not rely on `sanitize` with streamed OpenAI
-  calls.
+  would misrepresent what the caller has already seen. Both wrappers
+  raise `ValueError` at stream entry when `mode="sanitize"` is
+  combined with `stream=True` (chat, async, Responses on OpenAI;
+  stream, async, `stream_messages` on Anthropic). Use `block`,
+  `flag`, or `log` for streams.
 
 See the `StreamGuard` module docstring for the technical details of the
 hold-back window, scan sequencing, and the enforcement state machine.

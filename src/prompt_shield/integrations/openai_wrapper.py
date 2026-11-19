@@ -370,6 +370,8 @@ class PromptShieldOpenAI:
                 "PromptShieldOpenAI.create() requires a synchronous openai.OpenAI client; "
                 "pass an AsyncOpenAI instance and use acreate() instead"
             )
+        if kwargs.get("stream", False):
+            self._reject_sanitize_for_stream()
         messages = kwargs.get("messages", [])
         self._scan_input_messages(messages)
 
@@ -388,6 +390,8 @@ class PromptShieldOpenAI:
                 "PromptShieldOpenAI.acreate() requires an openai.AsyncOpenAI client; "
                 "pass a sync OpenAI instance and use create() instead"
             )
+        if kwargs.get("stream", False):
+            self._reject_sanitize_for_stream()
         messages = kwargs.get("messages", [])
         self._scan_input_messages(messages)
 
@@ -521,8 +525,23 @@ class PromptShieldOpenAI:
     # Internal — streaming plumbing
     # ------------------------------------------------------------------
 
+    def _reject_sanitize_for_stream(self) -> None:
+        """Raise ``ValueError`` if ``mode='sanitize'`` is combined with any
+        streaming entry point. Released stream text cannot be recalled, so
+        ``sanitize`` is never meaningful on a stream. This runs at the call
+        site (``create``/``acreate`` with ``stream=True``, or ``responses``
+        streaming paths) so the raise fires before the upstream SDK is
+        touched, matching the Anthropic wrapper's behaviour.
+        """
+        if self.mode == "sanitize":
+            raise ValueError(
+                "mode='sanitize' is not supported on streaming responses; "
+                "released text cannot be recalled. Use 'block', 'flag', or 'log' for streams."
+            )
+
     def _make_stream_guard(self) -> StreamGuard:
         """Construct a fresh :class:`StreamGuard` honouring user overrides."""
+        self._reject_sanitize_for_stream()
         guard_mode = _STREAM_MODE_MAP.get(self.mode, "log")
         kwargs: dict[str, Any] = {"mode": guard_mode}
         if self._stream_scanners is not None:
@@ -794,6 +813,8 @@ class _ResponsesNamespace:
                 "openai.OpenAI client; use acreate() with AsyncOpenAI instead"
             )
         self._p._require_responses_api()
+        if kwargs.get("stream", False):
+            self._p._reject_sanitize_for_stream()
         self._p._responses_scan_input(kwargs.get("input"))
 
         if kwargs.get("stream", False):
@@ -812,6 +833,8 @@ class _ResponsesNamespace:
                 "client; use create() with a sync OpenAI instance instead"
             )
         self._p._require_responses_api()
+        if kwargs.get("stream", False):
+            self._p._reject_sanitize_for_stream()
         self._p._responses_scan_input(kwargs.get("input"))
 
         if kwargs.get("stream", False):
