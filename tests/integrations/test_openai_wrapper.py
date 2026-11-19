@@ -396,23 +396,23 @@ class TestPromptShieldOpenAI:
             )
         mock_openai_client.chat.completions.create.assert_not_called()
 
-    def test_warns_on_streamed_response_with_scan_responses_true(self, engine, mock_openai_client):
-        # A stream iterator has no `.choices`; spec=[] keeps hasattr() False.
-        stream_obj = MagicMock(spec=[])
-        mock_openai_client.chat.completions.create.return_value = stream_obj
+    def test_no_warn_on_streamed_response_after_streaming_coverage(
+        self, engine, mock_openai_client
+    ):
+        # Regression for the P1 stopgap: once streaming is guarded end-to-end
+        # the wrapper no longer emits the scan-coverage warning on stream=True.
+        # Use an empty iterator so the guarded stream has nothing to read when
+        # the caller iterates; create() itself must not fire the warning.
+        mock_openai_client.chat.completions.create.return_value = iter([])
 
         shield = PromptShieldOpenAI(client=mock_openai_client, engine=engine, scan_responses=True)
-        with pytest.warns(UserWarning, match=r"stream=True.*prompt-shield 0\.10\.0") as record:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", UserWarning)
             shield.create(
                 model="gpt-4o",
                 messages=[{"role": "user", "content": "Hello"}],
                 stream=True,
             )
-        # Filter: pytest.warns records ALL warnings fired in the context (torch/vader
-        # DeprecationWarnings can leak in), so count only our scan-coverage UserWarning.
-        ours = [r for r in record if issubclass(r.category, UserWarning) and "stream=True" in str(r.message)]
-        assert len(ours) == 1
-        assert ours[0].filename == __file__
 
     def test_warns_on_unknown_response_shape(self, engine, mock_openai_client):
         mock_openai_client.chat.completions.create.return_value = SimpleNamespace()
