@@ -432,6 +432,22 @@ prompt-shield scan "Ignore previous instructions" --gate tool_result --tool-name
 - **Anthropic wrapper** — inherit-from-`mode` parity shipped in v0.8.1 via [#37](https://github.com/mthamil107/prompt-shield/pull/37).
 - **CrewAI** — `scan_tool_result` is still open at [#31](https://github.com/mthamil107/prompt-shield/issues/31) (`help wanted`).
 
+**Streaming mode semantics (v0.10.0).** When the OpenAI or Anthropic wrapper
+is configured with `scan_responses=True` and the underlying call is a stream
+(or an async stream, or Responses API / `messages.stream`), mode semantics
+differ slightly from the sync buffered path because released chunks cannot
+be retracted:
+
+| Mode | Mid-stream behaviour |
+|------|----------------------|
+| `block` | On the first finding, raise `PromptShieldStreamBlocked`. Future chunks are stopped; chunks already released to the caller have been seen. |
+| `flag` | Keep releasing chunks. Findings are collected on the `StreamReport` returned by `finish()`; the Anthropic guarded streams also expose it as `stream_report`. |
+| `log` | Same as `flag`, plus `logger.warning` per finding (the matched text is never logged). |
+| `sanitize` | Not supported on streams — released text cannot be recalled. The Anthropic wrapper raises at stream entry; the OpenAI wrapper currently has a gap on some constructor combinations where it silently degrades to `log` on streams (fix pending in the next release). Use `block` or buffer-until-finish if you need retract semantics. |
+
+See [`docs/streaming.md`](docs/streaming.md) for usage examples and the full
+list of known limitations.
+
 ---
 
 ## Architecture
@@ -1238,7 +1254,8 @@ These notes are published as a dated public disclosure. The author makes no clai
   - ✅ +14 tests (1,232 → 1,246 passing, 18 skipped). No behaviour change for existing v0.7.4 users; d035 is opt-in.
 - **v0.7.6 – v0.8.1** — see [CHANGELOG.md](CHANGELOG.md).
 - **v0.8.0** (shipped 2026-09-23): consumer-side capability-receipt verification (`capabilities/` Pipelock v1 + JWS/JWT), OpenAI wrapper `role="tool"` / `role="function"` scanning via [#34](https://github.com/mthamil107/prompt-shield/pull/34), JailbreakBench evaluation runner, NotInject FPR column across four classifiers + `d022` classifier-swap docs, and `Dockerfile.mcp`. **Not shipped, still planned:** Sigstore Cosign keyless signing, multimodal OCR/audio scanning, OpenTelemetry, CrewAI `scan_tool_result` ([#31](https://github.com/mthamil107/prompt-shield/issues/31)), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`.
-- **v0.9.0** (current, shipped 2026-11-11): pydantic-ai `PromptShieldToolset` routing both sync and async tool results through `ToolResultGuard` via [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+- **v0.9.0** (shipped 2026-11-11): pydantic-ai `PromptShieldToolset` routing both sync and async tool results through `ToolResultGuard` via [#32](https://github.com/mthamil107/prompt-shield/pull/32).
+- **v0.10.0** (current, shipped <TBD by T12/T13>): streaming, async, and Responses-API / `messages.stream` coverage for `PromptShieldOpenAI` and `PromptShieldAnthropic`; new `prompt_shield.streaming` module (`StreamGuard`, `StreamReport`, `StreamFinding`, `PromptShieldStreamBlocked`). Closes the scan-coverage gap that v0.9.1 began warning about. See [`docs/streaming.md`](docs/streaming.md).
 
 See [ROADMAP.md](ROADMAP.md) for details.
 

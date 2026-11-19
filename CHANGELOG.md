@@ -5,6 +5,122 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.0] - <TBD by T12/T13>
+
+**Streaming, async, and Responses-API coverage.** Closes the scan-coverage
+gap surfaced by the v0.9.1 `UserWarning`: `PromptShieldOpenAI` and
+`PromptShieldAnthropic` now scan streamed responses, async-client responses,
+and Responses-API / `messages.stream` responses. Mode semantics on streams
+differ slightly from the sync `create()` path because released chunks cannot
+be retracted. Stream text scanning runs through a new `streaming/` module
+(`StreamGuard`); tool-call arguments continue to flow through the wrapper's
+existing engine. Mode semantics mid-stream are documented in
+[`docs/streaming.md`](docs/streaming.md) and in the `StreamGuard` module
+docstring.
+
+### Added
+
+- **`prompt_shield.streaming` module.** New public surface:
+  `StreamGuard`, `StreamReport`, `StreamFinding`,
+  `PromptShieldStreamBlocked`.
+  `StreamGuard` runs a bounded hold-back window (configurable
+  `hold_back` and `overlap`) over released deltas and routes each
+  window through `OutputScanEngine` and `LeakDetector`. Mode semantics
+  mid-stream (`block` / `flag` / `log`) are defined in the
+  `stream_guard.py` module docstring; the OpenAI wrapper's *Enforcement
+  model* section is in the `openai_wrapper.py` module docstring, and
+  *Scan engine coverage* is in the `PromptShieldAnthropic` class
+  docstring.
+- **`PromptShieldOpenAI` — streaming / async / Responses paths.**
+  `create(stream=True)` returns a guarded iterator; `acreate()` wraps
+  `AsyncOpenAI` for both buffered and streamed calls; `responses.create`
+  and `responses.acreate` are covered for buffered and streamed variants.
+  Tool-call argument deltas are collected by an internal
+  `ToolCallAccumulator` (an implementation detail, not part of the public
+  `streaming/` API) and scanned through the wrapper's engine before the completed call is
+  released to the caller.
+- **`PromptShieldAnthropic` — streaming / async / `messages.stream`
+  paths.** `create(stream=True)`, `acreate()`, `stream_messages()`
+  (sync context manager wrapping `messages.stream`), and
+  `astream_messages()` (async equivalent). The #37 mode-inherit logic
+  for tool-result scanning is preserved on every new path.
+- **New wrapper kwargs** (both `PromptShieldOpenAI` and
+  `PromptShieldAnthropic`): `stream_scanners`,
+  `stream_canary_tokens`, `stream_hold_back`, `stream_overlap`. See
+  `StreamGuard.__init__` for semantics and defaults.
+
+### Changed
+
+- The v0.9.1 scan-coverage `UserWarning` no longer fires on the paths
+  now covered by this release: `stream=True`, `AsyncOpenAI` /
+  `AsyncAnthropic` clients, and Responses-API / `messages.stream`
+  responses. The warning remains for shapes still outside coverage.
+- The default scanner set used for **stream text scanning** is
+  stream-safe: `sentiment`, `relevance`, `hallucination`, and
+  `schema_validation` are excluded because they are not meaningful on
+  sub-complete fragments. Callers who want them on streams can pass
+  them explicitly via `stream_scanners=`. Non-stream scanning is
+  unaffected.
+
+### Fixed
+
+- Non-stream `.content` responses that contain only `tool_use` blocks
+  (no text blocks) in `PromptShieldAnthropic.create()` are now scanned
+  through the tool-call path instead of being silently skipped. The
+  v0.9.1 `UserWarning` previously missed this case; it is now covered.
+
+### Known limitations
+
+- `mode="sanitize"` is not supported on streams because released text
+  cannot be recalled; stream-time sanitization would misrepresent what
+  the caller has already seen. The Anthropic wrapper raises at stream
+  entry when `mode="sanitize"`. **Known issue:** the OpenAI wrapper
+  currently has a gap on some constructor combinations (for example
+  `mode="sanitize"`, `tool_result_mode="block"`, `scan_responses=True`)
+  where `sanitize` silently degrades to `log` on streams instead of
+  raising; a follow-up fix is pending in the next release. Use `block` (stop future chunks on first finding),
+  `flag` (collect findings, keep streaming), or `log` (as `flag`,
+  plus `logger.warning`).
+- **`block` stops future chunks; it does not retract prior chunks.**
+  Chunks released by earlier `feed()` calls have already been seen by
+  the caller. Callers that need a retract-all contract should buffer
+  until `finish()` and gate emission on `StreamReport.findings`.
+- **Positionless dedup under continuous coarse chunking (flag / log).**
+  Two identical positionless findings of the same scanner in the same
+  hold-back window (for example, two instances of the same email
+  address) collapse to one finding. `block` mode is unaffected because
+  it halts on the first finding. Pinned by test; a refinement is
+  queued for a follow-up release.
+- **`d022` residual false positives on benign tool-call JSON.** In
+  default `block` mode, roughly two in five plain-JSON benign tool
+  calls flag on `d022`. This is pre-existing engine behaviour in the
+  semantic classifier, not introduced by streaming. Set
+  `mode="flag"` or `mode="log"` on the wrapper, or disable `d022`
+  via the engine config, if this is noisy on your traffic.
+
+### Tests
+
+- Full suite: <TBD by T12/T13> tests collected. New streaming tests added:
+  `tests/streaming/test_stream_guard.py`,
+  `tests/streaming/test_tool_call_accumulator.py`,
+  `tests/streaming/test_boundary_splits.py`,
+  `tests/integrations/test_openai_wrapper_streaming.py`,
+  `tests/integrations/test_anthropic_wrapper_streaming.py`.
+  Boundary-split coverage splits each probe payload at every offset
+  `1..N` and asserts detection fires the same verdict regardless of
+  where the chunk boundary lands.
+- Microbenchmark `tests/streaming/benchmark_stream_overhead.py` records
+  per-chunk overhead on a 100-chunk fake stream: median 223 µs/chunk,
+  p95 605 µs/chunk (p95 varies run to run). Informational only; not a release gate.
+
+### Not in this release
+
+- Streaming `sanitize` mode (see *Known limitations*).
+- CrewAI `scan_tool_result` ([#31](https://github.com/mthamil107/prompt-shield/issues/31))
+  remains open.
+- `AutoTuner` initial-threshold reset issue (carried from v0.9.1
+  *Not in this release*) remains a separate correctness fix.
+
 ## [0.9.1] - 2026-11-17
 
 **Scan-coverage warning (stopgap).** When `scan_responses=True` and the
