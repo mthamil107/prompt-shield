@@ -155,6 +155,13 @@ and the rationale behind each default.
   identical positionless findings of the same scanner in the same
   hold-back window collapse to one finding. `block` mode is unaffected.
   Pinned by test; refinement queued for a follow-up release.
+- **Positional-dedup multi-match over-count (`flag` / `log`).** A long
+  payload with multiple distinct positional matches of the same
+  scanner (e.g. both the `javascript:` and `document.cookie` xss
+  patterns in one markdown-image literal) can emit more than one
+  finding as the hold-back window slides past the first match.
+  Detection is never missed. `block` mode is unaffected. Refinement
+  queued for a follow-up release.
 - **`d022` residual FPs on plain-JSON tool-call arguments.** Roughly two
   in five benign JSON tool calls flag on `d022` in `block` mode. This
   is pre-existing semantic-classifier behaviour, not introduced by

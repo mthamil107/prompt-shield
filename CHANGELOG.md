@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.10.0] - <TBD by T12/T13>
+## [0.10.0] - 2026-11-20
 
 **Streaming, async, and Responses-API coverage.** Closes the scan-coverage
 gap surfaced by the v0.9.1 `UserWarning`: `PromptShieldOpenAI` and
@@ -96,6 +96,16 @@ docstring.
   address) collapse to one finding. `block` mode is unaffected because
   it halts on the first finding. Pinned by test; a refinement is
   queued for a follow-up release.
+- **Positional-dedup multi-match over-count (flag / log).** A long
+  payload containing multiple distinct positional matches of the same
+  scanner (for example, both the `javascript:` and `document.cookie`
+  xss patterns in one markdown-image literal) can emit more than one
+  finding as the hold-back window slides past the first match and the
+  second becomes the new "first match" for dedup-key purposes.
+  Detection is never missed. `block` mode is unaffected because it
+  halts on the first finding. The boundary-split test suite uses a
+  single-match payload to avoid tripping this; a refinement is queued
+  for a follow-up release.
 - **`d022` residual false positives on benign tool-call JSON.** In
   default `block` mode, roughly two in five plain-JSON benign tool
   calls flag on `d022`. This is pre-existing engine behaviour in the
@@ -105,7 +115,10 @@ docstring.
 
 ### Tests
 
-- Full suite: <TBD by T12/T13> tests collected. New streaming tests added:
+- Full suite: 1,844 tests collected (via `pytest --co
+  --ignore=tests/tool_guard`; `tests/tool_guard` is excluded due
+  to a known Windows access-violation that reproduces on `main`
+  and is unrelated to this release). New streaming tests added:
   `tests/streaming/test_stream_guard.py`,
   `tests/streaming/test_tool_call_accumulator.py`,
   `tests/streaming/test_boundary_splits.py`,

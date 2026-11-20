@@ -19,7 +19,7 @@
   <img src="https://img.shields.io/badge/languages-10-orange" alt="10 languages" />
   <img src="https://img.shields.io/badge/F1_(self--curated_n%3D54)-96.0%25-success" alt="F1 96% on Benchmark 1: 39 attacks + 15 benign, self-curated - see paper 5.4 for self-eval caveats" />
   <img src="https://img.shields.io/badge/false_positives_(deepset_n%3D56)-0%25-success" alt="0% FP on deepset benign - NotInject FPR is 3.8%; see benchmark table" />
-  <img src="https://img.shields.io/badge/tests-1368-blue" alt="1368 tests" />
+  <img src="https://img.shields.io/badge/tests-1844-blue" alt="1844 tests" />
   <a href="https://github.com/mthamil107/prompt-shield-signatures"><img src="https://img.shields.io/badge/threat--intel-federated%20feed-purple" alt="federated threat-intel feed" /></a>
   <a href="https://doi.org/10.5281/zenodo.19644135"><img src="https://zenodo.org/badge/DOI/10.5281/zenodo.19644135.svg" alt="DOI" /></a>
   <a href="https://arxiv.org/abs/2604.18248"><img src="https://img.shields.io/badge/arXiv-2604.18248-b31b1b.svg" alt="arXiv:2604.18248" /></a>
@@ -443,7 +443,7 @@ be retracted:
 | `block` | On the first finding, raise `PromptShieldStreamBlocked`. Future chunks are stopped; chunks already released to the caller have been seen. |
 | `flag` | Keep releasing chunks. Findings are collected on the `StreamReport` returned by `finish()`; the Anthropic guarded streams also expose it as `stream_report`. |
 | `log` | Same as `flag`, plus `logger.warning` per finding (the matched text is never logged). |
-| `sanitize` | Not supported on streams — released text cannot be recalled. The Anthropic wrapper raises at stream entry; the OpenAI wrapper currently has a gap on some constructor combinations where it silently degrades to `log` on streams (fix pending in the next release). Use `block` or buffer-until-finish if you need retract semantics. |
+| `sanitize` | Not supported on streams — released text cannot be recalled. Both wrappers raise `ValueError` at stream entry when `mode="sanitize"` is combined with `stream=True`. Use `block` or buffer-until-finish if you need retract semantics. |
 
 See [`docs/streaming.md`](docs/streaming.md) for usage examples and the full
 list of known limitations.
@@ -1255,7 +1255,7 @@ These notes are published as a dated public disclosure. The author makes no clai
 - **v0.7.6 – v0.8.1** — see [CHANGELOG.md](CHANGELOG.md).
 - **v0.8.0** (shipped 2026-09-23): consumer-side capability-receipt verification (`capabilities/` Pipelock v1 + JWS/JWT), OpenAI wrapper `role="tool"` / `role="function"` scanning via [#34](https://github.com/mthamil107/prompt-shield/pull/34), JailbreakBench evaluation runner, NotInject FPR column across four classifiers + `d022` classifier-swap docs, and `Dockerfile.mcp`. **Not shipped, still planned:** Sigstore Cosign keyless signing, multimodal OCR/audio scanning, OpenTelemetry, CrewAI `scan_tool_result` ([#31](https://github.com/mthamil107/prompt-shield/issues/31)), and the hard-flip of `sync_threats()` bare calls from `FutureWarning` to `ValueError`.
 - **v0.9.0** (shipped 2026-11-11): pydantic-ai `PromptShieldToolset` routing both sync and async tool results through `ToolResultGuard` via [#32](https://github.com/mthamil107/prompt-shield/pull/32).
-- **v0.10.0** (current, shipped <TBD by T12/T13>): streaming, async, and Responses-API / `messages.stream` coverage for `PromptShieldOpenAI` and `PromptShieldAnthropic`; new `prompt_shield.streaming` module (`StreamGuard`, `StreamReport`, `StreamFinding`, `PromptShieldStreamBlocked`). Closes the scan-coverage gap that v0.9.1 began warning about. See [`docs/streaming.md`](docs/streaming.md).
+- **v0.10.0** (current, shipped 2026-11-20): streaming, async, and Responses-API / `messages.stream` coverage for `PromptShieldOpenAI` and `PromptShieldAnthropic`; new `prompt_shield.streaming` module (`StreamGuard`, `StreamReport`, `StreamFinding`, `PromptShieldStreamBlocked`). Closes the scan-coverage gap that v0.9.1 began warning about. See [`docs/streaming.md`](docs/streaming.md).
 
 See [ROADMAP.md](ROADMAP.md) for details.
 
