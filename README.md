@@ -129,6 +129,22 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
   <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
 </p>
 
+#### MCP server (v0.7.6) — Claude Desktop / Cursor / VS Code / n8n
+
+Standalone `prompt-shield-mcp` exposes four tools (`scan_input`, `scan_output`, `scan_tool_result`, `list_detectors`) over the MCP stdio transport. The GIF below shows Claude Desktop calling `scan_tool_result` on a poisoned document and receiving a sanitized copy.
+
+<p align="center">
+  <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/mcp-demo.gif" alt="prompt-shield MCP server in Claude Desktop: detect and sanitize indirect injection" width="820" />
+</p>
+
+<p align="center">
+  <sub>Setup guide: <a href="docs/mcp-server.md">docs/mcp-server.md</a></sub>
+</p>
+
+<p align="center">
+  <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo_gif.py --mode all</code></sub>
+</p>
+
 ---
 
 ## Table of Contents
