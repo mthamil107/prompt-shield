@@ -40,13 +40,13 @@
 
 ---
 
-The most comprehensive open-source prompt injection firewall for LLM applications. Combines **35 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift, and — as of v0.7.5, opt-in — perplexity-CUSUM change-point analysis), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
+An open-source prompt-injection detection layer for LLM applications — one layer of a defense-in-depth setup, not a guarantee. Combines **35 input detectors** (10 languages, 7 encoding schemes, Smith-Waterman sequence alignment for paraphrased attacks, structural many-shot detection, custom YAML rules, language enforcement, denied-topic policy, multi-turn topic drift, and — as of v0.7.5, opt-in — perplexity-CUSUM change-point analysis), **9 output scanners** (toxicity, code injection, prompt leakage, PII, schema validation, jailbreak detection, sentiment, bias/fairness, hallucination/grounding), a semantic ML classifier (DeBERTa) with no input-length cap, NFKC + homoglyph **normalization pipeline**, **multi-encoding preprocessor** (base64/hex/URL/HTML/ROT13), per-key **sliding-window rate limiting**, **Prometheus /metrics** observability, parallel execution, and a self-hardening feedback loop that gets smarter with every attack.
 
 > **New in v0.6.0 — [federated threat-intel feed](#federated-threat-intel-feed-v060).** Fetch and verify a public ed25519-signed catalog of known prompt-injection attack patterns from [prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures). First OSS feed we're aware of; Lakera / ProtectAI / Cisco keep their threat intel proprietary because it *is* their business model. CC0 data, Apache 2.0 code, offline-signed.
 
 ### Evaluated on 9 datasets, 10,700+ samples — 8 public/academic sources
 
-Below: head-to-head against 5 OSS competitors on 39 real-world 2025-2026 attacks and 15 benign inputs (54 samples total). Full breakdown across all 9 datasets (Garak, InjecAgent, HarmBench, Liu/USENIX, deepset, NotInject, v0.4.1 ablation set, PINT) in the [Benchmark Results](#benchmark-results) section, with honest commentary on where we win and where we lose.
+Below: head-to-head against 4 open-source classifier models on 39 real-world 2025-2026 attacks and 15 benign inputs (54 samples total). Full breakdown across all 9 datasets (Garak, InjecAgent, HarmBench, Liu/USENIX, deepset, NotInject, v0.4.1 ablation set, PINT) in the [Benchmark Results](#benchmark-results) section, with honest commentary on where we win and where we lose.
 
 <table>
 <tr>
@@ -57,10 +57,10 @@ Below: head-to-head against 5 OSS competitors on 39 real-world 2025-2026 attacks
 <th>Speed</th>
 </tr>
 <tr style="font-weight:bold; background:#f0fff0">
-<td>prompt-shield</td>
+<td>prompt-shield (regex detectors, d022 ML off)</td>
 <td>96.0%</td>
 <td>92.3%</td>
-<td>0.0%</td>
+<td>0/15</td>
 <td>555/sec</td>
 </tr>
 <tr>
@@ -95,6 +95,10 @@ Below: head-to-head against 5 OSS competitors on 39 real-world 2025-2026 attacks
 
 <p align="center">
   <sub>Reproduce it: <code>pip install prompt-shield-ai && python tests/benchmark_comparison.py</code></sub>
+</p>
+
+<p align="center">
+  <sub>FP measured on 15 benign prompts with the ML classifier (<code>d022</code>) disabled — the harness configuration for this table. On 339 NotInject benign prompts the same configuration flags 3.8%; with <code>d022</code> enabled (the <code>pip install</code> default) roughly two in five benign plain-JSON tool calls flag in block mode, see <a href="CHANGELOG.md">CHANGELOG 0.10.0 → Known limitations</a>.</sub>
 </p>
 
 ### See it in action
@@ -550,7 +554,7 @@ prompt-shield is evaluated on **9 datasets totalling 10,700+ samples**, of which
 
 | Scanner | F1 | Detection | FP Rate | Speed |
 |---------|-----|-----------|---------|-------|
-| **prompt-shield** | **96.0%** | **92.3%** | **0.0%** | **555/sec** |
+| **prompt-shield (regex detectors, d022 ML off)** | **96.0%** | **92.3%** | **0/15** | **555/sec** |
 | Deepset DeBERTa v3 | 91.9% | 87.2% | 6.7% | 10/sec |
 | PIGuard (ACL 2025) | 76.9% | 64.1% | 6.7% | 12/sec |
 | ProtectAI DeBERTa v2 | 65.5% | 48.7% | 0.0% | 15/sec |
@@ -573,13 +577,13 @@ The [leolee99/NotInject](https://huggingface.co/datasets/leolee99/NotInject) dat
 
 | Scanner | FP Rate | False Positives |
 |---------|---------|-----------------|
-| **prompt-shield (shipped default, v0.7.1+)** | **3.8%** | 13/339 |
+| **prompt-shield (regex detectors, d022 ML off)** | **3.8%** | 13/339 |
 | Meta Prompt Guard 2 | 4.4% | 15/339 |
 | PIGuard | 11.5% | 39/339 |
 | ProtectAI DeBERTa v2 | 43.4% | 147/339 |
 | Deepset DeBERTa v3 | 71.4% | 242/339 |
 
-**What the 13 false positives are.** All 10 above the regex-only baseline come from `d028_sequence_alignment` at its default 0.60 threshold; permissive synonym matching is the cost of paraphrase coverage. With `d028` disabled the rate is 0.9% (3/339). We report the shipped default because that is what `pip install prompt-shield-ai` gives you. Tuning `d028` from 0.60 to 0.63 is tracked for a future patch release.
+**What the 13 false positives are.** All 10 above the regex-only baseline come from `d028_sequence_alignment` at its default 0.60 threshold; permissive synonym matching is the cost of paraphrase coverage. With `d028` disabled the rate is 0.9% (3/339). This is the regex-detector configuration (`d022` disabled), which is how every benchmark in this README is run unless stated otherwise. The `pip install` default enables `d022`; on this set its underlying model (`protectai/deberta-v3-base-prompt-injection-v2`) scores 43.4% FP, and on benign plain-JSON tool-call arguments roughly two in five flag — see Known limitations in [CHANGELOG 0.10.0](CHANGELOG.md). Tuning `d028` from 0.60 to 0.63 is tracked for a future patch release.
 
 **Reproducibility.** `tests/benchmark_public_datasets.py` now downloads NotInject parquet files directly via `huggingface_hub.hf_hub_download` (bypassing a v0.7.0-era incompatibility with newer `datasets`-library schema resolution — `Feature type 'List' not found`). Run it in any clean venv with `pip install prompt-shield-ai huggingface_hub pandas pyarrow` and it will reproduce the number above.
 
@@ -938,7 +942,7 @@ print(update)  # SignaturesUpdate(success=True, signature_count=56, ...)
 
 **Why it's structurally novel.** Lakera, ProtectAI, and Cisco AI Defense all sell threat intel as their product line; open-sourcing the catalog would cannibalize their revenue. prompt-shield doesn't depend on selling intel, so we can ship it for free. The companion repo with the actual feed lives at [github.com/mthamil107/prompt-shield-signatures](https://github.com/mthamil107/prompt-shield-signatures).
 
-**Status: v0.6.0-alpha.** Schema may evolve. Signing cadence is currently manual (~daily); v0.7.0 migrates to [Sigstore Cosign](https://www.sigstore.dev/) keyless signing for hourly cadence and eliminating the single-point-of-failure on the maintainer's local key.
+**Status.** Schema may evolve. Signed manually by one maintainer with one offline ed25519 key — a single point of failure, called out plainly. [Sigstore Cosign](https://www.sigstore.dev/) migration for keyless signing is not yet shipped. Signing authority, key rotation, submission vetting and succession are documented in [GOVERNANCE.md](GOVERNANCE.md).
 
 ```bash
 # Try it from the command line — fetch + verify the live feed:
