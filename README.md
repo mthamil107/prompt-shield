@@ -133,7 +133,7 @@ Detects many-shot jailbreaks by structural density (paired-marker counts and den
   <img src="https://raw.githubusercontent.com/mthamil107/prompt-shield/main/docs/images/demo_d029.gif" alt="d029 many-shot structural analysis demo" width="820" />
 </p>
 
-#### MCP server (v0.7.6) — Claude Desktop / Cursor / VS Code / n8n
+#### MCP server (since v0.7.6) — Claude Desktop / Cursor / VS Code / n8n
 
 Standalone `prompt-shield-mcp` exposes four tools (`scan_input`, `scan_output`, `scan_tool_result`, `list_detectors`) over the MCP stdio transport. The GIF below shows Claude Desktop calling `scan_tool_result` on a poisoned document and receiving a sanitized copy.
 
@@ -149,12 +149,16 @@ Standalone `prompt-shield-mcp` exposes four tools (`scan_input`, `scan_output`, 
   <sub>Run it yourself: <code>pip install prompt-shield-ai[ml] && python examples/demo_gif.py --mode all</code></sub>
 </p>
 
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/mthamil107/prompt-shield"><img src="https://glama.ai/mcp/servers/mthamil107/prompt-shield/badges/score.svg" alt="mthamil107/prompt-shield MCP server" /></a>
+</p>
+
 ---
 
 ## Table of Contents
 
 - [Quick Install](#quick-install) | [Quickstart](#30-second-quickstart) | [Features](#features) | [Architecture](#architecture)
-- [Detectors (34)](#built-in-detectors) | [Output Scanners (9)](#output-scanners-9) | [Benchmarks](#benchmark-results)
+- [Detectors (35)](#built-in-detectors) | [Output Scanners (9)](#output-scanners-9) | [Benchmarks](#benchmark-results)
 - [Research: Novel Techniques (v0.4.0)](#research-novel-cross-domain-techniques-v040) -- **NEW**
 - [PII Redaction](#pii-detection--redaction) | [Output Scanning](#output-scanning) | [Red Team](#adversarial-self-testing-red-team)
 - [3-Gate Agent Protection](#protecting-agentic-apps-3-gate-model) | [Integrations](#integrations)
@@ -191,7 +195,7 @@ print(report.overall_risk_score)  # 1.0
 
 ## Features
 
-### Input Protection (33 Detectors)
+### Input Protection (35 Detectors)
 
 | Category | Detectors | What It Catches |
 |----------|-----------|----------------|
